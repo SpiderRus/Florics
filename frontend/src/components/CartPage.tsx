@@ -1,0 +1,209 @@
+import React, { useEffect } from 'react';
+import { Container, Table, Button, Badge, Card } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import { toast } from 'react-toastify';
+
+const CartPage: React.FC = () => {
+    const navigate = useNavigate();
+    const { isAuthenticated, loading: authLoading } = useAuth();
+    const { cart, localCartItems, loading, updateQuantity, removeItem, clearCart, refreshCart } = useCart();
+
+    useEffect(() => {
+        // Ждём завершения проверки аутентификации перед загрузкой корзины
+        if (!authLoading)
+            refreshCart();
+    }, [authLoading]);
+
+    if (loading || authLoading)
+        return <Container style={{ paddingTop: '3rem' }}><p>Загрузка корзины...</p></Container>;
+
+    // Определяем какую корзину отображать
+    const displayCart = isAuthenticated
+        ? cart
+        : (localCartItems.length > 0 ? {
+            items: localCartItems,
+            totalItems: localCartItems.reduce((sum, item) => sum + item.quantity, 0),
+            totalPrice: localCartItems.reduce((sum, item) => sum + (item.plant.price * item.quantity), 0)
+        } : null);
+
+    // Пустая корзина
+    if (!displayCart || displayCart.items.length === 0) {
+        return (
+            <Container className="cart-page" style={{ paddingTop: '3rem', textAlign: 'center' }}>
+                <Card className="auth-card" style={{ margin: '0 auto' }}>
+                    <Card.Body>
+                        <div className="cart-icon" style={{ fontSize: '4rem' }}>🛒</div>
+                        <h2>Корзина пуста</h2>
+                        <p className="text-muted">Добавьте растения из каталога</p>
+                        <Button
+                            variant="success"
+                            onClick={() => navigate('/catalog')}
+                            style={{ marginTop: '1rem' }}
+                        >
+                            Перейти в каталог 🌿
+                        </Button>
+                    </Card.Body>
+                </Card>
+            </Container>
+        );
+    }
+
+    const handleRemove = async (plantId: string, plantName: string) => {
+        try {
+            await removeItem(plantId);
+            toast.info(`${plantName} удалено из корзины`);
+        } catch (error) {
+            toast.error('Ошибка при удалении товара');
+        }
+    };
+
+    const handleClear = async () => {
+        if (window.confirm('Вы уверены, что хотите очистить корзину?')) {
+            try {
+                await clearCart();
+                toast.success('Корзина очищена');
+            } catch (error) {
+                toast.error('Ошибка при очистке корзины');
+            }
+        }
+    };
+
+    // Корзина с товарами
+    return (
+        <Container className="cart-page" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ color: 'var(--forest-green)' }}>🛒 Ваша корзина</h2>
+                <Button variant="outline-secondary" onClick={() => navigate('/catalog')}>
+                    Продолжить покупки
+                </Button>
+            </div>
+
+            <Table striped bordered hover responsive className="cart-table">
+                <thead style={{ backgroundColor: 'var(--light-green)' }}>
+                    <tr>
+                        <th>Растение</th>
+                        <th style={{ width: '120px' }}>Цена</th>
+                        <th style={{ width: '160px' }}>Количество</th>
+                        <th style={{ width: '120px' }}>Сумма</th>
+                        <th style={{ width: '100px' }}>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {displayCart.items.map(item => (
+                        <tr key={item.id}>
+                            <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <img
+                                        src={item.plant.images[0]}
+                                        alt={item.plant.name}
+                                        style={{
+                                            width: '60px',
+                                            height: '60px',
+                                            objectFit: 'cover',
+                                            borderRadius: '8px',
+                                            boxShadow: '0 2px 8px var(--shadow)'
+                                        }}
+                                    />
+                                    <div>
+                                        <strong>{item.plant.name}</strong>
+                                        <div className="text-muted" style={{ fontSize: '0.85rem' }}>
+                                            {item.plant.category}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style={{ verticalAlign: 'middle' }}>
+                                <strong>{item.plant.price.toFixed(0)} ₽</strong>
+                            </td>
+                            <td style={{ verticalAlign: 'middle' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                                    <Button
+                                        size="sm"
+                                        variant="outline-secondary"
+                                        onClick={() => updateQuantity(item.plant.id, item.quantity - 1)}
+                                        disabled={loading}
+                                    >
+                                        −
+                                    </Button>
+                                    <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>
+                                        {item.quantity}
+                                    </span>
+                                    <Button
+                                        size="sm"
+                                        variant="outline-secondary"
+                                        onClick={() => updateQuantity(item.plant.id, item.quantity + 1)}
+                                        disabled={loading}
+                                    >
+                                        +
+                                    </Button>
+                                </div>
+                            </td>
+                            <td style={{ verticalAlign: 'middle' }}>
+                                <strong style={{ color: 'var(--sage-green)', fontSize: '1.1rem' }}>
+                                    {(item.plant.price * item.quantity).toFixed(0)} ₽
+                                </strong>
+                            </td>
+                            <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
+                                <Button
+                                    size="sm"
+                                    variant="outline-danger"
+                                    onClick={() => handleRemove(item.plant.id, item.plant.name)}
+                                    disabled={loading}
+                                >
+                                    ✕
+                                </Button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </Table>
+
+            <Card className="cart-summary-card" style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: 'var(--light-green)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h4 style={{ color: 'var(--forest-green)', marginBottom: '0.5rem' }}>Итого</h4>
+                        <p className="text-muted" style={{ marginBottom: 0 }}>
+                            Товаров: <Badge bg="info">{displayCart.totalItems}</Badge>
+                        </p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--forest-green)' }}>
+                            {displayCart.totalPrice.toFixed(0)} ₽
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                    <Button
+                        variant="outline-danger"
+                        onClick={handleClear}
+                        disabled={loading}
+                    >
+                        Очистить корзину
+                    </Button>
+                    {isAuthenticated ? (
+                        <Button
+                            variant="success"
+                            onClick={() => toast.info('Оформление заказа - в разработке')}
+                            style={{ flex: 1 }}
+                        >
+                            Оформить заказ ✓
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="success"
+                            onClick={() => navigate('/login')}
+                            style={{ flex: 1 }}
+                        >
+                            Войдите для оформления заказа 🌿
+                        </Button>
+                    )}
+                </div>
+            </Card>
+        </Container>
+    );
+};
+
+export default CartPage;

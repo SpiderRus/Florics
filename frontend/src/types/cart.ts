@@ -1,0 +1,32 @@
+import { Plant } from '../services/plantService';
+
+export interface CartItem {
+    id: string;
+    plant: Plant;
+    quantity: number;
+    addedAt: string;
+}
+
+export interface CartSummary {
+    items: CartItem[];
+    totalItems: number;
+    totalPrice: number;
+}
+
+export interface LocalCartItem {
+    plantId: string;
+    quantity: number;
+}
+
+export interface AddToCartRequest {
+    plantId: string;
+    quantity: number;
+}
+
+export interface UpdateQuantityRequest {
+    quantity: number;
+}
+
+export interface MergeCartRequest {
+    items: LocalCartItem[];
+}
