@@ -24,6 +24,12 @@ export const setupAxiosInterceptors = () => {
                 // Токен истек или невалиден
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
+
+                // Сохраняем текущий URL для возврата после логина (кроме самой страницы логина)
+                const currentPath = window.location.pathname;
+                if (currentPath !== '/login' && currentPath !== '/register')
+                    localStorage.setItem('redirectAfterLogin', currentPath);
+
                 window.location.href = '/login';
             }
             return Promise.reject(error);

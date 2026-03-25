@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Container, Form, Alert } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -10,6 +10,7 @@ const Login: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -18,7 +19,12 @@ const Login: React.FC = () => {
 
         try {
             await login(email, password);
-            navigate('/');
+
+            // Получаем URL для возврата из state или localStorage
+            const from = (location.state as any)?.from || localStorage.getItem('redirectAfterLogin') || '/';
+            localStorage.removeItem('redirectAfterLogin');
+
+            navigate(from, { replace: true });
         } catch (err) {
             setError('Неверный email или пароль');
         } finally {

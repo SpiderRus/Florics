@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*
 class UserController(private val userService: UserService) {
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Получить всех пользователей", description = "Возвращает поток всех пользователей через Flow")
     @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "Успешная операция", content = [Content(schema = Schema(implementation = User::class))])
@@ -29,6 +31,7 @@ class UserController(private val userService: UserService) {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Получить пользователя по ID", description = "Возвращает пользователя по его идентификатору")
     @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "Пользователь найден", content = [Content(schema = Schema(implementation = User::class))]),
@@ -42,6 +45,7 @@ class UserController(private val userService: UserService) {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Создать пользователя", description = "Создает нового пользователя и возвращает его")
     @ApiResponses(value = [
         ApiResponse(responseCode = "201", description = "Пользователь создан", content = [Content(schema = Schema(implementation = User::class))]),
@@ -55,6 +59,7 @@ class UserController(private val userService: UserService) {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Обновить пользователя", description = "Обновляет существующего пользователя по ID")
     @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "Пользователь обновлен", content = [Content(schema = Schema(implementation = User::class))]),
@@ -70,6 +75,7 @@ class UserController(private val userService: UserService) {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Удалить пользователя", description = "Удаляет пользователя по ID")
     @ApiResponses(value = [
         ApiResponse(responseCode = "204", description = "Пользователь удален", content = [Content()]),

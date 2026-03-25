@@ -1,12 +1,7 @@
 package com.example.webflux.config
 
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 import org.springframework.web.reactive.config.WebFluxConfigurer
-import tools.jackson.databind.ObjectMapper
-import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.KotlinModule
 
 
 @Configuration

@@ -1,4 +1,4 @@
-import {BrowserRouter, Routes, Route, useNavigate} from 'react-router-dom'
+import {BrowserRouter, Routes, Route, useNavigate, useLocation} from 'react-router-dom'
 import {Container, Navbar, Nav} from 'react-bootstrap'
 import PlantCatalog from './components/PlantCatalog'
 import Login from './components/Login'
@@ -58,11 +58,16 @@ function HomePage() {
 
 function AppContent() {
     const navigate = useNavigate()
+    const location = useLocation()
     const {user, isAuthenticated, logout} = useAuth()
 
     const handleLogout = async () => {
         await logout()
         navigate('/')
+    }
+
+    const handleLoginClick = () => {
+        navigate('/login', { state: { from: location.pathname } })
     }
 
     return (
@@ -88,7 +93,7 @@ function AppContent() {
                                 </>
                             ) : (
                                 <>
-                                    <Nav.Link onClick={() => navigate('/login')}>Вход</Nav.Link>
+                                    <Nav.Link onClick={handleLoginClick}>Вход</Nav.Link>
                                     <Nav.Link onClick={() => navigate('/register')}>Регистрация</Nav.Link>
                                 </>
                             )}

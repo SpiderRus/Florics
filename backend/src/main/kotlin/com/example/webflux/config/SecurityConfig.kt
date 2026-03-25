@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono
 
 @Configuration
 @EnableWebFluxSecurity
-// @EnableReactiveMethodSecurity - Отключено, так как используется программная проверка ролей через SecurityUtils.requireRole()
+@EnableReactiveMethodSecurity
 class SecurityConfig {
 
     @Bean

@@ -194,7 +194,7 @@ const CartPage: React.FC = () => {
                     ) : (
                         <Button
                             variant="success"
-                            onClick={() => navigate('/login')}
+                            onClick={() => navigate('/login', { state: { from: '/cart' } })}
                             style={{ flex: 1 }}
                         >
                             Войдите для оформления заказа 🌿
