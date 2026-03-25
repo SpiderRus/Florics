@@ -10,6 +10,10 @@ export interface Plant {
     images: string[];
     category: string;
     difficulty: string;
+    type?: 'COURSE' | null;
+    duration?: number | null;
+    videoUrl?: string | null;
+    previewUrl?: string | null;
 }
 
 export const plantService = {

@@ -178,6 +178,51 @@ class PlantRepository {
             ),
             category = "Флорариум",
             difficulty = "Минимальный уход"
+        ),
+        15L to Plant(
+            id = "15",
+            name = "Флорариум своими руками",
+            description = "Пошаговый мастер-класс по созданию флорариумов. Узнайте, как выбрать растения, подготовить грунт, создать композицию и ухаживать за мини-экосистемой в стекле.",
+            price = 2500.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400&h=300&fit=crop"
+            ),
+            category = "Мастер-класс",
+            difficulty = "Для начинающих",
+            type = "COURSE",
+            duration = 90,
+            videoUrl = "kinescope_stub_florarium_basics",
+            previewUrl = null
+        ),
+        16L to Plant(
+            id = "16",
+            name = "Уход за тропическими растениями",
+            description = "Секреты выращивания капризных тропических растений в домашних условиях. Полив, влажность, освещение, пересадка, борьба с вредителями.",
+            price = 1800.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&h=300&fit=crop"
+            ),
+            category = "Мастер-класс",
+            difficulty = "Средний уровень",
+            type = "COURSE",
+            duration = 75,
+            videoUrl = "kinescope_stub_tropical_care",
+            previewUrl = null
+        ),
+        17L to Plant(
+            id = "17",
+            name = "Размножение комнатных растений",
+            description = "Все способы размножения комнатных растений: черенками, листьями, делением, отводками. Укоренение в воде и грунте. Создание мини-парничка.",
+            price = 1500.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400&h=300&fit=crop"
+            ),
+            category = "Мастер-класс",
+            difficulty = "Для начинающих",
+            type = "COURSE",
+            duration = 60,
+            videoUrl = "kinescope_stub_propagation",
+            previewUrl = null
         )
     )
 

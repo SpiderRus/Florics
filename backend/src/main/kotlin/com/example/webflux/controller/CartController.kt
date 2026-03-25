@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/cart")
 @Tag(name = "Корзина", description = "API управления корзиной покупок")
 class CartController(
-    private val cartService: CartService
+    private val cartService: CartService,
+    private val purchaseService: com.example.webflux.service.PurchaseService
 ) {
     /**
      * Получить корзину текущего пользователя с расчётом итоговой суммы
@@ -96,5 +97,34 @@ class CartController(
         val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
         val summary = cartService.mergeLocalCart(userId, request.items)
         return ResponseEntity.ok(summary)
+    }
+
+    /**
+     * Оформить заказ
+     */
+    @PostMapping("/checkout")
+    @PreAuthorize("hasRole('BUYER')")
+    @Operation(summary = "Оформить заказ", description = "Обработка покупки товаров из корзины. Записываются только курсы.")
+    suspend fun checkout(): ResponseEntity<CheckoutResponse> {
+        val userId = SecurityUtils.getCurrentUserId()
+            ?: throw IllegalStateException("User not authenticated")
+
+        val cart = cartService.getCartSummary(userId)
+        val courseItems = cart.items.filter { it.plant.type == "COURSE" }
+
+        // Записываем покупки только для курсов
+        val purchases = courseItems.map { item ->
+            purchaseService.recordPurchase(userId, item.plant.id, item.plant.price)
+        }
+
+        // Очищаем корзину
+        cartService.clearCart(userId)
+
+        return ResponseEntity.ok(CheckoutResponse(
+            success = true,
+            message = "Заказ успешно оформлен. Курсы доступны в разделе Мастер-классы.",
+            purchasedCourses = purchases.map { it.plantId },
+            totalAmount = courseItems.sumOf { it.plant.price * it.quantity }
+        ))
     }
 }

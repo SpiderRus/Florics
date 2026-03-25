@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
+import { cartService } from '../services/cartService';
 
 const CartPage: React.FC = () => {
     const navigate = useNavigate();
@@ -67,6 +68,22 @@ const CartPage: React.FC = () => {
             } catch (error) {
                 toast.error('Ошибка при очистке корзины');
             }
+        }
+    };
+
+    const handleCheckout = async () => {
+        try {
+            const response = await cartService.checkout();
+            toast.success(response.message);
+
+            if (response.purchasedCourses.length > 0)
+                toast.info(`Куплено курсов: ${response.purchasedCourses.length}`);
+
+            await refreshCart();
+            navigate('/masterclasses');
+        } catch (error) {
+            console.error('Checkout error:', error);
+            toast.error('Ошибка при оформлении заказа');
         }
     };
 
@@ -186,7 +203,7 @@ const CartPage: React.FC = () => {
                     {isAuthenticated ? (
                         <Button
                             variant="success"
-                            onClick={() => toast.info('Оформление заказа - в разработке')}
+                            onClick={handleCheckout}
                             style={{ flex: 1 }}
                         >
                             Оформить заказ ✓

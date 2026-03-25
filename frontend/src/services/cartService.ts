@@ -4,6 +4,13 @@ import { CartSummary, CartItem, LocalCartItem, AddToCartRequest, UpdateQuantityR
 const API_BASE_URL = 'http://localhost:8080/api';
 const LOCAL_CART_KEY = 'localCart';
 
+export interface CheckoutResponse {
+    success: boolean;
+    message: string;
+    purchasedCourses: string[];
+    totalAmount: number;
+}
+
 export const cartService = {
     // ========== Серверные операции (требуют авторизации) ==========
 
@@ -41,6 +48,11 @@ export const cartService = {
             `${API_BASE_URL}/cart/merge`,
             { items: localItems } as MergeCartRequest
         );
+        return response.data;
+    },
+
+    checkout: async (): Promise<CheckoutResponse> => {
+        const response = await axios.post<CheckoutResponse>(`${API_BASE_URL}/cart/checkout`);
         return response.data;
     },
 

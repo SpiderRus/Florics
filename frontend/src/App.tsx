@@ -3,6 +3,8 @@ import {Container, Navbar, Nav} from 'react-bootstrap'
 import PlantCatalog from './components/PlantCatalog'
 import TerrariumCatalog from './components/TerrariumCatalog'
 import CustomTerrariumPage from './components/CustomTerrariumPage'
+import MasterClassCatalog from './components/MasterClassCatalog'
+import MasterClassPlayer from './components/MasterClassPlayer'
 import Login from './components/Login'
 import Register from './components/Register'
 import CartPage from './components/CartPage'
@@ -51,10 +53,14 @@ function HomePage() {
                         <h3>Флорариумы</h3>
                         <p>Стеклянные флорариумы ручной работы с живыми экосистемами</p>
                     </div>
-                    <div className="feature-card">
-                        <div className="feature-icon">🌿</div>
-                        <h3>Руководство по уходу</h3>
-                        <p>Экспертные советы и рекомендации по уходу за растениями</p>
+                    <div
+                        className="feature-card clickable-card"
+                        onClick={() => navigate('/masterclasses')}
+                        style={{cursor: 'pointer'}}
+                    >
+                        <div className="feature-icon">🎓</div>
+                        <h3>Мастер-классы</h3>
+                        <p>Обучающие видеокурсы по созданию флорариумов и уходу за растениями</p>
                     </div>
                 </div>
             </Container>
@@ -93,6 +99,7 @@ function AppContent() {
                             <Nav.Link onClick={() => navigate('/')}>Главная</Nav.Link>
                             <Nav.Link onClick={() => navigate('/catalog')}>Растения</Nav.Link>
                             <Nav.Link onClick={() => navigate('/terrariums')}>Флорариумы</Nav.Link>
+                            <Nav.Link onClick={() => navigate('/masterclasses')}>Мастер-классы</Nav.Link>
                             {/* Вертикальный разделитель */}
                             <Navbar.Text className="px-2" style={{color: '#ccc'}}>|</Navbar.Text>
                             {isAuthenticated ? (
@@ -119,6 +126,8 @@ function AppContent() {
                 <Route path="/catalog" element={<PlantCatalog/>}/>
                 <Route path="/terrariums" element={<TerrariumCatalog/>}/>
                 <Route path="/custom-terrarium" element={<CustomTerrariumPage/>}/>
+                <Route path="/masterclasses" element={<MasterClassCatalog/>}/>
+                <Route path="/masterclass/:id" element={<MasterClassPlayer/>}/>
                 <Route path="/cart" element={<CartPage/>}/>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
