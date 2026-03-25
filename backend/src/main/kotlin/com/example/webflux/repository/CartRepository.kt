@@ -21,7 +21,6 @@ class CartRepository {
      * Получить все товары корзины пользователя
      */
     suspend fun findByUserId(userId: Long): List<CartItem> {
-        delay(50) // Имитация БД
         return storage[userId]?.values?.toList() ?: emptyList()
     }
 
@@ -29,7 +28,6 @@ class CartRepository {
      * Добавить товар в корзину или увеличить количество если уже существует
      */
     suspend fun addOrUpdateItem(item: CartItem): CartItem {
-        delay(50)
         val userCart = storage.getOrPut(item.userId) { mutableMapOf() }
         val existing = userCart[item.plantId]
 
@@ -47,7 +45,6 @@ class CartRepository {
      * Если quantity <= 0, товар удаляется
      */
     suspend fun updateQuantity(userId: Long, plantId: String, quantity: Int): CartItem? {
-        delay(50)
         val userCart = storage[userId] ?: return null
         val item = userCart[plantId] ?: return null
 
@@ -65,7 +62,6 @@ class CartRepository {
      * Удалить товар из корзины
      */
     suspend fun removeItem(userId: Long, plantId: String): Boolean {
-        delay(50)
         return storage[userId]?.remove(plantId) != null
     }
 
@@ -73,7 +69,6 @@ class CartRepository {
      * Очистить всю корзину пользователя
      */
     suspend fun clearCart(userId: Long): Boolean {
-        delay(50)
         return storage.remove(userId) != null
     }
 
@@ -82,7 +77,6 @@ class CartRepository {
      * При конфликтах суммируются количества
      */
     suspend fun mergeItems(userId: Long, localItems: List<LocalCartItem>): List<CartItem> {
-        delay(100)
         val userCart = storage.getOrPut(userId) { mutableMapOf() }
 
         localItems.forEach { localItem ->

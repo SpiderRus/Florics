@@ -17,12 +17,10 @@ class UserRepository {
     )
 
     suspend fun findById(id: Long): User? {
-        delay(50) // имитация I/O операции
         return storage[id]
     }
 
     suspend fun save(user: User): User {
-        delay(50)
         storage[user.id] = user
         return user
     }
@@ -32,22 +30,18 @@ class UserRepository {
     }
 
     suspend fun deleteById(id: Long): Boolean {
-        delay(50)
         return storage.remove(id) != null
     }
 
     suspend fun existsById(id: Long): Boolean {
-        delay(30)
         return storage.containsKey(id)
     }
 
     suspend fun findByEmail(email: String): User? {
-        delay(50)
         return storage.values.find { it.email == email }
     }
 
     suspend fun existsByEmail(email: String): Boolean {
-        delay(30)
         return storage.values.any { it.email == email }
     }
 }

@@ -11,16 +11,13 @@ interface PlantCardProps {
 const PlantCard: React.FC<PlantCardProps> = ({plant}) => {
     // Определяем класс для badge сложности
     const getDifficultyClass = (difficulty: string): string => {
-        switch (difficulty) {
-            case 'Легко':
-                return 'difficulty-easy';
-            case 'Средне':
-                return 'difficulty-medium';
-            case 'Сложно':
-                return 'difficulty-hard';
-            default:
-                return 'difficulty-medium';
-        }
+        if (difficulty === 'Легко' || difficulty.includes('Не требует'))
+            return 'difficulty-easy';
+        if (difficulty === 'Средне' || difficulty.includes('Минимальный'))
+            return 'difficulty-medium';
+        if (difficulty === 'Сложно')
+            return 'difficulty-hard';
+        return 'difficulty-medium'; // default
     };
 
     return (

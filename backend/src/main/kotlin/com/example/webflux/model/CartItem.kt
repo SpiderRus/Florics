@@ -12,3 +12,4 @@ data class CartItem(
     val quantity: Int,           // Количество
     val addedAt: Instant         // Время добавления
 )
+

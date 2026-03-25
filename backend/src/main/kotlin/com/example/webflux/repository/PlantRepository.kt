@@ -106,16 +106,86 @@ class PlantRepository {
             ),
             category = "Декоративнолиственные",
             difficulty = "Легко"
+        ),
+        9L to Plant(
+            id = "9",
+            name = "Тропический лес в стекле",
+            description = "Роскошная композиция из мха, папоротника и фиттонии в геометрическом флорариуме. Создает атмосферу влажных тропиков. Самоувлажняющаяся экосистема.",
+            price = 3500.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=400&h=300&fit=crop"
+            ),
+            category = "Флорариум",
+            difficulty = "Не требует ухода"
+        ),
+        10L to Plant(
+            id = "10",
+            name = "Пустынный пейзаж",
+            description = "Минималистичная композиция из суккулентов и кактусов на песчаной подложке. Идеальна для современных интерьеров. Поливать раз в месяц.",
+            price = 2800.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1496192521521-98b789c0c24e?w=400&h=300&fit=crop"
+            ),
+            category = "Флорариум",
+            difficulty = "Минимальный уход"
+        ),
+        11L to Plant(
+            id = "11",
+            name = "Мини-джунгли",
+            description = "Плотная композиция из миниатюрных тропических растений с декоративными камнями и корягой. Вечнозеленые джунгли в бутылке. Полностью автономная экосистема.",
+            price = 4200.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1452827073306-6e6e661baf57?w=400&h=300&fit=crop"
+            ),
+            category = "Флорариум",
+            difficulty = "Не требует ухода"
+        ),
+        12L to Plant(
+            id = "12",
+            name = "Лесной мох",
+            description = "Композиция из трех видов мха с натуральной корягой и камнями. Напоминает лесную поляну после дождя. Мох сохраняет свежесть благодаря герметичному стеклу.",
+            price = 3200.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1470058869958-2a77ade41c02?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400&h=300&fit=crop"
+            ),
+            category = "Флорариум",
+            difficulty = "Не требует ухода"
+        ),
+        13L to Plant(
+            id = "13",
+            name = "Воздушный сад",
+            description = "Подвесной флорариум с тилландсиями - воздушными растениями, которые не нуждаются в почве. Стильный элемент декора. Опрыскивание раз в неделю.",
+            price = 2500.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?w=400&h=300&fit=crop"
+            ),
+            category = "Флорариум",
+            difficulty = "Минимальный уход"
+        ),
+        14L to Plant(
+            id = "14",
+            name = "Каменный садик",
+            description = "Элегантная композиция из эхеверий, хавортий и декоративных минералов в широком стеклянном контейнере. Японская эстетика в сочетании с живыми растениями.",
+            price = 3800.0,
+            images = listOf(
+                "https://images.unsplash.com/photo-1565008576549-57569a49371d?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?w=400&h=300&fit=crop"
+            ),
+            category = "Флорариум",
+            difficulty = "Минимальный уход"
         )
     )
 
     suspend fun findAll(): List<Plant> {
-        delay(100) // Имитация I/O операции
         return plants.values.toList()
     }
 
     suspend fun findById(id: Long): Plant? {
-        delay(50) // Имитация I/O операции
         return plants[id]
     }
 }

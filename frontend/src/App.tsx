@@ -1,6 +1,8 @@
 import {BrowserRouter, Routes, Route, useNavigate, useLocation} from 'react-router-dom'
 import {Container, Navbar, Nav} from 'react-bootstrap'
 import PlantCatalog from './components/PlantCatalog'
+import TerrariumCatalog from './components/TerrariumCatalog'
+import CustomTerrariumPage from './components/CustomTerrariumPage'
 import Login from './components/Login'
 import Register from './components/Register'
 import CartPage from './components/CartPage'
@@ -40,7 +42,11 @@ function HomePage() {
                         <h3>Комнатные растения</h3>
                         <p>Широкий выбор комнатных растений для любого пространства</p>
                     </div>
-                    <div className="feature-card">
+                    <div
+                        className="feature-card clickable-card"
+                        onClick={() => navigate('/terrariums')}
+                        style={{cursor: 'pointer'}}
+                    >
                         <div className="feature-icon">🌱</div>
                         <h3>Флорариумы</h3>
                         <p>Стеклянные флорариумы ручной работы с живыми экосистемами</p>
@@ -85,7 +91,10 @@ function AppContent() {
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="ms-auto">
                             <Nav.Link onClick={() => navigate('/')}>Главная</Nav.Link>
-                            <CartIcon />
+                            <Nav.Link onClick={() => navigate('/catalog')}>Растения</Nav.Link>
+                            <Nav.Link onClick={() => navigate('/terrariums')}>Флорариумы</Nav.Link>
+                            {/* Вертикальный разделитель */}
+                            <Navbar.Text className="px-2" style={{color: '#ccc'}}>|</Navbar.Text>
                             {isAuthenticated ? (
                                 <>
                                     <Nav.Link disabled>Привет, {user?.name}</Nav.Link>
@@ -97,6 +106,9 @@ function AppContent() {
                                     <Nav.Link onClick={() => navigate('/register')}>Регистрация</Nav.Link>
                                 </>
                             )}
+                            {/* Вертикальный разделитель */}
+                            <Navbar.Text className="px-2" style={{color: '#ccc'}}>|</Navbar.Text>
+                            <CartIcon />
                         </Nav>
                     </Navbar.Collapse>
                 </Container>
@@ -105,6 +117,8 @@ function AppContent() {
             <Routes>
                 <Route path="/" element={<HomePage/>}/>
                 <Route path="/catalog" element={<PlantCatalog/>}/>
+                <Route path="/terrariums" element={<TerrariumCatalog/>}/>
+                <Route path="/custom-terrarium" element={<CustomTerrariumPage/>}/>
                 <Route path="/cart" element={<CartPage/>}/>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
