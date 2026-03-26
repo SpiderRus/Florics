@@ -30,3 +30,17 @@ export interface UpdateQuantityRequest {
 export interface MergeCartRequest {
     items: LocalCartItem[];
 }
+
+export interface CheckoutResponse {
+    orderId: string;
+    totalPrice: number;
+    items: PurchasedItem[];
+    purchaseDate: string;
+}
+
+export interface PurchasedItem {
+    plantId: string;
+    plantName: string;
+    quantity: number;
+    price: number;
+}

@@ -18,7 +18,8 @@ import org.springframework.web.bind.annotation.*
 @Tag(name = "Корзина", description = "API управления корзиной покупок")
 class CartController(
     private val cartService: CartService,
-    private val purchaseService: com.example.webflux.service.PurchaseService
+    private val purchaseService: com.example.webflux.service.PurchaseService,
+    private val plantService: com.example.webflux.service.PlantService
 ) {
     /**
      * Получить корзину текущего пользователя с расчётом итоговой суммы
@@ -104,27 +105,44 @@ class CartController(
      */
     @PostMapping("/checkout")
     @PreAuthorize("hasRole('BUYER')")
-    @Operation(summary = "Оформить заказ", description = "Обработка покупки товаров из корзины. Записываются только курсы.")
+    @Operation(summary = "Оформить заказ", description = "Оформляет покупку всех товаров из корзины. Создает Purchase записи для каждого товара.")
     suspend fun checkout(): ResponseEntity<CheckoutResponse> {
         val userId = SecurityUtils.getCurrentUserId()
             ?: throw IllegalStateException("User not authenticated")
 
         val cart = cartService.getCartSummary(userId)
-        val courseItems = cart.items.filter { it.plant.type == "COURSE" }
 
-        // Записываем покупки только для курсов
-        val purchases = courseItems.map { item ->
-            purchaseService.recordPurchase(userId, item.plant.id, item.plant.price)
+        if (cart.items.isEmpty())
+            throw IllegalStateException("Корзина пуста")
+
+        // Создаём Purchase для каждого товара
+        cart.items.forEach { item ->
+            repeat(item.quantity) {
+                purchaseService.recordPurchase(userId, item.plant.id, item.plant.price)
+            }
         }
+
+        // Подготавливаем список купленных товаров
+        val purchasedItems = cart.items.map { item ->
+            PurchasedItem(
+                plantId = item.plant.id,
+                plantName = item.plant.name,
+                quantity = item.quantity,
+                price = item.plant.price
+            )
+        }
+
+        val orderId = java.util.UUID.randomUUID().toString()
+        val purchaseDate = java.time.Instant.now()
 
         // Очищаем корзину
         cartService.clearCart(userId)
 
         return ResponseEntity.ok(CheckoutResponse(
-            success = true,
-            message = "Заказ успешно оформлен. Курсы доступны в разделе Мастер-классы.",
-            purchasedCourses = purchases.map { it.plantId },
-            totalAmount = courseItems.sumOf { it.plant.price * it.quantity }
+            orderId = orderId,
+            totalPrice = cart.totalPrice,
+            items = purchasedItems,
+            purchaseDate = purchaseDate
         ))
     }
 }

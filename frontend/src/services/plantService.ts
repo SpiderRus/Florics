@@ -14,6 +14,8 @@ export interface Plant {
     duration?: number | null;
     videoUrl?: string | null;
     previewUrl?: string | null;
+    detailedDescription?: string | null;
+    careInstructions?: string | null;
 }
 
 export const plantService = {

@@ -1,15 +1,8 @@
 import axios from 'axios';
-import { CartSummary, CartItem, LocalCartItem, AddToCartRequest, UpdateQuantityRequest, MergeCartRequest } from '../types/cart';
+import { CartSummary, CartItem, LocalCartItem, AddToCartRequest, UpdateQuantityRequest, MergeCartRequest, CheckoutResponse } from '../types/cart';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 const LOCAL_CART_KEY = 'localCart';
-
-export interface CheckoutResponse {
-    success: boolean;
-    message: string;
-    purchasedCourses: string[];
-    totalAmount: number;
-}
 
 export const cartService = {
     // ========== Серверные операции (требуют авторизации) ==========

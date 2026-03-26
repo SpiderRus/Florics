@@ -74,6 +74,8 @@ class SecurityConfig {
                     // Публичные эндпоинты (login и register)
                     .pathMatchers("/api/auth/login", "/api/auth/register").permitAll()
                     .pathMatchers("/api/plants/**").permitAll()
+                    .pathMatchers("/api/reviews/{plantId}").permitAll()
+                    .pathMatchers("/api/reviews/rating/{plantId}").permitAll()
                     .pathMatchers("/api/hello/**").permitAll()
                     .pathMatchers("/api/stream").permitAll()
                     .pathMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
@@ -81,7 +83,7 @@ class SecurityConfig {
                     .pathMatchers("/webjars/**").permitAll()
                     // Статические ресурсы фронтенда
                     .pathMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.ico").permitAll()
-                    .pathMatchers("/catalog", "/login", "/register", "/cart", "/terrariums", "/custom-terrarium", "/masterclasses", "/masterclass/*").permitAll()
+                    .pathMatchers("/catalog", "/catalog/*", "/login", "/register", "/cart", "/terrariums", "/custom-terrarium", "/masterclasses", "/masterclass/*").permitAll()
                     // Остальное требует авторизацию (включая /api/auth/me и /api/auth/logout)
                     .anyExchange().authenticated()
             }

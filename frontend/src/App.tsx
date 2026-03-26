@@ -1,6 +1,7 @@
 import {BrowserRouter, Routes, Route, useNavigate, useLocation} from 'react-router-dom'
 import {Container, Navbar, Nav} from 'react-bootstrap'
 import PlantCatalog from './components/PlantCatalog'
+import PlantDetailPage from './components/PlantDetailPage'
 import TerrariumCatalog from './components/TerrariumCatalog'
 import CustomTerrariumPage from './components/CustomTerrariumPage'
 import MasterClassCatalog from './components/MasterClassCatalog'
@@ -124,6 +125,7 @@ function AppContent() {
             <Routes>
                 <Route path="/" element={<HomePage/>}/>
                 <Route path="/catalog" element={<PlantCatalog/>}/>
+                <Route path="/catalog/:id" element={<PlantDetailPage/>}/>
                 <Route path="/terrariums" element={<TerrariumCatalog/>}/>
                 <Route path="/custom-terrarium" element={<CustomTerrariumPage/>}/>
                 <Route path="/masterclasses" element={<MasterClassCatalog/>}/>

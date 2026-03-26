@@ -74,16 +74,16 @@ const CartPage: React.FC = () => {
     const handleCheckout = async () => {
         try {
             const response = await cartService.checkout();
-            toast.success(response.message);
-
-            if (response.purchasedCourses.length > 0)
-                toast.info(`Куплено курсов: ${response.purchasedCourses.length}`);
+            toast.success(`Заказ №${response.orderId.substring(0, 8)} успешно оформлен!`);
+            toast.info(`Итого: ${response.totalPrice.toFixed(0)} ₽ (${response.items.length} товаров)`);
 
             await refreshCart();
-            navigate('/masterclasses');
-        } catch (error) {
+            // Можно показать модальное окно с деталями заказа, но для простоты просто перенаправляем
+            navigate('/catalog');
+        } catch (error: any) {
             console.error('Checkout error:', error);
-            toast.error('Ошибка при оформлении заказа');
+            const errorMessage = error.response?.data?.message || 'Ошибка при оформлении заказа';
+            toast.error(errorMessage);
         }
     };
 

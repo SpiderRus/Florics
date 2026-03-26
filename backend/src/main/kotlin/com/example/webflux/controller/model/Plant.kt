@@ -35,5 +35,11 @@ data class Plant(
     val videoUrl: String? = null,
 
     @Schema(description = "URL превью видео")
-    val previewUrl: String? = null
+    val previewUrl: String? = null,
+
+    @Schema(description = "Расширенное описание товара")
+    val detailedDescription: String? = null,
+
+    @Schema(description = "Рекомендации по уходу")
+    val careInstructions: String? = null
 )
