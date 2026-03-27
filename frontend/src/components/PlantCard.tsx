@@ -65,10 +65,12 @@ const PlantCard: React.FC<PlantCardProps> = ({plant}) => {
 
                 <p className="plant-description">{plant.description}</p>
 
-                <div className="plant-price">{plant.price.toFixed(0)} ₽</div>
+                <div className="plant-card-footer">
+                    <div className="plant-price">{plant.price.toFixed(0)} ₽</div>
 
-                <div onClick={(e) => e.stopPropagation()}>
-                    <AddToCartButton plantId={plant.id} plantName={plant.name} />
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <AddToCartButton plantId={plant.id} plantName={plant.name} />
+                    </div>
                 </div>
             </Card.Body>
         </Card>

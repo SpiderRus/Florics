@@ -220,6 +220,13 @@ body {
 
 .plant-card-body {
   padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.plant-card-footer {
+  margin-top: auto;
 }
 
 .plant-name {
@@ -576,8 +583,19 @@ body {
 
 /* ===== Image Modal ===== */
 .image-modal .modal-dialog {
-    max-width: 90vw;
-    max-height: 90vh;
+    margin: 0;
+}
+
+.image-modal .modal-content {
+    border: none;
+    border-radius: 0;
+    height: 100vh;
+    background: transparent;
+}
+
+.image-modal .modal-body {
+    height: 100%;
+    padding: 0;
 }
 
 .image-modal-content {
@@ -586,12 +604,15 @@ body {
     justify-content: center;
     align-items: center;
     background: rgba(0, 0, 0, 0.95);
-    border-radius: 10px;
+    width: 100%;
+    height: 100%;
 }
 
 .modal-image {
     max-width: 100%;
-    max-height: 90vh;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
 }
 
@@ -601,13 +622,18 @@ body {
     right: 15px;
     background: rgba(255, 255, 255, 0.9);
     border: none;
-    font-size: 2rem;
-    width: 40px;
-    height: 40px;
+    font-size: 1.5rem;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     cursor: pointer;
-    z-index: 10;
+    z-index: 20;
     transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 0 0.18em 0;
 }
 
 .modal-close:hover {
@@ -619,28 +645,39 @@ body {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.8);
+    background: transparent;
     border: none;
-    font-size: 3rem;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
+    color: white;
+    font-size: 4rem;
+    width: 15%;
+    height: 100%;
     cursor: pointer;
     z-index: 10;
-    transition: all 0.3s;
+    transition: background-color 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.5;
 }
 
 .modal-prev {
-    left: 20px;
+    left: 0;
+    justify-content: flex-start;
+    padding-left: 1rem;
 }
 
 .modal-next {
-    right: 20px;
+    right: 0;
+    justify-content: flex-end;
+    padding-right: 1rem;
 }
 
 .modal-prev:hover, .modal-next:hover {
-    background: white;
-    transform: translateY(-50%) scale(1.1);
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0.9;
+    transform: translateY(-50%);
 }
 
 /* ===== Star Rating ===== */

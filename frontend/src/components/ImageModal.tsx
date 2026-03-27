@@ -22,7 +22,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ show, image, images, currentInd
     };
 
     return (
-        <Modal show={show} onHide={onHide} centered size="xl" className="image-modal">
+        <Modal show={show} onHide={onHide} fullscreen className="image-modal">
             <Modal.Body className="p-0">
                 <div className="image-modal-content">
                     <button className="modal-close" onClick={onHide}>×</button>
