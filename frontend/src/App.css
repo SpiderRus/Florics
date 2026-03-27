@@ -512,9 +512,9 @@ body {
     font-weight: 500;
     padding: 0.75rem 1.5rem;
     margin-right: 0.25rem;
-    margin-bottom: -2px;
+    /*margin-bottom: -2px;*/
     background: var(--light-green);
-    transition: all 0.3s ease;
+    transition: all 0.1s ease
 }
 
 .plant-tabs .nav-tabs .nav-link:hover {
@@ -523,10 +523,23 @@ body {
     border-bottom-color: var(--sage-green);
 }
 
-.plant-tabs .nav-tabs .nav-link.active {
+.plant-tabs.nav-tabs .nav-item {
+    margin-bottom: -1px;
+}
+
+.plant-tabs.nav-tabs .nav-item:has(.active) {
     background: white;
     border: 2px solid var(--sage-green);
     border-bottom: none;
+    border-radius: 15px 15px 0 0;
+    /*margin-bottom: -1px;*/
+}
+
+/*.plant-tabs .nav-tabs .nav-link.active {*/
+.plant-tabs .nav-link.active,
+.plant-tabs .nav-item.show .nav-link {
+    background: transparent;
+    border: none;
     color: var(--forest-green);
     z-index: 1;
     position: relative;
