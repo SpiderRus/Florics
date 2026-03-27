@@ -3,7 +3,7 @@ import { Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Plant } from '../services/plantService';
 import { reviewService } from '../services/reviewService';
-import ImageCarousel from './ImageCarousel';
+import MediaCarousel from './MediaCarousel';
 import AddToCartButton from './AddToCartButton';
 
 interface PlantCardProps {
@@ -43,7 +43,12 @@ const PlantCard: React.FC<PlantCardProps> = ({plant}) => {
     return (
         <Card className="plant-card h-100 clickable-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
             <div onClick={(e) => e.stopPropagation()}>
-                <ImageCarousel images={plant.images} plantName={plant.name} plantId={plant.id}/>
+                <MediaCarousel
+                    images={plant.images}
+                    videoUrls={plant.videoGalleryUrls}
+                    plantName={plant.name}
+                    plantId={plant.id}
+                />
             </div>
             <Card.Body className="plant-card-body">
                 <h3 className="plant-name">{plant.name}</h3>

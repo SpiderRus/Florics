@@ -13,6 +13,7 @@ export interface Plant {
     type?: 'COURSE' | null;
     duration?: number | null;
     videoUrl?: string | null;
+    videoGalleryUrls?: string[];
     previewUrl?: string | null;
     detailedDescription?: string | null;
     careInstructions?: string | null;

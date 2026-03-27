@@ -5,7 +5,8 @@ import { plantService, Plant } from '../services/plantService';
 import { reviewService } from '../services/reviewService';
 import { purchaseService } from '../services/purchaseService';
 import { Review } from '../types/review';
-import LargeImageCarousel from './LargeImageCarousel';
+import LargeMediaCarousel, { MediaItem } from './LargeMediaCarousel';
+import MediaModal from './MediaModal';
 import ReviewList from './ReviewList';
 import ReviewForm from './ReviewForm';
 import AddToCartButton from './AddToCartButton';
@@ -21,6 +22,9 @@ const PlantDetailPage: React.FC = () => {
     const [hasPurchased, setHasPurchased] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMediaItems, setModalMediaItems] = useState<MediaItem[]>([]);
+    const [modalCurrentIndex, setModalCurrentIndex] = useState(0);
 
     useEffect(() => {
         if (!id) return;
@@ -61,6 +65,12 @@ const PlantDetailPage: React.FC = () => {
         setReviews(updatedReviews);
     };
 
+    const handleMediaClick = (mediaItems: MediaItem[], index: number) => {
+        setModalMediaItems(mediaItems);
+        setModalCurrentIndex(index);
+        setShowModal(true);
+    };
+
     if (loading) {
         return (
             <Container className="text-center my-5">
@@ -89,7 +99,12 @@ const PlantDetailPage: React.FC = () => {
         <Container className="plant-detail-page my-4">
             <Row className="mb-4">
                 <Col md={6}>
-                    <LargeImageCarousel images={plant.images} plantName={plant.name} />
+                    <LargeMediaCarousel
+                        images={plant.images}
+                        videoUrls={plant.videoGalleryUrls}
+                        plantName={plant.name}
+                        onMediaClick={handleMediaClick}
+                    />
                 </Col>
                 <Col md={6} className="plant-detail-info">
                     <h1 className="plant-name">{plant.name}</h1>
@@ -143,6 +158,14 @@ const PlantDetailPage: React.FC = () => {
                     </Tabs>
                 </Col>
             </Row>
+
+            <MediaModal
+                show={showModal}
+                mediaItems={modalMediaItems}
+                currentIndex={modalCurrentIndex}
+                onHide={() => setShowModal(false)}
+                onNavigate={setModalCurrentIndex}
+            />
         </Container>
     );
 };

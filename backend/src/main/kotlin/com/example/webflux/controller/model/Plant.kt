@@ -31,8 +31,11 @@ data class Plant(
     @Schema(description = "Длительность курса в минутах", example = "90")
     val duration: Int? = null,
 
-    @Schema(description = "ID видео в Kinescope", example = "kinescope_stub_12345")
+    @Schema(description = "ID видео в Kinescope для курсов", example = "kinescope_stub_12345")
     val videoUrl: String? = null,
+
+    @Schema(description = "Список URL видео для галереи товара")
+    val videoGalleryUrls: List<String>? = null,
 
     @Schema(description = "URL превью видео")
     val previewUrl: String? = null,
