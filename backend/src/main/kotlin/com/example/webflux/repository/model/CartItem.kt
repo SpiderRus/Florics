@@ -1,4 +1,4 @@
-package com.example.webflux.model
+package com.example.webflux.repository.model
 
 import java.time.Instant
 

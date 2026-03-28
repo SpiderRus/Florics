@@ -1,6 +1,6 @@
 package com.example.webflux.service
 
-import com.example.webflux.model.Review
+import com.example.webflux.repository.model.Review
 import com.example.webflux.repository.ReviewRepository
 import com.example.webflux.repository.UserRepository
 import org.springframework.stereotype.Service

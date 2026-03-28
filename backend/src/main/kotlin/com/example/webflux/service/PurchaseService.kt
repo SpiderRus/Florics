@@ -1,6 +1,6 @@
 package com.example.webflux.service
 
-import com.example.webflux.model.Purchase
+import com.example.webflux.repository.model.Purchase
 import com.example.webflux.repository.PurchaseRepository
 import com.example.webflux.repository.PlantRepository
 import org.springframework.stereotype.Service
@@ -9,8 +9,7 @@ import java.util.*
 
 @Service
 class PurchaseService(
-    private val purchaseRepository: PurchaseRepository,
-    private val plantRepository: PlantRepository
+    private val purchaseRepository: PurchaseRepository
 ) {
     suspend fun recordPurchase(userId: Long, plantId: String, price: Double): Purchase {
         val purchase = Purchase(

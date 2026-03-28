@@ -1,6 +1,6 @@
 package com.example.webflux.repository
 
-import com.example.webflux.model.Review
+import com.example.webflux.repository.model.Review
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 

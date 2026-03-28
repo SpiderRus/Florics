@@ -3,7 +3,7 @@ package com.example.webflux.service
 import com.example.webflux.controller.model.CartItemDto
 import com.example.webflux.controller.model.CartSummaryDto
 import com.example.webflux.controller.model.LocalCartItem
-import com.example.webflux.model.CartItem
+import com.example.webflux.repository.model.CartItem
 import com.example.webflux.repository.CartRepository
 import com.example.webflux.repository.PlantRepository
 import org.springframework.stereotype.Service

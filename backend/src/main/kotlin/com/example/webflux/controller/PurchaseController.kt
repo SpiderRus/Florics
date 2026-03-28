@@ -1,6 +1,6 @@
 package com.example.webflux.controller
 
-import com.example.webflux.model.Purchase
+import com.example.webflux.repository.model.Purchase
 import com.example.webflux.security.SecurityUtils
 import com.example.webflux.service.PurchaseService
 import io.swagger.v3.oas.annotations.Operation

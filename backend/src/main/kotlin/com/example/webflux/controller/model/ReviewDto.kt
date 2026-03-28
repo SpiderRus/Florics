@@ -1,6 +1,6 @@
 package com.example.webflux.controller.model
 
-import com.example.webflux.model.Review
+import com.example.webflux.repository.model.Review
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
