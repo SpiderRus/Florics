@@ -1,7 +1,9 @@
 package com.example.webflux.controller
 
 import com.example.webflux.domain.model.Goods
+import com.example.webflux.domain.model.Category
 import com.example.webflux.controller.model.GoodsDto
+import com.example.webflux.controller.model.CategoryDto
 import com.example.webflux.service.GoodsService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -35,7 +37,10 @@ class GoodsController(
         ]
     )
     suspend fun getAllGoods(): ResponseEntity<List<GoodsDto>> {
-        val goods = goodsService.getAllGoods().map { it.toDto() }
+        val goods = goodsService.getAllGoods().map {
+            val category = goodsService.getCategoryForGoods(it)
+            it.toDto(category)
+        }
         return ResponseEntity.ok(goods)
     }
 
@@ -62,20 +67,22 @@ class GoodsController(
         @PathVariable id: Long
     ): ResponseEntity<GoodsDto> {
         val goods = goodsService.getGoodsById(id)
-        return goods?.let { ResponseEntity.ok(it.toDto()) }
-            ?: ResponseEntity.notFound().build()
+        return goods?.let {
+            val category = goodsService.getCategoryForGoods(it)
+            ResponseEntity.ok(it.toDto(category))
+        } ?: ResponseEntity.notFound().build()
     }
 
     // Extension функция для преобразования domain entity в DTO
-    private fun Goods.toDto() = GoodsDto(
+    private fun Goods.toDto(category: Category?) = GoodsDto(
         id = id,
         name = name,
         description = description,
         price = price,
         images = images,
-        category = category,
+        categoryId = categoryId,
+        category = category?.let { CategoryDto(it.id, it.name, it.type) },
         difficulty = difficulty,
-        type = type,
         duration = duration,
         videoUrl = videoUrl,
         videoGalleryUrls = videoGalleryUrls,

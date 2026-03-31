@@ -74,6 +74,7 @@ class SecurityConfig {
                     // Публичные эндпоинты (login и register)
                     .pathMatchers("/api/auth/login", "/api/auth/register").permitAll()
                     .pathMatchers("/api/goods/**").permitAll()
+                    .pathMatchers("/api/categories/**").permitAll()
                     .pathMatchers("/api/reviews/{goodsId}").permitAll()
                     .pathMatchers("/api/reviews/rating/{goodsId}").permitAll()
                     .pathMatchers("/api/hello/**").permitAll()

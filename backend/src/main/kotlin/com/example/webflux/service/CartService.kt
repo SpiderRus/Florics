@@ -4,10 +4,12 @@ import com.example.webflux.controller.model.CartItemDto
 import com.example.webflux.controller.model.CartSummaryDto
 import com.example.webflux.controller.model.LocalCartItem
 import com.example.webflux.controller.model.GoodsDto
+import com.example.webflux.controller.model.CategoryDto
 import com.example.webflux.domain.model.CartItem
 import com.example.webflux.domain.model.Goods
 import com.example.webflux.repository.CartRepository
 import com.example.webflux.repository.GoodsRepository
+import com.example.webflux.repository.CategoryRepository
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.*
@@ -18,7 +20,8 @@ import java.util.*
 @Service
 class CartService(
     private val cartRepository: CartRepository,
-    private val goodsRepository: GoodsRepository
+    private val goodsRepository: GoodsRepository,
+    private val categoryRepository: CategoryRepository
 ) {
     /**
      * Получить сводку корзины с полной информацией о товарах и расчётом итогов
@@ -108,15 +111,17 @@ class CartService(
     }
 
     // Extension функция для преобразования Goods в GoodsDto
-    private fun Goods.toDto() = GoodsDto(
+    private suspend fun Goods.toDto() = GoodsDto(
         id = id,
         name = name,
         description = description,
         price = price,
         images = images,
-        category = category,
+        categoryId = categoryId,
+        category = categoryRepository.findById(categoryId)?.let {
+            CategoryDto(it.id, it.name, it.type)
+        },
         difficulty = difficulty,
-        type = type,
         duration = duration,
         videoUrl = videoUrl,
         videoGalleryUrls = videoGalleryUrls,

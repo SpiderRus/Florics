@@ -126,7 +126,7 @@ const CartPage: React.FC = () => {
                                     <div>
                                         <strong>{item.goods.name}</strong>
                                         <div className="text-muted" style={{ fontSize: '0.85rem' }}>
-                                            {item.goods.category}
+                                            {item.goods.category?.name || 'Без категории'}
                                         </div>
                                     </div>
                                 </div>

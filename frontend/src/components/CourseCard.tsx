@@ -43,7 +43,7 @@ const CourseCard: React.FC<CourseCardProps> = ({goods}) => {
 
                 <div className="goods-meta">
                     <Badge bg="secondary" className="me-2">
-                        🎥 {goods.category}
+                        🎥 {goods.category?.name || 'Без категории'}
                     </Badge>
                     {goods.duration && (
                         <Badge bg="info" className="me-2">

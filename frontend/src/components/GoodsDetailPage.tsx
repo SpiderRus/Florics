@@ -110,7 +110,7 @@ const GoodsDetailPage: React.FC = () => {
                     <h1 className="goods-name">{goods.name}</h1>
                     <p className="goods-description">{goods.description}</p>
                     <div className="goods-meta mb-3">
-                        <span className="badge bg-secondary me-2">{goods.category}</span>
+                        <span className="badge bg-secondary me-2">{goods.category?.name || 'Без категории'}</span>
                         <span className="badge bg-info">{goods.difficulty}</span>
                     </div>
                     <h3 className="goods-price mb-3">{goods.price.toFixed(0)} ₽</h3>

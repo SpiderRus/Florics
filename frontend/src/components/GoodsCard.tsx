@@ -55,7 +55,7 @@ const GoodsCard: React.FC<GoodsCardProps> = ({goods}) => {
 
                 <div className="goods-meta">
                     <Badge bg="secondary" className="me-2">
-                        {goods.category}
+                        {goods.category?.name || 'Без категории'}
                     </Badge>
                     <span className={`difficulty-badge ${getDifficultyClass(goods.difficulty)}`}>
                         {goods.difficulty}

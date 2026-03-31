@@ -19,14 +19,14 @@ data class GoodsDto(
     @Schema(description = "Список URL изображений")
     val images: List<String>,
 
-    @Schema(description = "Категория", example = "Лианы")
-    val category: String,
+    @Schema(description = "ID категории товара", example = "1")
+    val categoryId: String,
+
+    @Schema(description = "Информация о категории")
+    val category: CategoryDto?,
 
     @Schema(description = "Уровень сложности", example = "Легко")
     val difficulty: String,
-
-    @Schema(description = "Тип товара: COURSE для мастер-классов, null для физических товаров", example = "COURSE")
-    val type: String? = null,
 
     @Schema(description = "Длительность курса в минутах", example = "90")
     val duration: Int? = null,

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Category } from './categoryService';
 
 const API_BASE_URL = '/api';
 
@@ -8,9 +9,9 @@ export interface Goods {
     description: string;
     price: number;
     images: string[];
-    category: string;
+    categoryId: string;
+    category?: Category;
     difficulty: string;
-    type?: 'COURSE' | null;
     duration?: number | null;
     videoUrl?: string | null;
     videoGalleryUrls?: string[];
