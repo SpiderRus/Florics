@@ -3,6 +3,11 @@ package com.example.webflux.service
 import com.example.webflux.domain.model.Review
 import com.example.webflux.repository.ReviewRepository
 import com.example.webflux.repository.UserRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.*
@@ -40,23 +45,18 @@ class ReviewService(
         return reviewRepository.save(review)
     }
 
-    suspend fun getReviewsByGoodsId(goodsId: String): List<Review> {
-        return reviewRepository.findByGoodsId(goodsId)
-            .sortedByDescending { it.createdAt }
+    fun getReviewsByGoodsId(goodsId: String): Flow<Review> = flow {
+        reviewRepository.findByGoodsId(goodsId).toList().sortedByDescending { it.createdAt }.forEach { emit(it) }
     }
 
     suspend fun getGoodsRating(goodsId: String): Pair<Double, Int> {
-        val reviews = reviewRepository.findByGoodsId(goodsId)
-        if (reviews.isEmpty())
-            return Pair(0.0, 0)
+        val reviews = reviewRepository.findByGoodsId(goodsId).map { it.rating }.toList()
 
-        val averageRating = reviews.map { it.rating }.average()
-        return Pair(averageRating, reviews.size)
+        return if (reviews.isEmpty()) Pair(0.0, 0) else Pair(reviews.average(), reviews.size)
     }
 
     suspend fun deleteReview(userId: Long, reviewId: String): Boolean {
-        val review = reviewRepository.findById(reviewId)
-            ?: throw IllegalArgumentException("Отзыв не найден")
+        val review = reviewRepository.findById(reviewId) ?: throw IllegalArgumentException("Отзыв не найден")
 
         // Проверка: только автор может удалить отзыв
         if (review.userId != userId)

@@ -1,19 +1,13 @@
 package com.example.webflux.repository
 
 import com.example.webflux.domain.model.Goods
-import com.example.webflux.domain.model.GoodsType
 import com.example.webflux.domain.model.Image
 import com.example.webflux.domain.model.Video
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.filter
 import org.springframework.stereotype.Repository
 
 @Repository
-class GoodsRepository(
-    private val categoryRepository: CategoryRepository
-) {
+class GoodsRepository {
     private val goods: MutableMap<Long, Goods> = mutableMapOf(
         1L to Goods(
             id = "1",
@@ -40,6 +34,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1592150621744-aca64f48394a?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1592150621744-aca64f48394a?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "2",
             difficulty = "Средне",
             detailedDescription = "Фикус лировидный - один из самых популярных комнатных фикусов, получивший свое название благодаря форме листьев, напоминающих скрипку или лиру. Родом из тропических лесов Западной Африки. Листья крупные (до 45 см в длину), кожистые, глянцевые, темно-зеленого цвета с выраженными прожилками. В природе достигает 12-15 метров, в комнатных условиях - 2-3 метров. Фикус лировидный - растение-долгожитель, которое при правильном уходе будет радовать вас десятилетиями. Важная особенность: фикус не любит перестановки и может сбросить листья при изменении условий.",
@@ -55,6 +54,12 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1509937528035-ad76254b0356?w=400&h=300&fit=crop", order = 1),
                 Image(url = "https://images.unsplash.com/photo-1632207691143-643e2985c0f9?w=400&h=300&fit=crop", order = 2)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1593482892290-f54927ae1bb6?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1509937528035-ad76254b0356?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1632207691143-643e2985c0f9?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "3",
             difficulty = "Легко",
             detailedDescription = "Сансевиерия, также известная как 'тещин язык' или 'щучий хвост', родом из Африки и Южной Азии. Это суккулент с толстыми мечевидными листьями, растущими прямо из корневища. Листья могут быть полностью зелеными или иметь желтую кайму, с характерным мраморным рисунком. Высота от 30 см до 1 метра в зависимости от сорта. Одно из самых выносливых комнатных растений - выдерживает засуху, низкую освещенность, перепады температур. Сансевиерия отлично очищает воздух, удаляя формальдегид, бензол и другие токсины. Особенность: выделяет кислород ночью, что делает ее идеальной для спальни.",
@@ -69,6 +74,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1597165194215-65eedfbf8de7?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1597165194215-65eedfbf8de7?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "4",
             difficulty = "Средне",
             detailedDescription = "Нефролепис - один из самых популярных комнатных папоротников родом из тропических регионов. Имеет изящные дугообразные вайи (листья) длиной до 60 см с многочисленными мелкими перистыми сегментами. Молодые листья скручены в характерную 'улитку'. Растение образует пышный кустик, который особенно эффектно смотрится в подвесных кашпо. Нефролепис не только украшает интерьер, но и активно увлажняет воздух, что особенно ценно в отопительный сезон. Это растение не имеет цветков, размножается спорами на нижней стороне листьев.",
@@ -84,6 +94,12 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1597165194215-65eedfbf8de7?w=400&h=300&fit=crop", order = 1),
                 Image(url = "https://images.unsplash.com/photo-1587334207984-1e5b6e4e2e28?w=400&h=300&fit=crop", order = 2)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1593691509543-c55fb32d8de5?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1597165194215-65eedfbf8de7?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1587334207984-1e5b6e4e2e28?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "5",
             difficulty = "Легко",
             detailedDescription = "Спатифиллум, известный как 'женское счастье' или 'белый парус', родом из тропиков Южной Америки. Это вечнозеленое растение с глянцевыми темно-зелеными листьями и элегантными белыми цветками-покрывалами, которые со временем зеленеют. Цветок состоит из белого прицветника-паруса и желтоватого початка. Высота 30-50 см в зависимости от сорта. Спатифиллум - одно из немногих цветущих растений, которое хорошо растет в тени. Отлично очищает воздух от формальдегида, бензола, аммиака. Растение 'говорящее' - опустившиеся листья сигнализируют о необходимости полива.",
@@ -98,6 +114,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1586685281522-c072aeebee21?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1591958911259-bee2173bdccc?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1586685281522-c072aeebee21?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1591958911259-bee2173bdccc?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "2",
             difficulty = "Сложно",
             detailedDescription = "Калатея - представитель семейства Марантовые из тропических лесов Южной Америки. Главная особенность - невероятно декоративные листья с замысловатыми узорами, сочетающие оттенки зеленого, розового, фиолетового, белого. Нижняя сторона листьев часто пурпурная. Уникальная способность: листья меняют положение в течение дня - утром раскрываются горизонтально, вечером поднимаются вертикально и складываются, издавая легкий шелест (за это калатею называют 'молитвенным растением'). Высота 40-60 см. Требовательна к условиям содержания, но усилия окупаются невероятной красотой.",
@@ -113,6 +134,12 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400&h=300&fit=crop", order = 1),
                 Image(url = "https://images.unsplash.com/photo-1598880940371-c756e015faf1?w=400&h=300&fit=crop", order = 2)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1596548438137-d51ea5c83ca5?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1598880940371-c756e015faf1?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "3",
             difficulty = "Легко",
             detailedDescription = "Алоэ вера - легендарный суккулент родом с Аравийского полуострова, известный своими лечебными свойствами более 6000 лет. Образует розетку из мясистых мечевидных листьев серо-зеленого цвета с мягкими шипами по краям. Листья заполнены прозрачным гелем, богатым витаминами, минералами и аминокислотами. Гель используется для лечения ожогов, ран, в косметологии. В домашних условиях алоэ редко цветет, но при хороших условиях может выпустить высокий цветонос с желто-оранжевыми цветами. Одно из самых неприхотливых комнатных растений, идеально для начинающих и занятых людей.",
@@ -127,6 +154,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1597165194215-65eedfbf8de7?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1610768764270-790fbec18178?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1597165194215-65eedfbf8de7?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1610768764270-790fbec18178?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "2",
             difficulty = "Легко",
             detailedDescription = "Драцена - популярное комнатное растение родом из тропиков Африки и Азии. Имеет древовидную форму: прямой стебель с розеткой узких длинных листьев на вершине, напоминающий миниатюрную пальму (хотя к пальмам не относится). Листья могут быть зелеными или с желтыми/белыми полосами в зависимости от сорта. В комнатных условиях достигает 1-2 метров. Драцена не только красива, но и полезна - очищает воздух от формальдегида, ксилола, толуола. Растет медленно, но стабильно, практически не болеет. Долгожитель - может радовать вас 10-15 лет.",
@@ -141,6 +173,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "6",
             difficulty = "Не требует ухода",
             detailedDescription = "Тропический флорариум - это миниатюрная замкнутая экосистема в стеклянном геометрическом сосуде высотой 25 см. Композиция включает несколько видов тропического мха, миниатюрный папоротник и фиттонию с розовыми прожилками. В основании - питательный субстрат, дренаж из вулканической лавы и декоративные камни. Благодаря герметичной или полугерметичной конструкции внутри создается свой микроклимат с повышенной влажностью. Влага циркулирует естественным образом - испаряется с листьев, конденсируется на стенках и возвращается в грунт. Флорариум не только красив, но и функционален - увлажняет воздух в помещении.",
@@ -155,6 +192,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1496192521521-98b789c0c24e?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1496192521521-98b789c0c24e?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "6",
             difficulty = "Минимальный уход",
             detailedDescription = "Пустынный флорариум - стильная минималистичная композиция в открытом стеклянном сосуде диаметром 20 см. Включает 3-4 вида миниатюрных суккулентов (эхеверия, хавортия) и небольшой кактус на фоне декоративного песка двух оттенков. Композицию дополняют природные камни и маленькая коряга. Открытая конструкция обеспечивает хорошую вентиляцию, что идеально для засухоустойчивых растений. Этот флорариум воплощает философию минимализма и отлично вписывается в современные интерьеры в стиле лофт, скандинавский или хай-тек.",
@@ -169,6 +211,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1452827073306-6e6e661baf57?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1452827073306-6e6e661baf57?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "6",
             difficulty = "Не требует ухода",
             detailedDescription = "Мини-джунгли - это премиальный закрытый флорариум в стеклянной бутылке высотой 30 см с пробкой. Содержит плотную многоуровневую композицию из 5-6 видов миниатюрных тропических растений: фиттония, пеперомия, карликовый плющ, селагинелла, мини-папоротник. Композицию дополняет натуральная коряга, покрытая мхом, декоративные камни и мульча из коры. Это полностью автономная закрытая экосистема - влага циркулирует внутри, растения дышат и фотосинтезируют. Может существовать годами практически без вмешательства. Настоящее чудо природы в вашем доме!",
@@ -183,6 +230,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1470058869958-2a77ade41c02?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1470058869958-2a77ade41c02?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "6",
             difficulty = "Не требует ухода",
             detailedDescription = "Лесной моховой флорариум - это кусочек скандинавского леса в стеклянном кубе 20x20 см. Композиция состоит из трех видов натурального стабилизированного мха разных оттенков зеленого, миниатюрной коряги, покрытой лишайником, и речных камней. Мох предварительно обработан специальным составом (глицерин + красители), который сохраняет его мягкость, цвет и внешний вид на годы. Стабилизированный мох не требует воды и света, не растет, не гниет. Это не живое растение, но выглядит абсолютно натурально. Идеальное решение для помещений без окон или для занятых людей.",
@@ -197,6 +249,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "6",
             difficulty = "Минимальный уход",
             detailedDescription = "Воздушный сад - инновационный подвесной флорариум в стеклянной колбе диаметром 15 см с петлей для подвешивания. Внутри размещены 2-3 тилландсии - уникальные эпифитные растения, которые растут без почвы, получая влагу и питание из воздуха через специальные чешуйки на листьях. Композицию дополняет небольшая коряга, на которой закреплены растения, и декоративные камни. Тилландсии имеют серебристо-зеленые листья, собранные в розетки. Некоторые виды цветут яркими розовыми или фиолетовыми соцветиями. Подвесной флорариум - это живая скульптура, которая смотрится эффектно с любого угла.",
@@ -211,6 +268,11 @@ class GoodsRepository(
                 Image(url = "https://images.unsplash.com/photo-1565008576549-57569a49371d?w=400&h=300&fit=crop", order = 0),
                 Image(url = "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?w=400&h=300&fit=crop", order = 1)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1565008576549-57569a49371d?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "6",
             difficulty = "Минимальный уход",
             detailedDescription = "Каменный садик - флорариум в стиле дзен-сада в широком низком стеклянном сосуде 30x15 см. Композиция вдохновлена японскими каменными садами и философией ваби-саби. Включает 4-5 миниатюрных суккулентов (эхеверия, хавортия, литопс) и коллекцию декоративных минералов: кварц, аметист, агат. Растения и камни расположены асимметрично на белом песке с волнистыми узорами, созданными миниатюрными граблями. Это не просто декор, а медитативный объект - можно менять узоры на песке граблями, создавая свои композиции. Воплощает минимализм, гармонию и баланс.",
@@ -224,6 +286,10 @@ class GoodsRepository(
             media = listOf(
                 Image(url = "https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400&h=300&fit=crop", order = 0)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1459156212016-c812468e2115?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "7",
             difficulty = "Для начинающих",
             duration = 90,
@@ -240,6 +306,10 @@ class GoodsRepository(
             media = listOf(
                 Image(url = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&h=300&fit=crop", order = 0)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "7",
             difficulty = "Средний уровень",
             duration = 75,
@@ -256,6 +326,10 @@ class GoodsRepository(
             media = listOf(
                 Image(url = "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400&h=300&fit=crop", order = 0)
             ),
+            images = listOf(
+                "https://images.unsplash.com/photo-1545241047-6083a3684587?w=400&h=300&fit=crop"
+            ),
+            videoGalleryUrls = null,
             categoryId = "7",
             difficulty = "Для начинающих",
             duration = 60,
@@ -266,15 +340,11 @@ class GoodsRepository(
         )
     )
 
-    fun findAll(): Flow<Goods> {
-        return goods.values.asFlow()
+    suspend fun findAll(): List<Goods> {
+        return goods.values.toList()
     }
 
     suspend fun findById(id: Long): Goods? {
         return goods[id]
-    }
-
-    fun findByType(type: GoodsType): Flow<Goods> {
-        return goods.values.asFlow().filter { categoryRepository.findById(it.categoryId)?.type == type }
     }
 }

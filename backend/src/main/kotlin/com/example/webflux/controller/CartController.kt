@@ -27,11 +27,8 @@ class CartController(
     @GetMapping
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Получить корзину", description = "Возвращает содержимое корзины с расчетом итоговой суммы")
-    suspend fun getCart(): ResponseEntity<CartSummaryDto> {
-        val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        val summary = cartService.getCartSummary(userId)
-        return ResponseEntity.ok(summary)
-    }
+    suspend fun getCart(): ResponseEntity<CartSummaryDto> =
+        ResponseEntity.ok(cartService.getCartSummary(SecurityUtils.requireCurrentUserId()))
 
     /**
      * Добавить товар в корзину
@@ -39,11 +36,8 @@ class CartController(
     @PostMapping("/items")
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Добавить товар в корзину", description = "Добавляет товар в корзину или увеличивает количество если уже есть")
-    suspend fun addItem(@RequestBody request: AddToCartRequest): ResponseEntity<CartItemDto> {
-        val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        val item = cartService.addToCart(userId, request.goodsId, request.quantity)
-        return ResponseEntity.ok(item)
-    }
+    suspend fun addItem(@RequestBody request: AddToCartRequest): ResponseEntity<CartItemDto> =
+        ResponseEntity.ok(cartService.addToCart(SecurityUtils.requireCurrentUserId(), request.goodsId, request.quantity))
 
     /**
      * Изменить количество товара в корзине
@@ -55,9 +49,9 @@ class CartController(
         @PathVariable goodsId: String,
         @RequestBody request: UpdateQuantityRequest
     ): ResponseEntity<CartItemDto> {
-        val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        val item = cartService.updateQuantity(userId, goodsId, request.quantity)
+        val item = cartService.updateQuantity(SecurityUtils.requireCurrentUserId(), goodsId, request.quantity)
             ?: return ResponseEntity.notFound().build()
+
         return ResponseEntity.ok(item)
     }
 
@@ -68,8 +62,7 @@ class CartController(
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Удалить товар из корзины", description = "Полностью удаляет товар из корзины")
     suspend fun removeItem(@PathVariable goodsId: String): ResponseEntity<Void> {
-        val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        cartService.removeFromCart(userId, goodsId)
+        cartService.removeFromCart(SecurityUtils.requireCurrentUserId(), goodsId)
         return ResponseEntity.noContent().build()
     }
 
@@ -80,8 +73,7 @@ class CartController(
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Очистить корзину", description = "Удаляет все товары из корзины")
     suspend fun clearCart(): ResponseEntity<Void> {
-        val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        cartService.clearCart(userId)
+        cartService.clearCart(SecurityUtils.requireCurrentUserId())
         return ResponseEntity.noContent().build()
     }
 
@@ -94,11 +86,8 @@ class CartController(
         summary = "Синхронизировать локальную корзину",
         description = "Объединяет товары из localStorage с серверной корзиной при логине. При конфликтах суммируются количества"
     )
-    suspend fun mergeCart(@RequestBody request: MergeCartRequest): ResponseEntity<CartSummaryDto> {
-        val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        val summary = cartService.mergeLocalCart(userId, request.items)
-        return ResponseEntity.ok(summary)
-    }
+    suspend fun mergeCart(@RequestBody request: MergeCartRequest): ResponseEntity<CartSummaryDto> =
+        ResponseEntity.ok(cartService.mergeLocalCart(SecurityUtils.requireCurrentUserId(), request.items))
 
     /**
      * Оформить заказ
@@ -107,9 +96,7 @@ class CartController(
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Оформить заказ", description = "Оформляет покупку всех товаров из корзины. Создает Purchase записи для каждого товара.")
     suspend fun checkout(): ResponseEntity<CheckoutResponse> {
-        val userId = SecurityUtils.getCurrentUserId()
-            ?: throw IllegalStateException("User not authenticated")
-
+        val userId = SecurityUtils.requireCurrentUserId()
         val cart = cartService.getCartSummary(userId)
 
         if (cart.items.isEmpty())

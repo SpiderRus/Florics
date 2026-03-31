@@ -2,6 +2,7 @@ package com.example.webflux.service
 
 import com.example.webflux.domain.model.Purchase
 import com.example.webflux.repository.PurchaseRepository
+import kotlinx.coroutines.flow.Flow
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.*
@@ -21,9 +22,7 @@ class PurchaseService(
         return purchaseRepository.save(purchase)
     }
 
-    suspend fun getUserPurchases(userId: Long): List<Purchase> {
-        return purchaseRepository.findByUserId(userId)
-    }
+    fun getUserPurchases(userId: Long): Flow<Purchase> = purchaseRepository.findByUserId(userId)
 
     suspend fun hasPurchased(userId: Long, goodsId: String): Boolean {
         return purchaseRepository.hasPurchased(userId, goodsId)

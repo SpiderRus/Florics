@@ -1,52 +1,16 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Carousel } from 'react-bootstrap';
 import VideoPlayer, { VideoPlayerHandle } from './VideoPlayer';
-
-type MediaType = 'image' | 'video';
-
-interface MediaItem {
-    type: MediaType;
-    url: string;
-    alt: string;
-}
+import { Media } from '../services/goodsService';
+import { convertMediaToItems } from '../utils/mediaUtils';
 
 interface MediaCarouselProps {
-    images: string[];
-    videoUrls?: string[];
+    media: Media[];
     goodsName: string;
     goodsId?: string | number;
 }
 
-// Функция для объединения изображений и видео
-function createMediaItems(
-    images: string[],
-    videoUrls: string[] | null | undefined,
-    goodsName: string
-): MediaItem[] {
-    const mediaItems: MediaItem[] = [];
-
-    // Добавляем изображения
-    images.forEach((url, idx) => {
-        mediaItems.push({
-            type: 'image',
-            url,
-            alt: `${goodsName} - фото ${idx + 1}`
-        });
-    });
-
-    // Добавляем видео
-    videoUrls?.forEach((url, idx) => {
-        mediaItems.push({
-            type: 'video',
-            url,
-            alt: `${goodsName} - видео ${idx + 1}`
-        });
-    });
-
-    return mediaItems;
-}
-
-const MediaCarousel: React.FC<MediaCarouselProps> = ({ images, videoUrls, goodsName, goodsId }) => {
+const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId }) => {
     // Отслеживаем битые элементы
     const [failedMedia, setFailedMedia] = useState<Set<string>>(new Set());
     // Состояние для управления автоскроллингом
@@ -58,10 +22,9 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ images, videoUrls, goodsN
     const videoRefs = useRef<Map<number, VideoPlayerHandle>>(new Map());
 
     // Объединяем медиа
-    const mediaItems = useMemo(
-        () => createMediaItems(images, videoUrls, goodsName),
-        [images, videoUrls, goodsName]
-    );
+    const mediaItems = useMemo(() => {
+        return convertMediaToItems(media, goodsName);
+    }, [media, goodsName]);
 
     // Фильтруем битые элементы
     const validMediaItems = useMemo(

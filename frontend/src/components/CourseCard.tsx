@@ -4,7 +4,7 @@ import {useNavigate} from 'react-router-dom';
 import {Goods} from '../services/goodsService';
 import {purchaseService} from '../services/purchaseService';
 import {useAuth} from '../contexts/AuthContext';
-import ImageCarousel from './ImageCarousel';
+import MediaCarousel from './MediaCarousel';
 import AddToCartButton from './AddToCartButton';
 
 interface CourseCardProps {
@@ -37,7 +37,7 @@ const CourseCard: React.FC<CourseCardProps> = ({goods}) => {
                     <Badge bg="success">Уже куплено ✓</Badge>
                 </div>
             )}
-            <ImageCarousel images={goods.images} goodsName={goods.name} goodsId={goods.id}/>
+            <MediaCarousel media={goods.media} goodsName={goods.name} goodsId={goods.id}/>
             <Card.Body className="goods-card-body">
                 <h3 className="goods-name">{goods.name}</h3>
 

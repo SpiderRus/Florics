@@ -100,8 +100,7 @@ const GoodsDetailPage: React.FC = () => {
             <Row className="mb-4">
                 <Col md={6}>
                     <LargeMediaCarousel
-                        images={goods.images}
-                        videoUrls={goods.videoGalleryUrls}
+                        media={goods.media}
                         goodsName={goods.name}
                         onMediaClick={handleMediaClick}
                     />

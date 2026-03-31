@@ -16,11 +16,8 @@ data class GoodsDto(
     @Schema(description = "Цена в рублях", example = "1500.0")
     val price: Double,
 
-    @Schema(description = "Список URL изображений")
-    val images: List<String>,
-
-    @Schema(description = "ID категории товара", example = "1")
-    val categoryId: String,
+    @Schema(description = "Список медиа-элементов (изображения и видео)")
+    val media: List<MediaDto>,
 
     @Schema(description = "Информация о категории")
     val category: CategoryDto?,
@@ -33,9 +30,6 @@ data class GoodsDto(
 
     @Schema(description = "ID видео в Kinescope для курсов", example = "kinescope_stub_12345")
     val videoUrl: String? = null,
-
-    @Schema(description = "Список URL видео для галереи товара")
-    val videoGalleryUrls: List<String>? = null,
 
     @Schema(description = "URL превью видео")
     val previewUrl: String? = null,

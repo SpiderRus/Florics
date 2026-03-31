@@ -1,15 +1,20 @@
 package com.example.webflux.controller
 
-import com.example.webflux.domain.model.Purchase
 import com.example.webflux.controller.model.PurchaseDto
 import com.example.webflux.controller.model.PurchasesResponseDto
+import com.example.webflux.domain.model.Purchase
 import com.example.webflux.security.SecurityUtils
 import com.example.webflux.service.PurchaseService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/purchases")
@@ -21,9 +26,8 @@ class PurchaseController(
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "История покупок", description = "Возвращает список купленных курсов")
     suspend fun getUserPurchases(): ResponseEntity<PurchasesResponseDto> {
-        val userId = SecurityUtils.getCurrentUserId()
-            ?: throw IllegalStateException("User not authenticated")
-        val purchases = purchaseService.getUserPurchases(userId).map { it.toDto() }
+        val purchases = purchaseService.getUserPurchases(SecurityUtils.requireCurrentUserId()).map { it.toDto() }.toList()
+
         return ResponseEntity.ok(PurchasesResponseDto(purchases))
     }
 
@@ -31,9 +35,7 @@ class PurchaseController(
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Проверка покупки", description = "Проверяет, купил ли пользователь курс")
     suspend fun hasPurchased(@PathVariable goodsId: String): ResponseEntity<HasPurchasedResponse> {
-        val userId = SecurityUtils.getCurrentUserId()
-            ?: throw IllegalStateException("User not authenticated")
-        val purchased = purchaseService.hasPurchased(userId, goodsId)
+        val purchased = purchaseService.hasPurchased(SecurityUtils.requireCurrentUserId(), goodsId)
         return ResponseEntity.ok(HasPurchasedResponse(purchased))
     }
 

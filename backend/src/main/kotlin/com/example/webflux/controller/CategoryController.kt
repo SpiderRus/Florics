@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -34,10 +36,7 @@ class CategoryController(
             )
         ]
     )
-    suspend fun getAllCategories(): ResponseEntity<List<CategoryDto>> {
-        val categories = categoryService.getAllCategories().map { it.toDto() }
-        return ResponseEntity.ok(categories)
-    }
+    fun getAllCategories(): Flow<CategoryDto> = categoryService.getAllCategories().map { it.toDto() }
 
     @GetMapping("/{id}")
     @Operation(
@@ -60,11 +59,8 @@ class CategoryController(
     suspend fun getCategoryById(
         @Parameter(description = "ID категории", example = "1")
         @PathVariable id: String
-    ): ResponseEntity<CategoryDto> {
-        val category = categoryService.getCategoryById(id)
-        return category?.let { ResponseEntity.ok(it.toDto()) }
-            ?: ResponseEntity.notFound().build()
-    }
+    ): ResponseEntity<CategoryDto> =
+        categoryService.getCategoryById(id)?.let { ResponseEntity.ok(it.toDto()) } ?: ResponseEntity.notFound().build()
 
     private fun Category.toDto() = CategoryDto(
         id = id,

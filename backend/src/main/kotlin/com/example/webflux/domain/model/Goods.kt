@@ -5,12 +5,11 @@ data class Goods(
     val name: String,
     val description: String,
     val price: Double,
-    val images: List<String>,
+    val media: List<Media>,
     val categoryId: String,
     val difficulty: String,
     val duration: Int? = null,
     val videoUrl: String? = null,
-    val videoGalleryUrls: List<String>? = null,
     val previewUrl: String? = null,
     val detailedDescription: String? = null,
     val careInstructions: String? = null

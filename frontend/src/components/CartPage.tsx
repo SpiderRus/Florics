@@ -113,7 +113,7 @@ const CartPage: React.FC = () => {
                             <td>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                     <img
-                                        src={item.goods.images[0]}
+                                        src={item.goods.media.find(m => m.type === 'image')?.url || item.goods.media[0]?.url || ''}
                                         alt={item.goods.name}
                                         style={{
                                             width: '60px',

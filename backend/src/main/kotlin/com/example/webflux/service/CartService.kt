@@ -5,8 +5,14 @@ import com.example.webflux.controller.model.CartSummaryDto
 import com.example.webflux.controller.model.LocalCartItem
 import com.example.webflux.controller.model.GoodsDto
 import com.example.webflux.controller.model.CategoryDto
+import com.example.webflux.controller.model.MediaDto
+import com.example.webflux.controller.model.ImageDto
+import com.example.webflux.controller.model.VideoDto
 import com.example.webflux.domain.model.CartItem
 import com.example.webflux.domain.model.Goods
+import com.example.webflux.domain.model.Media
+import com.example.webflux.domain.model.Image
+import com.example.webflux.domain.model.Video
 import com.example.webflux.repository.CartRepository
 import com.example.webflux.repository.GoodsRepository
 import com.example.webflux.repository.CategoryRepository
@@ -110,21 +116,25 @@ class CartService(
         return getCartSummary(userId)
     }
 
+    // Extension функция для преобразования Media в MediaDto
+    private fun Media.toDto(): MediaDto = when (this) {
+        is Image -> ImageDto(url = url, order = order)
+        is Video -> VideoDto(url = url, order = order)
+    }
+
     // Extension функция для преобразования Goods в GoodsDto
     private suspend fun Goods.toDto() = GoodsDto(
         id = id,
         name = name,
         description = description,
         price = price,
-        images = images,
-        categoryId = categoryId,
+        media = media.map { it.toDto() }.sortedBy { it.order },
         category = categoryRepository.findById(categoryId)?.let {
             CategoryDto(it.id, it.name, it.type)
         },
         difficulty = difficulty,
         duration = duration,
         videoUrl = videoUrl,
-        videoGalleryUrls = videoGalleryUrls,
         previewUrl = previewUrl,
         detailedDescription = detailedDescription,
         careInstructions = careInstructions

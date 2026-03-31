@@ -1,6 +1,10 @@
 package com.example.webflux.repository
 
 import com.example.webflux.domain.model.Review
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.mapNotNull
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 
@@ -18,8 +22,9 @@ class ReviewRepository {
         return review
     }
 
-    suspend fun findByGoodsId(goodsId: String): List<Review> {
-        val reviewIds = reviewsByGoodsId[goodsId] ?: return emptyList()
+    fun findByGoodsId(goodsId: String): Flow<Review> {
+        val reviewIds = reviewsByGoodsId[goodsId]?.asFlow() ?: return emptyFlow()
+
         return reviewIds.mapNotNull { reviewsById[it] }
     }
 

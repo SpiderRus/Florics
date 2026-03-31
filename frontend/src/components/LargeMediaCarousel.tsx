@@ -1,64 +1,26 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Carousel } from 'react-bootstrap';
 import VideoPlayer, { VideoPlayerHandle } from './VideoPlayer';
-
-type MediaType = 'image' | 'video';
-
-interface MediaItem {
-    type: MediaType;
-    url: string;
-    alt: string;
-}
+import { Media } from '../services/goodsService';
+import { convertMediaToItems, MediaItem } from '../utils/mediaUtils';
 
 interface LargeMediaCarouselProps {
-    images: string[];
-    videoUrls?: string[];
+    media: Media[];
     goodsName: string;
     onMediaClick?: (mediaItems: MediaItem[], index: number) => void;
 }
 
-// Функция для объединения изображений и видео
-function createMediaItems(
-    images: string[],
-    videoUrls: string[] | null | undefined,
-    goodsName: string
-): MediaItem[] {
-    const mediaItems: MediaItem[] = [];
-
-    // Добавляем изображения
-    images.forEach((url, idx) => {
-        mediaItems.push({
-            type: 'image',
-            url,
-            alt: `${goodsName} - фото ${idx + 1}`
-        });
-    });
-
-    // Добавляем видео
-    videoUrls?.forEach((url, idx) => {
-        mediaItems.push({
-            type: 'video',
-            url,
-            alt: `${goodsName} - видео ${idx + 1}`
-        });
-    });
-
-    return mediaItems;
-}
-
 const LargeMediaCarousel: React.FC<LargeMediaCarouselProps> = ({
-    images,
-    videoUrls,
+    media,
     goodsName,
     onMediaClick
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const videoRefs = useRef<Map<number, VideoPlayerHandle>>(new Map());
 
-    const mediaItems = useMemo(
-        () => createMediaItems(images, videoUrls, goodsName),
-        [images, videoUrls, goodsName]
-    );
+    const mediaItems = useMemo(() => {
+        return convertMediaToItems(media, goodsName);
+    }, [media, goodsName]);
 
     const handleSelect = useCallback((selectedIndex: number) => {
         // Пауза предыдущего видео

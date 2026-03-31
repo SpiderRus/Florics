@@ -44,8 +44,7 @@ const GoodsCard: React.FC<GoodsCardProps> = ({goods}) => {
         <Card className="goods-card h-100 clickable-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
             <div onClick={(e) => e.stopPropagation()}>
                 <MediaCarousel
-                    images={goods.images}
-                    videoUrls={goods.videoGalleryUrls}
+                    media={goods.media}
                     goodsName={goods.name}
                     goodsId={goods.id}
                 />

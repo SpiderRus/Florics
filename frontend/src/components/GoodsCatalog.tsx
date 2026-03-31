@@ -14,7 +14,7 @@ const GoodsCatalog: React.FC = () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await goodsService.getAllGoods();
+            const data = await goodsService.getGoodsByType('PLANT');
             setGoods(data);
         } catch (err) {
             console.error('Ошибка загрузки растений:', err);

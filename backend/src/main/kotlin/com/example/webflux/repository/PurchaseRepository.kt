@@ -1,6 +1,9 @@
 package com.example.webflux.repository
 
 import com.example.webflux.domain.model.Purchase
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.emptyFlow
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 
@@ -11,14 +14,12 @@ class PurchaseRepository {
 
     suspend fun save(purchase: Purchase): Purchase {
         storage.getOrPut(purchase.userId) { mutableListOf() }.add(purchase)
+
         return purchase
     }
 
-    suspend fun findByUserId(userId: Long): List<Purchase> {
-        return storage[userId]?.toList() ?: emptyList()
-    }
+    fun findByUserId(userId: Long): Flow<Purchase> = storage[userId]?.asFlow() ?: emptyFlow()
 
-    suspend fun hasPurchased(userId: Long, goodsId: String): Boolean {
-        return storage[userId]?.any { it.goodsId == goodsId } ?: false
-    }
+    suspend fun hasPurchased(userId: Long, goodsId: String): Boolean =
+        storage[userId]?.any { it.goodsId == goodsId } ?: false
 }

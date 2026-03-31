@@ -1,6 +1,5 @@
 package com.example.webflux.controller
 
-import com.example.webflux.domain.model.Review
 import com.example.webflux.controller.model.CreateReviewRequest
 import com.example.webflux.controller.model.GoodsRatingDto
 import com.example.webflux.controller.model.ReviewDto
@@ -10,7 +9,7 @@ import com.example.webflux.service.ReviewService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
@@ -23,44 +22,33 @@ class ReviewController(
 ) {
     @GetMapping("/{goodsId}")
     @Operation(summary = "Получить все отзывы на товар", description = "Возвращает список отзывов на товар, отсортированный по дате (новые первыми). Доступно всем пользователям.")
-    suspend fun getReviews(@PathVariable goodsId: String): Flow<ReviewDto> {
-        return reviewService.getReviewsByGoodsId(goodsId)
-            .map { it.toDto() }
-            .asFlow()
-    }
+    fun getReviews(@PathVariable goodsId: String): Flow<ReviewDto> =
+        reviewService.getReviewsByGoodsId(goodsId).map { it.toDto() }
 
     @GetMapping("/rating/{goodsId}")
     @Operation(summary = "Получить средний рейтинг товара", description = "Возвращает средний рейтинг и количество отзывов. Доступно всем пользователям.")
     suspend fun getGoodsRating(@PathVariable goodsId: String): ResponseEntity<GoodsRatingDto> {
         val (averageRating, totalReviews) = reviewService.getGoodsRating(goodsId)
+
         return ResponseEntity.ok(GoodsRatingDto(averageRating, totalReviews))
     }
 
     @PostMapping
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Создать отзыв", description = "Создает новый отзыв. Доступно только авторизованным пользователям, которые купили товар.")
-    suspend fun createReview(@RequestBody request: CreateReviewRequest): ResponseEntity<ReviewDto> {
-        val userId = SecurityUtils.getCurrentUserId()
-            ?: throw IllegalStateException("Пользователь не авторизован")
-
-        val review = reviewService.createReview(
-            userId = userId,
-            goodsId = request.goodsId,
-            rating = request.rating,
-            comment = request.comment
-        )
-
-        return ResponseEntity.ok(review.toDto())
-    }
+    suspend fun createReview(@RequestBody request: CreateReviewRequest): ResponseEntity<ReviewDto> =
+        ResponseEntity.ok(reviewService.createReview(
+                userId = SecurityUtils.requireCurrentUserId(),
+                goodsId = request.goodsId,
+                rating = request.rating,
+                comment = request.comment
+            ).toDto())
 
     @DeleteMapping("/{reviewId}")
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Удалить отзыв", description = "Удаляет отзыв. Только автор может удалить свой отзыв.")
     suspend fun deleteReview(@PathVariable reviewId: String): ResponseEntity<Void> {
-        val userId = SecurityUtils.getCurrentUserId()
-            ?: throw IllegalStateException("Пользователь не авторизован")
-
-        reviewService.deleteReview(userId, reviewId)
+        reviewService.deleteReview(SecurityUtils.requireCurrentUserId(), reviewId)
 
         return ResponseEntity.noContent().build()
     }

@@ -2,6 +2,8 @@ package com.example.webflux.repository
 
 import com.example.webflux.domain.model.Category
 import com.example.webflux.domain.model.GoodsType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -10,32 +12,32 @@ class CategoryRepository {
         "1" to Category(
             id = "1",
             name = "Лианы",
-            type = GoodsType.PHYSICAL
+            type = GoodsType.PLANT
         ),
         "2" to Category(
             id = "2",
             name = "Декоративнолиственные",
-            type = GoodsType.PHYSICAL
+            type = GoodsType.PLANT
         ),
         "3" to Category(
             id = "3",
             name = "Суккуленты",
-            type = GoodsType.PHYSICAL
+            type = GoodsType.PLANT
         ),
         "4" to Category(
             id = "4",
             name = "Папоротники",
-            type = GoodsType.PHYSICAL
+            type = GoodsType.PLANT
         ),
         "5" to Category(
             id = "5",
             name = "Цветущие",
-            type = GoodsType.PHYSICAL
+            type = GoodsType.PLANT
         ),
         "6" to Category(
             id = "6",
             name = "Флорариум",
-            type = GoodsType.PHYSICAL
+            type = GoodsType.TERRARIUM
         ),
         "7" to Category(
             id = "7",
@@ -44,11 +46,7 @@ class CategoryRepository {
         )
     )
 
-    suspend fun findAll(): List<Category> {
-        return categories.values.toList()
-    }
+    fun findAll(): Flow<Category> = categories.values.asFlow()
 
-    suspend fun findById(id: String): Category? {
-        return categories[id]
-    }
+    suspend fun findById(id: String): Category? = categories[id]
 }

@@ -14,9 +14,8 @@ const MasterClassCatalog: React.FC = () => {
         try {
             setLoading(true);
             setError(null);
-            const allPlants = await goodsService.getAllGoods();
-            const filtered = allPlants.filter(goods => goods.category?.type === 'COURSE');
-            setCourses(filtered);
+            const data = await goodsService.getGoodsByType('COURSE');
+            setCourses(data);
         } catch (err) {
             console.error('Ошибка загрузки мастер-классов:', err);
             setError('Не удалось загрузить каталог мастер-классов. Проверьте подключение к серверу.');
