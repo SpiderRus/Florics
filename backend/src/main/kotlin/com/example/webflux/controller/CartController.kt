@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*
 class CartController(
     private val cartService: CartService,
     private val purchaseService: com.example.webflux.service.PurchaseService,
-    private val plantService: com.example.webflux.service.PlantService
+    private val goodsService: com.example.webflux.service.GoodsService
 ) {
     /**
      * Получить корзину текущего пользователя с расчётом итоговой суммы
@@ -38,25 +38,25 @@ class CartController(
      */
     @PostMapping("/items")
     @PreAuthorize("hasRole('BUYER')")
-    @Operation(summary = "Добавить товар в корзину", description = "Добавляет растение в корзину или увеличивает количество если уже есть")
+    @Operation(summary = "Добавить товар в корзину", description = "Добавляет товар в корзину или увеличивает количество если уже есть")
     suspend fun addItem(@RequestBody request: AddToCartRequest): ResponseEntity<CartItemDto> {
         val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        val item = cartService.addToCart(userId, request.plantId, request.quantity)
+        val item = cartService.addToCart(userId, request.goodsId, request.quantity)
         return ResponseEntity.ok(item)
     }
 
     /**
      * Изменить количество товара в корзине
      */
-    @PutMapping("/items/{plantId}")
+    @PutMapping("/items/{goodsId}")
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Изменить количество товара", description = "Обновляет количество единиц товара в корзине")
     suspend fun updateQuantity(
-        @PathVariable plantId: String,
+        @PathVariable goodsId: String,
         @RequestBody request: UpdateQuantityRequest
     ): ResponseEntity<CartItemDto> {
         val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        val item = cartService.updateQuantity(userId, plantId, request.quantity)
+        val item = cartService.updateQuantity(userId, goodsId, request.quantity)
             ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(item)
     }
@@ -64,12 +64,12 @@ class CartController(
     /**
      * Удалить товар из корзины
      */
-    @DeleteMapping("/items/{plantId}")
+    @DeleteMapping("/items/{goodsId}")
     @PreAuthorize("hasRole('BUYER')")
-    @Operation(summary = "Удалить товар из корзины", description = "Полностью удаляет растение из корзины")
-    suspend fun removeItem(@PathVariable plantId: String): ResponseEntity<Void> {
+    @Operation(summary = "Удалить товар из корзины", description = "Полностью удаляет товар из корзины")
+    suspend fun removeItem(@PathVariable goodsId: String): ResponseEntity<Void> {
         val userId = SecurityUtils.getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-        cartService.removeFromCart(userId, plantId)
+        cartService.removeFromCart(userId, goodsId)
         return ResponseEntity.noContent().build()
     }
 
@@ -118,17 +118,17 @@ class CartController(
         // Создаём Purchase для каждого товара
         cart.items.forEach { item ->
             repeat(item.quantity) {
-                purchaseService.recordPurchase(userId, item.plant.id, item.plant.price)
+                purchaseService.recordPurchase(userId, item.goods.id, item.goods.price)
             }
         }
 
         // Подготавливаем список купленных товаров
         val purchasedItems = cart.items.map { item ->
             PurchasedItem(
-                plantId = item.plant.id,
-                plantName = item.plant.name,
+                goodsId = item.goods.id,
+                goodsName = item.goods.name,
                 quantity = item.quantity,
-                price = item.plant.price
+                price = item.goods.price
             )
         }
 

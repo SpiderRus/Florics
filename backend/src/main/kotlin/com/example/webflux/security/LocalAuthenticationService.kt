@@ -1,6 +1,6 @@
 package com.example.webflux.security
 
-import com.example.webflux.controller.model.User
+import com.example.webflux.domain.model.User
 import com.example.webflux.repository.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service

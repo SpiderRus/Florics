@@ -1,6 +1,6 @@
 package com.example.webflux.repository
 
-import com.example.webflux.controller.model.User
+import com.example.webflux.domain.model.User
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow

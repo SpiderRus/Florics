@@ -204,7 +204,7 @@ body {
 }
 
 /* Plant Card */
-.plant-card {
+.goods-card {
   background: white;
   border-radius: 15px;
   overflow: hidden;
@@ -213,44 +213,44 @@ body {
   height: 100%;
 }
 
-.plant-card:hover {
+.goods-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(74, 124, 44, 0.2);
 }
 
-.plant-card-body {
+.goods-card-body {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.plant-card-footer {
+.goods-card-footer {
   margin-top: auto;
 }
 
-.plant-name {
+.goods-name {
   color: var(--forest-green);
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 0.8rem;
 }
 
-.plant-description {
+.goods-description {
   color: var(--warm-brown);
   font-size: 0.95rem;
   line-height: 1.5;
   margin-bottom: 1rem;
 }
 
-.plant-price {
+.goods-price {
   color: var(--sage-green);
   font-size: 1.8rem;
   font-weight: 700;
   margin-top: 1rem;
 }
 
-.plant-meta {
+.goods-meta {
   display: flex;
   gap: 0.5rem;
   margin-top: 1rem;
@@ -485,33 +485,33 @@ body {
 }
 
 /* ===== Plant Detail Page ===== */
-.plant-detail-page {
+.goods-detail-page {
     padding-top: 2rem;
     padding-bottom: 3rem;
 }
 
-.plant-detail-info h1 {
+.goods-detail-info h1 {
     color: var(--forest-green);
     margin-bottom: 1rem;
 }
 
-.plant-detail-info .plant-price {
+.goods-detail-info .goods-price {
     font-size: 2rem;
     font-weight: bold;
     color: var(--sage-green);
 }
 
 /* Стиль вкладок как в записной книжке */
-.plant-tabs {
+.goods-tabs {
     margin-bottom: 0 !important;
 }
 
-.plant-tabs .nav-tabs {
+.goods-tabs .nav-tabs {
     border-bottom: none;
     margin-bottom: 0;
 }
 
-.plant-tabs .nav-tabs .nav-link {
+.goods-tabs .nav-tabs .nav-link {
     border: 2px solid transparent;
     border-bottom: 2px solid var(--sage-green);
     border-radius: 15px 15px 0 0;
@@ -524,17 +524,17 @@ body {
     transition: all 0.1s ease
 }
 
-.plant-tabs .nav-tabs .nav-link:hover {
+.goods-tabs .nav-tabs .nav-link:hover {
     background: #d5ecc5;
     border-color: var(--leaf-green);
     border-bottom-color: var(--sage-green);
 }
 
-.plant-tabs.nav-tabs .nav-item {
+.goods-tabs.nav-tabs .nav-item {
     margin-bottom: -1px;
 }
 
-.plant-tabs.nav-tabs .nav-item:has(.active) {
+.goods-tabs.nav-tabs .nav-item:has(.active) {
     background: white;
     border: 2px solid var(--sage-green);
     border-bottom: none;
@@ -542,9 +542,9 @@ body {
     /*margin-bottom: -1px;*/
 }
 
-/*.plant-tabs .nav-tabs .nav-link.active {*/
-.plant-tabs .nav-link.active,
-.plant-tabs .nav-item.show .nav-link {
+/*.goods-tabs .nav-tabs .nav-link.active {*/
+.goods-tabs .nav-link.active,
+.goods-tabs .nav-item.show .nav-link {
     background: transparent;
     border: none;
     color: var(--forest-green);
@@ -552,7 +552,7 @@ body {
     position: relative;
 }
 
-.plant-tabs .tab-content {
+.goods-tabs .tab-content {
     margin-top: 0 !important;
     padding-top: 0 !important;
 }
@@ -816,7 +816,7 @@ body {
 }
 
 /* ===== Plant Rating (on card) ===== */
-.plant-rating {
+.goods-rating {
     font-size: 0.9rem;
     color: var(--warm-brown);
     font-weight: 500;

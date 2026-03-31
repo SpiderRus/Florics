@@ -1,8 +1,10 @@
 package com.example.webflux.controller
 
+import com.example.webflux.domain.model.Review
 import com.example.webflux.controller.model.CreateReviewRequest
-import com.example.webflux.controller.model.PlantRatingDto
+import com.example.webflux.controller.model.GoodsRatingDto
 import com.example.webflux.controller.model.ReviewDto
+import com.example.webflux.controller.model.toDto
 import com.example.webflux.security.SecurityUtils
 import com.example.webflux.service.ReviewService
 import io.swagger.v3.oas.annotations.Operation
@@ -19,19 +21,19 @@ import org.springframework.web.bind.annotation.*
 class ReviewController(
     private val reviewService: ReviewService
 ) {
-    @GetMapping("/{plantId}")
+    @GetMapping("/{goodsId}")
     @Operation(summary = "Получить все отзывы на товар", description = "Возвращает список отзывов на товар, отсортированный по дате (новые первыми). Доступно всем пользователям.")
-    suspend fun getReviews(@PathVariable plantId: String): Flow<ReviewDto> {
-        return reviewService.getReviewsByPlantId(plantId)
-            .map { ReviewDto.fromReview(it) }
+    suspend fun getReviews(@PathVariable goodsId: String): Flow<ReviewDto> {
+        return reviewService.getReviewsByGoodsId(goodsId)
+            .map { it.toDto() }
             .asFlow()
     }
 
-    @GetMapping("/rating/{plantId}")
+    @GetMapping("/rating/{goodsId}")
     @Operation(summary = "Получить средний рейтинг товара", description = "Возвращает средний рейтинг и количество отзывов. Доступно всем пользователям.")
-    suspend fun getPlantRating(@PathVariable plantId: String): ResponseEntity<PlantRatingDto> {
-        val (averageRating, totalReviews) = reviewService.getPlantRating(plantId)
-        return ResponseEntity.ok(PlantRatingDto(averageRating, totalReviews))
+    suspend fun getGoodsRating(@PathVariable goodsId: String): ResponseEntity<GoodsRatingDto> {
+        val (averageRating, totalReviews) = reviewService.getGoodsRating(goodsId)
+        return ResponseEntity.ok(GoodsRatingDto(averageRating, totalReviews))
     }
 
     @PostMapping
@@ -43,12 +45,12 @@ class ReviewController(
 
         val review = reviewService.createReview(
             userId = userId,
-            plantId = request.plantId,
+            goodsId = request.goodsId,
             rating = request.rating,
             comment = request.comment
         )
 
-        return ResponseEntity.ok(ReviewDto.fromReview(review))
+        return ResponseEntity.ok(review.toDto())
     }
 
     @DeleteMapping("/{reviewId}")

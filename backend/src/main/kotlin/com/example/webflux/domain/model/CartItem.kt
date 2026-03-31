@@ -1,4 +1,4 @@
-package com.example.webflux.repository.model
+package com.example.webflux.domain.model
 
 import java.time.Instant
 
@@ -8,7 +8,7 @@ import java.time.Instant
 data class CartItem(
     val id: String,              // UUID строки корзины
     val userId: Long,            // Привязка к пользователю
-    val plantId: String,         // ID растения
+    val goodsId: String,         // ID товара
     val quantity: Int,           // Количество
     val addedAt: Instant         // Время добавления
 )

@@ -1,21 +1,21 @@
 import React, {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Container, Row, Col, Spinner, Alert, Button} from 'react-bootstrap';
-import {Plant, plantService} from '../services/plantService';
-import PlantCard from './PlantCard';
+import {Goods, goodsService} from '../services/goodsService';
+import GoodsCard from './GoodsCard';
 
-const PlantCatalog: React.FC = () => {
+const GoodsCatalog: React.FC = () => {
     const navigate = useNavigate();
-    const [plants, setPlants] = useState<Plant[]>([]);
+    const [goods, setGoods] = useState<Goods[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    const loadPlants = async () => {
+    const loadGoods = async () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await plantService.getAllPlants();
-            setPlants(data);
+            const data = await goodsService.getAllGoods();
+            setGoods(data);
         } catch (err) {
             console.error('Ошибка загрузки растений:', err);
             setError('Не удалось загрузить каталог растений. Проверьте подключение к серверу.');
@@ -25,7 +25,7 @@ const PlantCatalog: React.FC = () => {
     };
 
     useEffect(() => {
-        loadPlants();
+        loadGoods();
     }, []);
 
     if (loading) {
@@ -47,7 +47,7 @@ const PlantCatalog: React.FC = () => {
                 <Alert variant="danger" className="text-center">
                     <Alert.Heading>Ошибка</Alert.Heading>
                     <p>{error}</p>
-                    <Button variant="outline-danger" onClick={loadPlants}>
+                    <Button variant="outline-danger" onClick={loadGoods}>
                         Попробовать снова
                     </Button>
                 </Alert>
@@ -71,14 +71,14 @@ const PlantCatalog: React.FC = () => {
             </div>
 
             <Row className="g-4">
-                {plants.map((plant) => (
-                    <Col key={plant.id} xs={12} md={6} lg={4}>
-                        <PlantCard plant={plant}/>
+                {goods.map((goods) => (
+                    <Col key={goods.id} xs={12} md={6} lg={4}>
+                        <GoodsCard goods={goods}/>
                     </Col>
                 ))}
             </Row>
 
-            {plants.length === 0 && (
+            {goods.length === 0 && (
                 <Alert variant="info" className="text-center mt-4">
                     Каталог пуст. Растения скоро появятся!
                 </Alert>
@@ -87,4 +87,4 @@ const PlantCatalog: React.FC = () => {
     );
 };
 
-export default PlantCatalog;
+export default GoodsCatalog;

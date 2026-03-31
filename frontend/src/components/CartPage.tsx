@@ -26,7 +26,7 @@ const CartPage: React.FC = () => {
         : (localCartItems.length > 0 ? {
             items: localCartItems,
             totalItems: localCartItems.reduce((sum, item) => sum + item.quantity, 0),
-            totalPrice: localCartItems.reduce((sum, item) => sum + (item.plant.price * item.quantity), 0)
+            totalPrice: localCartItems.reduce((sum, item) => sum + (item.goods.price * item.quantity), 0)
         } : null);
 
     // Пустая корзина
@@ -51,10 +51,10 @@ const CartPage: React.FC = () => {
         );
     }
 
-    const handleRemove = async (plantId: string, plantName: string) => {
+    const handleRemove = async (goodsId: string, goodsName: string) => {
         try {
-            await removeItem(plantId);
-            toast.info(`${plantName} удалено из корзины`);
+            await removeItem(goodsId);
+            toast.info(`${goodsName} удалено из корзины`);
         } catch (error) {
             toast.error('Ошибка при удалении товара');
         }
@@ -113,8 +113,8 @@ const CartPage: React.FC = () => {
                             <td>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                     <img
-                                        src={item.plant.images[0]}
-                                        alt={item.plant.name}
+                                        src={item.goods.images[0]}
+                                        alt={item.goods.name}
                                         style={{
                                             width: '60px',
                                             height: '60px',
@@ -124,22 +124,22 @@ const CartPage: React.FC = () => {
                                         }}
                                     />
                                     <div>
-                                        <strong>{item.plant.name}</strong>
+                                        <strong>{item.goods.name}</strong>
                                         <div className="text-muted" style={{ fontSize: '0.85rem' }}>
-                                            {item.plant.category}
+                                            {item.goods.category}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td style={{ verticalAlign: 'middle' }}>
-                                <strong>{item.plant.price.toFixed(0)} ₽</strong>
+                                <strong>{item.goods.price.toFixed(0)} ₽</strong>
                             </td>
                             <td style={{ verticalAlign: 'middle' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
                                     <Button
                                         size="sm"
                                         variant="outline-secondary"
-                                        onClick={() => updateQuantity(item.plant.id, item.quantity - 1)}
+                                        onClick={() => updateQuantity(item.goods.id, item.quantity - 1)}
                                         disabled={loading}
                                     >
                                         −
@@ -150,7 +150,7 @@ const CartPage: React.FC = () => {
                                     <Button
                                         size="sm"
                                         variant="outline-secondary"
-                                        onClick={() => updateQuantity(item.plant.id, item.quantity + 1)}
+                                        onClick={() => updateQuantity(item.goods.id, item.quantity + 1)}
                                         disabled={loading}
                                     >
                                         +
@@ -159,14 +159,14 @@ const CartPage: React.FC = () => {
                             </td>
                             <td style={{ verticalAlign: 'middle' }}>
                                 <strong style={{ color: 'var(--sage-green)', fontSize: '1.1rem' }}>
-                                    {(item.plant.price * item.quantity).toFixed(0)} ₽
+                                    {(item.goods.price * item.quantity).toFixed(0)} ₽
                                 </strong>
                             </td>
                             <td style={{ verticalAlign: 'middle', textAlign: 'center' }}>
                                 <Button
                                     size="sm"
                                     variant="outline-danger"
-                                    onClick={() => handleRemove(item.plant.id, item.plant.name)}
+                                    onClick={() => handleRemove(item.goods.id, item.goods.name)}
                                     disabled={loading}
                                 >
                                     ✕

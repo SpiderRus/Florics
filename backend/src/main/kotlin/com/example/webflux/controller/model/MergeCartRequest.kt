@@ -14,13 +14,13 @@ data class MergeCartRequest(
 )
 
 /**
- * Элемент локальной корзины (только plantId + quantity)
+ * Элемент локальной корзины (только goodsId + quantity)
  */
 @Schema(description = "Элемент локальной корзины из localStorage")
 data class LocalCartItem(
-    @JsonProperty("plantId")
-    @Schema(description = "ID растения", example = "1")
-    val plantId: String,
+    @JsonProperty("goodsId")
+    @Schema(description = "ID товара", example = "1")
+    val goodsId: String,
 
     @JsonProperty("quantity")
     @Schema(description = "Количество единиц", example = "2")

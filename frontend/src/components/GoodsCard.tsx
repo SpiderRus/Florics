@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { Plant } from '../services/plantService';
+import { Goods } from '../services/goodsService';
 import { reviewService } from '../services/reviewService';
 import MediaCarousel from './MediaCarousel';
 import AddToCartButton from './AddToCartButton';
 
-interface PlantCardProps {
-    plant: Plant;
+interface GoodsCardProps {
+    goods: Goods;
 }
 
-const PlantCard: React.FC<PlantCardProps> = ({plant}) => {
+const GoodsCard: React.FC<GoodsCardProps> = ({goods}) => {
     const navigate = useNavigate();
     const [rating, setRating] = useState<{ averageRating: number; totalReviews: number } | null>(null);
 
     useEffect(() => {
         const loadRating = async () => {
             try {
-                const ratingData = await reviewService.getPlantRating(plant.id);
+                const ratingData = await reviewService.getGoodsRating(goods.id);
                 setRating(ratingData);
             } catch (error) {
                 console.error('Error loading rating:', error);
             }
         };
         loadRating();
-    }, [plant.id]);
+    }, [goods.id]);
 
     const getDifficultyClass = (difficulty: string): string => {
         if (difficulty === 'Легко' || difficulty.includes('Не требует'))
@@ -37,44 +37,44 @@ const PlantCard: React.FC<PlantCardProps> = ({plant}) => {
     };
 
     const handleCardClick = () => {
-        navigate(`/catalog/${plant.id}`);
+        navigate(`/catalog/${goods.id}`);
     };
 
     return (
-        <Card className="plant-card h-100 clickable-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+        <Card className="goods-card h-100 clickable-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
             <div onClick={(e) => e.stopPropagation()}>
                 <MediaCarousel
-                    images={plant.images}
-                    videoUrls={plant.videoGalleryUrls}
-                    plantName={plant.name}
-                    plantId={plant.id}
+                    images={goods.images}
+                    videoUrls={goods.videoGalleryUrls}
+                    goodsName={goods.name}
+                    goodsId={goods.id}
                 />
             </div>
-            <Card.Body className="plant-card-body">
-                <h3 className="plant-name">{plant.name}</h3>
+            <Card.Body className="goods-card-body">
+                <h3 className="goods-name">{goods.name}</h3>
 
-                <div className="plant-meta">
+                <div className="goods-meta">
                     <Badge bg="secondary" className="me-2">
-                        {plant.category}
+                        {goods.category}
                     </Badge>
-                    <span className={`difficulty-badge ${getDifficultyClass(plant.difficulty)}`}>
-                        {plant.difficulty}
+                    <span className={`difficulty-badge ${getDifficultyClass(goods.difficulty)}`}>
+                        {goods.difficulty}
                     </span>
                 </div>
 
                 {rating && rating.totalReviews > 0 && (
-                    <div className="plant-rating mb-2">
+                    <div className="goods-rating mb-2">
                         ⭐ {rating.averageRating.toFixed(1)} ({rating.totalReviews} {rating.totalReviews === 1 ? 'отзыв' : 'отзывов'})
                     </div>
                 )}
 
-                <p className="plant-description">{plant.description}</p>
+                <p className="goods-description">{goods.description}</p>
 
-                <div className="plant-card-footer">
-                    <div className="plant-price">{plant.price.toFixed(0)} ₽</div>
+                <div className="goods-card-footer">
+                    <div className="goods-price">{goods.price.toFixed(0)} ₽</div>
 
                     <div onClick={(e) => e.stopPropagation()}>
-                        <AddToCartButton plantId={plant.id} plantName={plant.name} />
+                        <AddToCartButton goodsId={goods.id} goodsName={goods.name} />
                     </div>
                 </div>
             </Card.Body>
@@ -82,4 +82,4 @@ const PlantCard: React.FC<PlantCardProps> = ({plant}) => {
     );
 };
 
-export default PlantCard;
+export default GoodsCard;

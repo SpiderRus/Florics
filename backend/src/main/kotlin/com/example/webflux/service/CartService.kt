@@ -3,9 +3,11 @@ package com.example.webflux.service
 import com.example.webflux.controller.model.CartItemDto
 import com.example.webflux.controller.model.CartSummaryDto
 import com.example.webflux.controller.model.LocalCartItem
-import com.example.webflux.repository.model.CartItem
+import com.example.webflux.controller.model.GoodsDto
+import com.example.webflux.domain.model.CartItem
+import com.example.webflux.domain.model.Goods
 import com.example.webflux.repository.CartRepository
-import com.example.webflux.repository.PlantRepository
+import com.example.webflux.repository.GoodsRepository
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.*
@@ -16,21 +18,21 @@ import java.util.*
 @Service
 class CartService(
     private val cartRepository: CartRepository,
-    private val plantRepository: PlantRepository
+    private val goodsRepository: GoodsRepository
 ) {
     /**
-     * Получить сводку корзины с полной информацией о растениях и расчётом итогов
+     * Получить сводку корзины с полной информацией о товарах и расчётом итогов
      */
     suspend fun getCartSummary(userId: Long): CartSummaryDto {
         val cartItems = cartRepository.findByUserId(userId)
 
-        // Получаем полную информацию о растениях и фильтруем несуществующие
+        // Получаем полную информацию о товарах и фильтруем несуществующие
         val itemDtos = cartItems.mapNotNull { item ->
-            val plant = plantRepository.findById(item.plantId.toLong())
-            if (plant != null) {
-                CartItemDto(item.id, plant, item.quantity, item.addedAt)
+            val goods = goodsRepository.findById(item.goodsId.toLong())
+            if (goods != null) {
+                CartItemDto(item.id, goods.toDto(), item.quantity, item.addedAt)
             } else {
-                // Растение удалено из каталога - пропускаем
+                // Товар удален из каталога - пропускаем
                 null
             }
         }
@@ -38,17 +40,17 @@ class CartService(
         return CartSummaryDto(
             items = itemDtos,
             totalItems = itemDtos.sumOf { it.quantity },
-            totalPrice = itemDtos.sumOf { it.plant.price * it.quantity }
+            totalPrice = itemDtos.sumOf { (it.goods.price * it.quantity).toDouble() }
         )
     }
 
     /**
      * Добавить товар в корзину
      */
-    suspend fun addToCart(userId: Long, plantId: String, quantity: Int): CartItemDto {
-        // Валидация: растение существует
-        val plant = plantRepository.findById(plantId.toLong())
-            ?: throw IllegalArgumentException("Plant not found: $plantId")
+    suspend fun addToCart(userId: Long, goodsId: String, quantity: Int): CartItemDto {
+        // Валидация: товар существует
+        val goods = goodsRepository.findById(goodsId.toLong())
+            ?: throw IllegalArgumentException("Goods not found: $goodsId")
 
         // Валидация: количество положительное
         require(quantity > 0) { "Quantity must be positive" }
@@ -56,35 +58,35 @@ class CartService(
         val cartItem = CartItem(
             id = UUID.randomUUID().toString(),
             userId = userId,
-            plantId = plantId,
+            goodsId = goodsId,
             quantity = quantity,
             addedAt = Instant.now()
         )
 
         val savedItem = cartRepository.addOrUpdateItem(cartItem)
-        return CartItemDto(savedItem.id, plant, savedItem.quantity, savedItem.addedAt)
+        return CartItemDto(savedItem.id, goods.toDto(), savedItem.quantity, savedItem.addedAt)
     }
 
     /**
      * Изменить количество товара в корзине
      */
-    suspend fun updateQuantity(userId: Long, plantId: String, quantity: Int): CartItemDto? {
+    suspend fun updateQuantity(userId: Long, goodsId: String, quantity: Int): CartItemDto? {
         require(quantity > 0) { "Use removeFromCart for deleting items" }
 
-        val updated = cartRepository.updateQuantity(userId, plantId, quantity)
+        val updated = cartRepository.updateQuantity(userId, goodsId, quantity)
             ?: return null
 
-        val plant = plantRepository.findById(plantId.toLong())
-            ?: throw IllegalStateException("Plant not found")
+        val goods = goodsRepository.findById(goodsId.toLong())
+            ?: throw IllegalStateException("Goods not found")
 
-        return CartItemDto(updated.id, plant, updated.quantity, updated.addedAt)
+        return CartItemDto(updated.id, goods.toDto(), updated.quantity, updated.addedAt)
     }
 
     /**
      * Удалить товар из корзины
      */
-    suspend fun removeFromCart(userId: Long, plantId: String): Boolean {
-        return cartRepository.removeItem(userId, plantId)
+    suspend fun removeFromCart(userId: Long, goodsId: String): Boolean {
+        return cartRepository.removeItem(userId, goodsId)
     }
 
     /**
@@ -104,4 +106,22 @@ class CartService(
         // Вернуть обновленную корзину
         return getCartSummary(userId)
     }
+
+    // Extension функция для преобразования Goods в GoodsDto
+    private fun Goods.toDto() = GoodsDto(
+        id = id,
+        name = name,
+        description = description,
+        price = price,
+        images = images,
+        category = category,
+        difficulty = difficulty,
+        type = type,
+        duration = duration,
+        videoUrl = videoUrl,
+        videoGalleryUrls = videoGalleryUrls,
+        previewUrl = previewUrl,
+        detailedDescription = detailedDescription,
+        careInstructions = careInstructions
+    )
 }

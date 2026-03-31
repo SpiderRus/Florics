@@ -1,5 +1,6 @@
 package com.example.webflux.controller
 
+import com.example.webflux.domain.model.User
 import com.example.webflux.controller.model.*
 import com.example.webflux.repository.UserRepository
 import com.example.webflux.security.AuthenticationService

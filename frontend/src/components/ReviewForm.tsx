@@ -5,11 +5,11 @@ import { reviewService } from '../services/reviewService';
 import { toast } from 'react-toastify';
 
 interface ReviewFormProps {
-    plantId: string;
+    goodsId: string;
     onReviewSubmitted: () => void;
 }
 
-const ReviewForm: React.FC<ReviewFormProps> = ({ plantId, onReviewSubmitted }) => {
+const ReviewForm: React.FC<ReviewFormProps> = ({ goodsId, onReviewSubmitted }) => {
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -24,7 +24,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ plantId, onReviewSubmitted }) =
 
         setSubmitting(true);
         try {
-            await reviewService.createReview({ plantId, rating, comment: comment.trim() });
+            await reviewService.createReview({ goodsId, rating, comment: comment.trim() });
             toast.success('Отзыв успешно добавлен!');
             setRating(5);
             setComment('');

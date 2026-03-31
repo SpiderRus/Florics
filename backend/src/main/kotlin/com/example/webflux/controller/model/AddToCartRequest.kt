@@ -8,9 +8,9 @@ import io.swagger.v3.oas.annotations.media.Schema
  */
 @Schema(description = "Запрос на добавление товара в корзину")
 data class AddToCartRequest(
-    @JsonProperty("plantId")
-    @Schema(description = "ID растения для добавления", example = "1", required = true)
-    val plantId: String,
+    @JsonProperty("goodsId")
+    @Schema(description = "ID товара для добавления", example = "1", required = true)
+    val goodsId: String,
 
     @JsonProperty("quantity")
     @Schema(description = "Количество единиц товара", example = "2", required = true)

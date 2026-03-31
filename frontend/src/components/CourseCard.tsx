@@ -1,17 +1,17 @@
 import React, {useState, useEffect} from 'react';
 import {Card, Badge, Button} from 'react-bootstrap';
 import {useNavigate} from 'react-router-dom';
-import {Plant} from '../services/plantService';
+import {Goods} from '../services/goodsService';
 import {purchaseService} from '../services/purchaseService';
 import {useAuth} from '../contexts/AuthContext';
 import ImageCarousel from './ImageCarousel';
 import AddToCartButton from './AddToCartButton';
 
 interface CourseCardProps {
-    plant: Plant;
+    goods: Goods;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({plant}) => {
+const CourseCard: React.FC<CourseCardProps> = ({goods}) => {
     const [isPurchased, setIsPurchased] = useState(false);
     const {isAuthenticated} = useAuth();
     const navigate = useNavigate();
@@ -19,11 +19,11 @@ const CourseCard: React.FC<CourseCardProps> = ({plant}) => {
     useEffect(() => {
         if (isAuthenticated)
             checkPurchaseStatus();
-    }, [isAuthenticated, plant.id]);
+    }, [isAuthenticated, goods.id]);
 
     const checkPurchaseStatus = async () => {
         try {
-            const result = await purchaseService.hasPurchased(plant.id);
+            const result = await purchaseService.hasPurchased(goods.id);
             setIsPurchased(result);
         } catch (error) {
             console.error('Error checking purchase status:', error);
@@ -31,42 +31,45 @@ const CourseCard: React.FC<CourseCardProps> = ({plant}) => {
     };
 
     return (
-        <Card className="plant-card h-100" style={{position: 'relative'}}>
+        <Card className="goods-card h-100" style={{position: 'relative'}}>
             {isPurchased && (
                 <div className="purchased-badge">
                     <Badge bg="success">Уже куплено ✓</Badge>
                 </div>
             )}
-            <ImageCarousel images={plant.images} plantName={plant.name} plantId={plant.id}/>
-            <Card.Body className="plant-card-body">
-                <h3 className="plant-name">{plant.name}</h3>
+            <ImageCarousel images={goods.images} goodsName={goods.name} goodsId={goods.id}/>
+            <Card.Body className="goods-card-body">
+                <h3 className="goods-name">{goods.name}</h3>
 
-                <div className="plant-meta">
+                <div className="goods-meta">
                     <Badge bg="secondary" className="me-2">
-                        🎥 {plant.category}
+                        🎥 {goods.category}
                     </Badge>
-                    {plant.duration && (
+                    {goods.duration && (
                         <Badge bg="info" className="me-2">
-                            🕒 {plant.duration} мин
+                            🕒 {goods.duration} мин
                         </Badge>
                     )}
-                    <Badge bg="primary">{plant.difficulty}</Badge>
+                    <Badge bg="primary">{goods.difficulty}</Badge>
                 </div>
 
-                <p className="plant-description">{plant.description}</p>
-                <div className="plant-price">{plant.price.toFixed(0)} ₽</div>
+                <p className="goods-description">{goods.description}</p>
 
-                {isPurchased ? (
-                    <Button
-                        variant="success"
-                        onClick={() => navigate(`/masterclass/${plant.id}`)}
-                        style={{width: '100%', borderRadius: '25px'}}
-                    >
-                        Смотреть курс →
-                    </Button>
-                ) : (
-                    <AddToCartButton plantId={plant.id} plantName={plant.name}/>
-                )}
+                <div className="goods-card-footer">
+                    <div className="goods-price">{goods.price.toFixed(0)} ₽</div>
+
+                    {isPurchased ? (
+                        <Button
+                            variant="success"
+                            onClick={() => navigate(`/masterclass/${goods.id}`)}
+                            style={{width: '100%', borderRadius: '25px'}}
+                        >
+                            Смотреть курс →
+                        </Button>
+                    ) : (
+                        <AddToCartButton goodsId={goods.id} goodsName={goods.name}/>
+                    )}
+                </div>
             </Card.Body>
         </Card>
     );

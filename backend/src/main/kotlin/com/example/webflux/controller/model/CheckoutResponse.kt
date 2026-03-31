@@ -21,10 +21,10 @@ data class CheckoutResponse(
 @Schema(description = "Купленный товар")
 data class PurchasedItem(
     @Schema(description = "ID товара", example = "1")
-    val plantId: String,
+    val goodsId: String,
 
     @Schema(description = "Название товара", example = "Монстера деликатесная")
-    val plantName: String,
+    val goodsName: String,
 
     @Schema(description = "Количество", example = "2")
     val quantity: Int,

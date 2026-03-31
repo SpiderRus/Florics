@@ -1,12 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Container, Row, Col, Spinner, Alert, Button} from 'react-bootstrap';
-import {Plant, plantService} from '../services/plantService';
-import PlantCard from './PlantCard';
+import {Goods, goodsService} from '../services/goodsService';
+import GoodsCard from './GoodsCard';
 
 const TerrariumCatalog: React.FC = () => {
     const navigate = useNavigate();
-    const [terrariums, setTerrariums] = useState<Plant[]>([]);
+    const [terrariums, setTerrariums] = useState<Goods[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -14,8 +14,8 @@ const TerrariumCatalog: React.FC = () => {
         try {
             setLoading(true);
             setError(null);
-            const allPlants = await plantService.getAllPlants();
-            const filtered = allPlants.filter(plant => plant.category === 'Флорариум');
+            const allPlants = await goodsService.getAllGoods();
+            const filtered = allPlants.filter(goods => goods.category === 'Флорариум');
             setTerrariums(filtered);
         } catch (err) {
             console.error('Ошибка загрузки флорариумов:', err);
@@ -89,7 +89,7 @@ const TerrariumCatalog: React.FC = () => {
             <Row className="g-4">
                 {terrariums.map((terrarium) => (
                     <Col key={terrarium.id} xs={12} md={6} lg={4}>
-                        <PlantCard plant={terrarium}/>
+                        <GoodsCard goods={terrarium}/>
                     </Col>
                 ))}
             </Row>

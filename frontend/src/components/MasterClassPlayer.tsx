@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
 import {Container, Row, Col, Card, Badge, Button, Spinner} from 'react-bootstrap';
-import {Plant, plantService} from '../services/plantService';
+import {Goods, goodsService} from '../services/goodsService';
 import {purchaseService} from '../services/purchaseService';
 import {useAuth} from '../contexts/AuthContext';
 
@@ -9,7 +9,7 @@ const MasterClassPlayer: React.FC = () => {
     const {id} = useParams<{ id: string }>();
     const {isAuthenticated, loading: authLoading} = useAuth();
     const navigate = useNavigate();
-    const [course, setCourse] = useState<Plant | null>(null);
+    const [course, setCourse] = useState<Goods | null>(null);
     const [isPurchased, setIsPurchased] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -24,8 +24,8 @@ const MasterClassPlayer: React.FC = () => {
 
     const loadCourse = async () => {
         try {
-            const plant = await plantService.getPlantById(Number(id!));
-            setCourse(plant);
+            const goods = await goodsService.getGoodsById(Number(id!));
+            setCourse(goods);
 
             const purchased = await purchaseService.hasPurchased(id!);
             setIsPurchased(purchased);

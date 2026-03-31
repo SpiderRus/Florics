@@ -4,11 +4,11 @@ import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
 
 interface AddToCartButtonProps {
-    plantId: string;
-    plantName: string;
+    goodsId: string;
+    goodsName: string;
 }
 
-const AddToCartButton: React.FC<AddToCartButtonProps> = ({ plantId, plantName }) => {
+const AddToCartButton: React.FC<AddToCartButtonProps> = ({ goodsId, goodsName }) => {
     const { addToCart } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
@@ -49,8 +49,8 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({ plantId, plantName })
         }
 
         try {
-            await addToCart(plantId, quantity);
-            toast.success(`🛒 ${plantName} добавлено в корзину (${quantity} шт)`);
+            await addToCart(goodsId, quantity);
+            toast.success(`🛒 ${goodsName} добавлено в корзину (${quantity} шт)`);
             setQuantity(1);
         } catch (error) {
             toast.error('❌ Ошибка при добавлении в корзину');

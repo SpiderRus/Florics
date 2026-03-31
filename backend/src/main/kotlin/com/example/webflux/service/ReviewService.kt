@@ -1,6 +1,6 @@
 package com.example.webflux.service
 
-import com.example.webflux.repository.model.Review
+import com.example.webflux.domain.model.Review
 import com.example.webflux.repository.ReviewRepository
 import com.example.webflux.repository.UserRepository
 import org.springframework.stereotype.Service
@@ -13,9 +13,9 @@ class ReviewService(
     private val purchaseService: PurchaseService,
     private val userRepository: UserRepository
 ) {
-    suspend fun createReview(userId: Long, plantId: String, rating: Int, comment: String): Review {
+    suspend fun createReview(userId: Long, goodsId: String, rating: Int, comment: String): Review {
         // Проверка: купил ли пользователь этот товар
-        if (!purchaseService.hasPurchased(userId, plantId))
+        if (!purchaseService.hasPurchased(userId, goodsId))
             throw IllegalStateException("Вы можете оставить отзыв только на купленные товары")
 
         // Валидация рейтинга
@@ -28,7 +28,7 @@ class ReviewService(
 
         val review = Review(
             id = UUID.randomUUID().toString(),
-            plantId = plantId,
+            goodsId = goodsId,
             userId = userId,
             userName = user.name,
             rating = rating,
@@ -40,13 +40,13 @@ class ReviewService(
         return reviewRepository.save(review)
     }
 
-    suspend fun getReviewsByPlantId(plantId: String): List<Review> {
-        return reviewRepository.findByPlantId(plantId)
+    suspend fun getReviewsByGoodsId(goodsId: String): List<Review> {
+        return reviewRepository.findByGoodsId(goodsId)
             .sortedByDescending { it.createdAt }
     }
 
-    suspend fun getPlantRating(plantId: String): Pair<Double, Int> {
-        val reviews = reviewRepository.findByPlantId(plantId)
+    suspend fun getGoodsRating(goodsId: String): Pair<Double, Int> {
+        val reviews = reviewRepository.findByGoodsId(goodsId)
         if (reviews.isEmpty())
             return Pair(0.0, 0)
 

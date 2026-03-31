@@ -1,10 +1,10 @@
-package com.example.webflux.repository.model
+package com.example.webflux.domain.model
 
 import java.time.Instant
 
 data class Review(
     val id: String,
-    val plantId: String,
+    val goodsId: String,
     val userId: Long,
     val userName: String,
     val rating: Int,

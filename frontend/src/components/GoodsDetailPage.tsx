@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Tabs, Tab, Spinner, Alert } from 'react-bootstrap';
-import { plantService, Plant } from '../services/plantService';
+import { goodsService, Goods } from '../services/goodsService';
 import { reviewService } from '../services/reviewService';
 import { purchaseService } from '../services/purchaseService';
 import { Review } from '../types/review';
@@ -12,12 +12,12 @@ import ReviewForm from './ReviewForm';
 import AddToCartButton from './AddToCartButton';
 import { useAuth } from '../contexts/AuthContext';
 
-const PlantDetailPage: React.FC = () => {
+const GoodsDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
 
-    const [plant, setPlant] = useState<Plant | null>(null);
+    const [goods, setGoods] = useState<Goods | null>(null);
     const [reviews, setReviews] = useState<Review[]>([]);
     const [hasPurchased, setHasPurchased] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -34,12 +34,12 @@ const PlantDetailPage: React.FC = () => {
                 setLoading(true);
                 setError(null);
 
-                const plantData = await plantService.getPlantById(Number(id));
-                if (!plantData) {
+                const goodsData = await goodsService.getGoodsById(Number(id));
+                if (!goodsData) {
                     setError('Товар не найден');
                     return;
                 }
-                setPlant(plantData);
+                setGoods(goodsData);
 
                 const reviewsData = await reviewService.getReviews(id);
                 setReviews(reviewsData);
@@ -80,7 +80,7 @@ const PlantDetailPage: React.FC = () => {
         );
     }
 
-    if (error || !plant) {
+    if (error || !goods) {
         return (
             <Container className="my-5">
                 <Alert variant="danger">
@@ -96,44 +96,44 @@ const PlantDetailPage: React.FC = () => {
     const canLeaveReview = isAuthenticated && hasPurchased;
 
     return (
-        <Container className="plant-detail-page my-4">
+        <Container className="goods-detail-page my-4">
             <Row className="mb-4">
                 <Col md={6}>
                     <LargeMediaCarousel
-                        images={plant.images}
-                        videoUrls={plant.videoGalleryUrls}
-                        plantName={plant.name}
+                        images={goods.images}
+                        videoUrls={goods.videoGalleryUrls}
+                        goodsName={goods.name}
                         onMediaClick={handleMediaClick}
                     />
                 </Col>
-                <Col md={6} className="plant-detail-info">
-                    <h1 className="plant-name">{plant.name}</h1>
-                    <p className="plant-description">{plant.description}</p>
-                    <div className="plant-meta mb-3">
-                        <span className="badge bg-secondary me-2">{plant.category}</span>
-                        <span className="badge bg-info">{plant.difficulty}</span>
+                <Col md={6} className="goods-detail-info">
+                    <h1 className="goods-name">{goods.name}</h1>
+                    <p className="goods-description">{goods.description}</p>
+                    <div className="goods-meta mb-3">
+                        <span className="badge bg-secondary me-2">{goods.category}</span>
+                        <span className="badge bg-info">{goods.difficulty}</span>
                     </div>
-                    <h3 className="plant-price mb-3">{plant.price.toFixed(0)} ₽</h3>
-                    <AddToCartButton plantId={plant.id} plantName={plant.name} />
+                    <h3 className="goods-price mb-3">{goods.price.toFixed(0)} ₽</h3>
+                    <AddToCartButton goodsId={goods.id} goodsName={goods.name} />
                 </Col>
             </Row>
 
             <Row>
                 <Col>
-                    <Tabs defaultActiveKey="description" className="plant-tabs">
+                    <Tabs defaultActiveKey="description" className="goods-tabs">
                         <Tab eventKey="description" title="Описание">
                             <div className="tab-content-box">
-                                {plant.detailedDescription ? (
-                                    <p style={{ whiteSpace: 'pre-line' }}>{plant.detailedDescription}</p>
+                                {goods.detailedDescription ? (
+                                    <p style={{ whiteSpace: 'pre-line' }}>{goods.detailedDescription}</p>
                                 ) : (
-                                    <p>{plant.description}</p>
+                                    <p>{goods.description}</p>
                                 )}
                             </div>
                         </Tab>
                         <Tab eventKey="care" title="Уход">
                             <div className="tab-content-box">
-                                {plant.careInstructions ? (
-                                    <p style={{ whiteSpace: 'pre-line' }}>{plant.careInstructions}</p>
+                                {goods.careInstructions ? (
+                                    <p style={{ whiteSpace: 'pre-line' }}>{goods.careInstructions}</p>
                                 ) : (
                                     <p>Информация по уходу скоро появится.</p>
                                 )}
@@ -143,7 +143,7 @@ const PlantDetailPage: React.FC = () => {
                             <div className="tab-content-box">
                                 <ReviewList reviews={reviews} />
                                 {canLeaveReview ? (
-                                    <ReviewForm plantId={plant.id} onReviewSubmitted={handleReviewSubmitted} />
+                                    <ReviewForm goodsId={goods.id} onReviewSubmitted={handleReviewSubmitted} />
                                 ) : isAuthenticated ? (
                                     <Alert variant="info" className="mt-3">
                                         Купите товар, чтобы оставить отзыв
@@ -170,4 +170,4 @@ const PlantDetailPage: React.FC = () => {
     );
 };
 
-export default PlantDetailPage;
+export default GoodsDetailPage;

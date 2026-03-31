@@ -1,13 +1,13 @@
 package com.example.webflux.controller.model
 
-import com.example.webflux.repository.model.Review
+import com.example.webflux.domain.model.Review
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
 @Schema(description = "Запрос на создание отзыва")
 data class CreateReviewRequest(
     @Schema(description = "ID товара", example = "1")
-    val plantId: String,
+    val goodsId: String,
 
     @Schema(description = "Рейтинг от 1 до 5", example = "5")
     val rating: Int,
@@ -22,7 +22,7 @@ data class ReviewDto(
     val id: String,
 
     @Schema(description = "ID товара")
-    val plantId: String,
+    val goodsId: String,
 
     @Schema(description = "Имя автора")
     val userName: String,
@@ -38,22 +38,21 @@ data class ReviewDto(
 
     @Schema(description = "Дата обновления")
     val updatedAt: Instant
-) {
-    companion object {
-        fun fromReview(review: Review) = ReviewDto(
-            id = review.id,
-            plantId = review.plantId,
-            userName = review.userName,
-            rating = review.rating,
-            comment = review.comment,
-            createdAt = review.createdAt,
-            updatedAt = review.updatedAt
-        )
-    }
-}
+)
+
+// Extension функция для преобразования domain entity в DTO
+fun Review.toDto() = ReviewDto(
+    id = id,
+    goodsId = goodsId,
+    userName = userName,
+    rating = rating,
+    comment = comment,
+    createdAt = createdAt,
+    updatedAt = updatedAt
+)
 
 @Schema(description = "Средний рейтинг товара")
-data class PlantRatingDto(
+data class GoodsRatingDto(
     @Schema(description = "Средний рейтинг (0.0 если нет отзывов)", example = "4.5")
     val averageRating: Double,
 

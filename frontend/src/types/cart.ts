@@ -1,8 +1,8 @@
-import { Plant } from '../services/plantService';
+import { Goods } from '../services/goodsService';
 
 export interface CartItem {
     id: string;
-    plant: Plant;
+    goods: Goods;
     quantity: number;
     addedAt: string;
 }
@@ -14,12 +14,12 @@ export interface CartSummary {
 }
 
 export interface LocalCartItem {
-    plantId: string;
+    goodsId: string;
     quantity: number;
 }
 
 export interface AddToCartRequest {
-    plantId: string;
+    goodsId: string;
     quantity: number;
 }
 
@@ -39,8 +39,8 @@ export interface CheckoutResponse {
 }
 
 export interface PurchasedItem {
-    plantId: string;
-    plantName: string;
+    goodsId: string;
+    goodsName: string;
     quantity: number;
     price: number;
 }

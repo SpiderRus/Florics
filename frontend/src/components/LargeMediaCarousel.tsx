@@ -13,7 +13,7 @@ interface MediaItem {
 interface LargeMediaCarouselProps {
     images: string[];
     videoUrls?: string[];
-    plantName: string;
+    goodsName: string;
     onMediaClick?: (mediaItems: MediaItem[], index: number) => void;
 }
 
@@ -21,7 +21,7 @@ interface LargeMediaCarouselProps {
 function createMediaItems(
     images: string[],
     videoUrls: string[] | null | undefined,
-    plantName: string
+    goodsName: string
 ): MediaItem[] {
     const mediaItems: MediaItem[] = [];
 
@@ -30,7 +30,7 @@ function createMediaItems(
         mediaItems.push({
             type: 'image',
             url,
-            alt: `${plantName} - фото ${idx + 1}`
+            alt: `${goodsName} - фото ${idx + 1}`
         });
     });
 
@@ -39,7 +39,7 @@ function createMediaItems(
         mediaItems.push({
             type: 'video',
             url,
-            alt: `${plantName} - видео ${idx + 1}`
+            alt: `${goodsName} - видео ${idx + 1}`
         });
     });
 
@@ -49,15 +49,15 @@ function createMediaItems(
 const LargeMediaCarousel: React.FC<LargeMediaCarouselProps> = ({
     images,
     videoUrls,
-    plantName,
+    goodsName,
     onMediaClick
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const videoRefs = useRef<Map<number, VideoPlayerHandle>>(new Map());
 
     const mediaItems = useMemo(
-        () => createMediaItems(images, videoUrls, plantName),
-        [images, videoUrls, plantName]
+        () => createMediaItems(images, videoUrls, goodsName),
+        [images, videoUrls, goodsName]
     );
 
     const handleSelect = useCallback((selectedIndex: number) => {

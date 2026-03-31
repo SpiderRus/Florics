@@ -13,15 +13,15 @@ interface MediaItem {
 interface MediaCarouselProps {
     images: string[];
     videoUrls?: string[];
-    plantName: string;
-    plantId?: string | number;
+    goodsName: string;
+    goodsId?: string | number;
 }
 
 // Функция для объединения изображений и видео
 function createMediaItems(
     images: string[],
     videoUrls: string[] | null | undefined,
-    plantName: string
+    goodsName: string
 ): MediaItem[] {
     const mediaItems: MediaItem[] = [];
 
@@ -30,7 +30,7 @@ function createMediaItems(
         mediaItems.push({
             type: 'image',
             url,
-            alt: `${plantName} - фото ${idx + 1}`
+            alt: `${goodsName} - фото ${idx + 1}`
         });
     });
 
@@ -39,14 +39,14 @@ function createMediaItems(
         mediaItems.push({
             type: 'video',
             url,
-            alt: `${plantName} - видео ${idx + 1}`
+            alt: `${goodsName} - видео ${idx + 1}`
         });
     });
 
     return mediaItems;
 }
 
-const MediaCarousel: React.FC<MediaCarouselProps> = ({ images, videoUrls, plantName, plantId }) => {
+const MediaCarousel: React.FC<MediaCarouselProps> = ({ images, videoUrls, goodsName, goodsId }) => {
     // Отслеживаем битые элементы
     const [failedMedia, setFailedMedia] = useState<Set<string>>(new Set());
     // Состояние для управления автоскроллингом
@@ -59,8 +59,8 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ images, videoUrls, plantN
 
     // Объединяем медиа
     const mediaItems = useMemo(
-        () => createMediaItems(images, videoUrls, plantName),
-        [images, videoUrls, plantName]
+        () => createMediaItems(images, videoUrls, goodsName),
+        [images, videoUrls, goodsName]
     );
 
     // Фильтруем битые элементы
@@ -120,7 +120,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ images, videoUrls, plantN
         return (
             <img
                 src={placeholderImage}
-                alt={`${plantName} - медиа недоступно`}
+                alt={`${goodsName} - медиа недоступно`}
                 style={{
                     width: '100%',
                     height: '250px',
@@ -176,7 +176,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ images, videoUrls, plantN
             }}
         >
             <Carousel
-                key={`carousel-${plantId}`}
+                key={`carousel-${goodsId}`}
                 interval={isHovered && !isManuallyPaused ? 2000 : null}
                 pause={false}
                 onSelect={handleSlideChange}

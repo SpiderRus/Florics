@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartSummary, CartItem } from '../types/cart';
 import { cartService } from '../services/cartService';
-import { plantService } from '../services/plantService';
+import { goodsService } from '../services/goodsService';
 import { useAuth } from './AuthContext';
 import { toast } from 'react-toastify';
 
@@ -10,9 +10,9 @@ interface CartContextType {
     localCartCount: number;
     localCartItems: CartItem[];
     loading: boolean;
-    addToCart: (plantId: string, quantity: number) => Promise<void>;
-    updateQuantity: (plantId: string, quantity: number) => Promise<void>;
-    removeItem: (plantId: string) => Promise<void>;
+    addToCart: (goodsId: string, quantity: number) => Promise<void>;
+    updateQuantity: (goodsId: string, quantity: number) => Promise<void>;
+    removeItem: (goodsId: string) => Promise<void>;
     clearCart: () => Promise<void>;
     refreshCart: () => Promise<void>;
     getTotalItems: () => number;
@@ -125,17 +125,17 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setLoading(true);
         try {
             // Загружаем детали растений для каждого товара
-            const plants = await plantService.getAllPlants();
+            const plants = await goodsService.getAllGoods();
             const plantsMap = new Map(plants.map(p => [p.id, p]));
 
             const items: CartItem[] = localItems
                 .map(localItem => {
-                    const plant = plantsMap.get(localItem.plantId);
-                    if (!plant) return null; // Растение удалено из каталога
+                    const goods = plantsMap.get(localItem.goodsId);
+                    if (!goods) return null; // Растение удалено из каталога
 
                     return {
-                        id: `local-${localItem.plantId}`,
-                        plant,
+                        id: `local-${localItem.goodsId}`,
+                        goods,
                         quantity: localItem.quantity,
                         addedAt: new Date().toISOString()
                     };
@@ -152,33 +152,33 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const addToCart = async (plantId: string, quantity: number) => {
+    const addToCart = async (goodsId: string, quantity: number) => {
         if (isAuthenticated) {
             const previousCart = cart;
 
             // Optimistic update для существующих товаров
             if (cart) {
-                const existingItem = cart.items.find(item => item.plant.id === plantId);
+                const existingItem = cart.items.find(item => item.goods.id === goodsId);
 
                 if (existingItem) {
                     // Увеличиваем количество оптимистично
                     const optimisticCart: CartSummary = {
                         items: cart.items.map(item =>
-                            item.plant.id === plantId
+                            item.goods.id === goodsId
                                 ? { ...item, quantity: item.quantity + quantity }
                                 : item
                         ),
                         totalItems: cart.totalItems + quantity,
-                        totalPrice: cart.totalPrice + (existingItem.plant.price * quantity)
+                        totalPrice: cart.totalPrice + (existingItem.goods.price * quantity)
                     };
                     setCart(optimisticCart);
                 }
             }
 
             try {
-                await cartService.addToCart(plantId, quantity);
+                await cartService.addToCart(goodsId, quantity);
                 // Если товар был новый (не было оптимистичного обновления), загружаем с сервера
-                if (cart && !cart.items.find(item => item.plant.id === plantId))
+                if (cart && !cart.items.find(item => item.goods.id === goodsId))
                     await loadServerCart();
             } catch (error) {
                 console.error('Failed to add to cart:', error);
@@ -190,11 +190,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const previousLocalItems = localCartItems;
 
             // Optimistic update для localStorage корзины
-            const existingItem = localCartItems.find(item => item.plant.id === plantId);
+            const existingItem = localCartItems.find(item => item.goods.id === goodsId);
             if (existingItem) {
                 // Увеличиваем количество оптимистично
                 const updatedItems = localCartItems.map(item =>
-                    item.plant.id === plantId
+                    item.goods.id === goodsId
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
@@ -202,7 +202,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
 
             try {
-                cartService.addToLocalCart(plantId, quantity);
+                cartService.addToLocalCart(goodsId, quantity);
                 updateLocalCartCount();
                 // Если товар был новый, загружаем детали с сервера
                 if (!existingItem)
@@ -215,7 +215,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const updateQuantity = async (plantId: string, quantity: number) => {
+    const updateQuantity = async (goodsId: string, quantity: number) => {
         if (isAuthenticated) {
             const previousCart = cart;
 
@@ -223,28 +223,28 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (cart) {
                 if (quantity <= 0) {
                     // Удаление
-                    const removedItem = cart.items.find(i => i.plant.id === plantId);
+                    const removedItem = cart.items.find(i => i.goods.id === goodsId);
                     if (removedItem) {
                         const optimisticCart: CartSummary = {
-                            items: cart.items.filter(item => item.plant.id !== plantId),
+                            items: cart.items.filter(item => item.goods.id !== goodsId),
                             totalItems: cart.totalItems - removedItem.quantity,
-                            totalPrice: cart.totalPrice - (removedItem.quantity * removedItem.plant.price)
+                            totalPrice: cart.totalPrice - (removedItem.quantity * removedItem.goods.price)
                         };
                         setCart(optimisticCart);
                     }
                 } else {
                     // Изменение количества
-                    const item = cart.items.find(i => i.plant.id === plantId);
+                    const item = cart.items.find(i => i.goods.id === goodsId);
                     if (item) {
                         const diff = quantity - item.quantity;
                         const optimisticCart: CartSummary = {
                             items: cart.items.map(cartItem =>
-                                cartItem.plant.id === plantId
+                                cartItem.goods.id === goodsId
                                     ? { ...cartItem, quantity }
                                     : cartItem
                             ),
                             totalItems: cart.totalItems + diff,
-                            totalPrice: cart.totalPrice + (diff * item.plant.price)
+                            totalPrice: cart.totalPrice + (diff * item.goods.price)
                         };
                         setCart(optimisticCart);
                     }
@@ -253,9 +253,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             try {
                 if (quantity <= 0)
-                    await cartService.removeItem(plantId);
+                    await cartService.removeItem(goodsId);
                 else
-                    await cartService.updateQuantity(plantId, quantity);
+                    await cartService.updateQuantity(goodsId, quantity);
                 // НЕ перезагружаем корзину с сервера - оптимистичное обновление уже применено
             } catch (error) {
                 console.error('Failed to update quantity:', error);
@@ -270,12 +270,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // Optimistic update для localStorage корзины
             if (quantity <= 0) {
                 // Удаление
-                const updatedItems = localCartItems.filter(item => item.plant.id !== plantId);
+                const updatedItems = localCartItems.filter(item => item.goods.id !== goodsId);
                 setLocalCartItems(updatedItems);
             } else {
                 // Изменение количества
                 const updatedItems = localCartItems.map(item =>
-                    item.plant.id === plantId
+                    item.goods.id === goodsId
                         ? { ...item, quantity }
                         : item
                 );
@@ -283,7 +283,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
 
             try {
-                cartService.updateLocalQuantity(plantId, quantity);
+                cartService.updateLocalQuantity(goodsId, quantity);
                 updateLocalCartCount();
             } catch (error) {
                 console.error('Failed to update local quantity:', error);
@@ -293,25 +293,25 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const removeItem = async (plantId: string) => {
+    const removeItem = async (goodsId: string) => {
         if (isAuthenticated) {
             const previousCart = cart;
 
             // Optimistic delete
             if (cart) {
-                const removedItem = cart.items.find(item => item.plant.id === plantId);
+                const removedItem = cart.items.find(item => item.goods.id === goodsId);
                 if (removedItem) {
                     const optimisticCart: CartSummary = {
-                        items: cart.items.filter(item => item.plant.id !== plantId),
+                        items: cart.items.filter(item => item.goods.id !== goodsId),
                         totalItems: cart.totalItems - removedItem.quantity,
-                        totalPrice: cart.totalPrice - (removedItem.quantity * removedItem.plant.price)
+                        totalPrice: cart.totalPrice - (removedItem.quantity * removedItem.goods.price)
                     };
                     setCart(optimisticCart);
                 }
             }
 
             try {
-                await cartService.removeItem(plantId);
+                await cartService.removeItem(goodsId);
                 // НЕ перезагружаем корзину с сервера - оптимистичное обновление уже применено
             } catch (error) {
                 console.error('Failed to remove item:', error);
@@ -323,11 +323,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const previousLocalItems = localCartItems;
 
             // Optimistic delete для localStorage корзины
-            const updatedItems = localCartItems.filter(item => item.plant.id !== plantId);
+            const updatedItems = localCartItems.filter(item => item.goods.id !== goodsId);
             setLocalCartItems(updatedItems);
 
             try {
-                cartService.removeFromLocalCart(plantId);
+                cartService.removeFromLocalCart(goodsId);
                 updateLocalCartCount();
             } catch (error) {
                 console.error('Failed to remove from local cart:', error);

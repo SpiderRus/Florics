@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
-export interface Plant {
+export interface Goods {
     id: string;
     name: string;
     description: string;
@@ -19,14 +19,14 @@ export interface Plant {
     careInstructions?: string | null;
 }
 
-export const plantService = {
-    getAllPlants: async (): Promise<Plant[]> => {
-        const response = await axios.get<Plant[]>(`${API_BASE_URL}/plants`);
+export const goodsService = {
+    getAllGoods: async (): Promise<Goods[]> => {
+        const response = await axios.get<Goods[]>(`${API_BASE_URL}/goods`);
         return response.data;
     },
 
-    getPlantById: async (id: number): Promise<Plant> => {
-        const response = await axios.get<Plant>(`${API_BASE_URL}/plants/${id}`);
+    getGoodsById: async (id: number): Promise<Goods> => {
+        const response = await axios.get<Goods>(`${API_BASE_URL}/goods/${id}`);
         return response.data;
     }
 };

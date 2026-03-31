@@ -1,6 +1,6 @@
 export interface Review {
     id: string;
-    plantId: string;
+    goodsId: string;
     userName: string;
     rating: number;
     comment: string;
@@ -9,12 +9,12 @@ export interface Review {
 }
 
 export interface CreateReviewRequest {
-    plantId: string;
+    goodsId: string;
     rating: number;
     comment: string;
 }
 
-export interface PlantRating {
+export interface GoodsRating {
     averageRating: number;
     totalReviews: number;
 }

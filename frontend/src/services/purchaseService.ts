@@ -1,16 +1,16 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
 interface HasPurchasedResponse {
     purchased: boolean;
 }
 
 export const purchaseService = {
-    hasPurchased: async (plantId: string): Promise<boolean> => {
+    hasPurchased: async (goodsId: string): Promise<boolean> => {
         try {
             const response = await axios.get<HasPurchasedResponse>(
-                `${API_BASE_URL}/purchases/has-purchased/${plantId}`
+                `${API_BASE_URL}/purchases/has-purchased/${goodsId}`
             );
             return response.data.purchased;
         } catch (error) {

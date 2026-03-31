@@ -2,8 +2,8 @@ package com.example.webflux.controller.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 
-@Schema(description = "Модель товара (растение или мастер-класс)")
-data class Plant(
+@Schema(description = "Модель товара для API")
+data class GoodsDto(
     @Schema(description = "Уникальный идентификатор", example = "1")
     val id: String,
 

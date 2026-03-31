@@ -1,6 +1,8 @@
 package com.example.webflux.controller
 
-import com.example.webflux.repository.model.Purchase
+import com.example.webflux.domain.model.Purchase
+import com.example.webflux.controller.model.PurchaseDto
+import com.example.webflux.controller.model.PurchasesResponseDto
 import com.example.webflux.security.SecurityUtils
 import com.example.webflux.service.PurchaseService
 import io.swagger.v3.oas.annotations.Operation
@@ -18,23 +20,31 @@ class PurchaseController(
     @GetMapping
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "История покупок", description = "Возвращает список купленных курсов")
-    suspend fun getUserPurchases(): ResponseEntity<PurchasesResponse> {
+    suspend fun getUserPurchases(): ResponseEntity<PurchasesResponseDto> {
         val userId = SecurityUtils.getCurrentUserId()
             ?: throw IllegalStateException("User not authenticated")
-        val purchases = purchaseService.getUserPurchases(userId)
-        return ResponseEntity.ok(PurchasesResponse(purchases))
+        val purchases = purchaseService.getUserPurchases(userId).map { it.toDto() }
+        return ResponseEntity.ok(PurchasesResponseDto(purchases))
     }
 
-    @GetMapping("/has-purchased/{plantId}")
+    @GetMapping("/has-purchased/{goodsId}")
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Проверка покупки", description = "Проверяет, купил ли пользователь курс")
-    suspend fun hasPurchased(@PathVariable plantId: String): ResponseEntity<HasPurchasedResponse> {
+    suspend fun hasPurchased(@PathVariable goodsId: String): ResponseEntity<HasPurchasedResponse> {
         val userId = SecurityUtils.getCurrentUserId()
             ?: throw IllegalStateException("User not authenticated")
-        val purchased = purchaseService.hasPurchased(userId, plantId)
+        val purchased = purchaseService.hasPurchased(userId, goodsId)
         return ResponseEntity.ok(HasPurchasedResponse(purchased))
     }
+
+    // Extension функция для преобразования domain entity в DTO
+    private fun Purchase.toDto() = PurchaseDto(
+        id = id,
+        goodsId = goodsId,
+        price = price,
+        purchaseDate = purchaseDate,
+        quantity = quantity
+    )
 }
 
-data class PurchasesResponse(val purchases: List<Purchase>)
 data class HasPurchasedResponse(val purchased: Boolean)

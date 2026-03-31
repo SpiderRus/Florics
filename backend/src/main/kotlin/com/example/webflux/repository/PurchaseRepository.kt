@@ -1,6 +1,6 @@
 package com.example.webflux.repository
 
-import com.example.webflux.repository.model.Purchase
+import com.example.webflux.domain.model.Purchase
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 
@@ -18,7 +18,7 @@ class PurchaseRepository {
         return storage[userId]?.toList() ?: emptyList()
     }
 
-    suspend fun hasPurchased(userId: Long, plantId: String): Boolean {
-        return storage[userId]?.any { it.plantId == plantId } ?: false
+    suspend fun hasPurchased(userId: Long, goodsId: String): Boolean {
+        return storage[userId]?.any { it.goodsId == goodsId } ?: false
     }
 }

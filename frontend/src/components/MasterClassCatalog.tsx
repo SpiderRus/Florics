@@ -1,12 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {Container, Row, Col, Spinner, Alert, Button} from 'react-bootstrap';
-import {Plant, plantService} from '../services/plantService';
+import {Goods, goodsService} from '../services/goodsService';
 import CourseCard from './CourseCard';
 
 const MasterClassCatalog: React.FC = () => {
     const navigate = useNavigate();
-    const [courses, setCourses] = useState<Plant[]>([]);
+    const [courses, setCourses] = useState<Goods[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -14,8 +14,8 @@ const MasterClassCatalog: React.FC = () => {
         try {
             setLoading(true);
             setError(null);
-            const allPlants = await plantService.getAllPlants();
-            const filtered = allPlants.filter(plant => plant.type === 'COURSE');
+            const allPlants = await goodsService.getAllGoods();
+            const filtered = allPlants.filter(goods => goods.type === 'COURSE');
             setCourses(filtered);
         } catch (err) {
             console.error('Ошибка загрузки мастер-классов:', err);
@@ -74,7 +74,7 @@ const MasterClassCatalog: React.FC = () => {
             <Row className="g-4">
                 {courses.map((course) => (
                     <Col key={course.id} xs={12} md={6} lg={4}>
-                        <CourseCard plant={course}/>
+                        <CourseCard goods={course}/>
                     </Col>
                 ))}
             </Row>

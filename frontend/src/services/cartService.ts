@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { CartSummary, CartItem, LocalCartItem, AddToCartRequest, UpdateQuantityRequest, MergeCartRequest, CheckoutResponse } from '../types/cart';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 const LOCAL_CART_KEY = 'localCart';
 
 export const cartService = {
@@ -12,24 +12,24 @@ export const cartService = {
         return response.data;
     },
 
-    addToCart: async (plantId: string, quantity: number): Promise<CartItem> => {
+    addToCart: async (goodsId: string, quantity: number): Promise<CartItem> => {
         const response = await axios.post<CartItem>(
             `${API_BASE_URL}/cart/items`,
-            { plantId, quantity } as AddToCartRequest
+            { goodsId, quantity } as AddToCartRequest
         );
         return response.data;
     },
 
-    updateQuantity: async (plantId: string, quantity: number): Promise<CartItem> => {
+    updateQuantity: async (goodsId: string, quantity: number): Promise<CartItem> => {
         const response = await axios.put<CartItem>(
-            `${API_BASE_URL}/cart/items/${plantId}`,
+            `${API_BASE_URL}/cart/items/${goodsId}`,
             { quantity } as UpdateQuantityRequest
         );
         return response.data;
     },
 
-    removeItem: async (plantId: string): Promise<void> => {
-        await axios.delete(`${API_BASE_URL}/cart/items/${plantId}`);
+    removeItem: async (goodsId: string): Promise<void> => {
+        await axios.delete(`${API_BASE_URL}/cart/items/${goodsId}`);
     },
 
     clearCart: async (): Promise<void> => {
@@ -60,25 +60,25 @@ export const cartService = {
         localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(items));
     },
 
-    addToLocalCart: (plantId: string, quantity: number): void => {
+    addToLocalCart: (goodsId: string, quantity: number): void => {
         const cart = cartService.getLocalCart();
-        const existingItem = cart.find(item => item.plantId === plantId);
+        const existingItem = cart.find(item => item.goodsId === goodsId);
 
         if (existingItem)
             existingItem.quantity += quantity;
         else
-            cart.push({ plantId, quantity });
+            cart.push({ goodsId, quantity });
 
         cartService.saveLocalCart(cart);
     },
 
-    updateLocalQuantity: (plantId: string, quantity: number): void => {
+    updateLocalQuantity: (goodsId: string, quantity: number): void => {
         const cart = cartService.getLocalCart();
-        const item = cart.find(item => item.plantId === plantId);
+        const item = cart.find(item => item.goodsId === goodsId);
 
         if (item) {
             if (quantity <= 0)
-                cartService.removeFromLocalCart(plantId);
+                cartService.removeFromLocalCart(goodsId);
             else {
                 item.quantity = quantity;
                 cartService.saveLocalCart(cart);
@@ -86,8 +86,8 @@ export const cartService = {
         }
     },
 
-    removeFromLocalCart: (plantId: string): void => {
-        const cart = cartService.getLocalCart().filter(item => item.plantId !== plantId);
+    removeFromLocalCart: (goodsId: string): void => {
+        const cart = cartService.getLocalCart().filter(item => item.goodsId !== goodsId);
         cartService.saveLocalCart(cart);
     },
 

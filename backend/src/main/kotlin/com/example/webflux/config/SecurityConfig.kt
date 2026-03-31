@@ -73,9 +73,9 @@ class SecurityConfig {
                 exchanges
                     // Публичные эндпоинты (login и register)
                     .pathMatchers("/api/auth/login", "/api/auth/register").permitAll()
-                    .pathMatchers("/api/plants/**").permitAll()
-                    .pathMatchers("/api/reviews/{plantId}").permitAll()
-                    .pathMatchers("/api/reviews/rating/{plantId}").permitAll()
+                    .pathMatchers("/api/goods/**").permitAll()
+                    .pathMatchers("/api/reviews/{goodsId}").permitAll()
+                    .pathMatchers("/api/reviews/rating/{goodsId}").permitAll()
                     .pathMatchers("/api/hello/**").permitAll()
                     .pathMatchers("/api/stream").permitAll()
                     .pathMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()

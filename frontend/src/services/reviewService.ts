@@ -1,16 +1,16 @@
 import axios from 'axios';
-import { Review, CreateReviewRequest, PlantRating } from '../types/review';
+import { Review, CreateReviewRequest, GoodsRating } from '../types/review';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = '/api';
 
 export const reviewService = {
-    getReviews: async (plantId: string): Promise<Review[]> => {
-        const response = await axios.get<Review[]>(`${API_BASE_URL}/reviews/${plantId}`);
+    getReviews: async (goodsId: string): Promise<Review[]> => {
+        const response = await axios.get<Review[]>(`${API_BASE_URL}/reviews/${goodsId}`);
         return response.data;
     },
 
-    getPlantRating: async (plantId: string): Promise<PlantRating> => {
-        const response = await axios.get<PlantRating>(`${API_BASE_URL}/reviews/rating/${plantId}`);
+    getGoodsRating: async (goodsId: string): Promise<GoodsRating> => {
+        const response = await axios.get<GoodsRating>(`${API_BASE_URL}/reviews/rating/${goodsId}`);
         return response.data;
     },
 

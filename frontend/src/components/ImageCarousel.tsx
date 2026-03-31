@@ -3,11 +3,11 @@ import {Carousel} from 'react-bootstrap';
 
 interface ImageCarouselProps {
     images: string[];
-    plantName: string;
-    plantId?: string | number;
+    goodsName: string;
+    goodsId?: string | number;
 }
 
-const ImageCarousel: React.FC<ImageCarouselProps> = ({images, plantName, plantId}) => {
+const ImageCarousel: React.FC<ImageCarouselProps> = ({images, goodsName, goodsId}) => {
     // Отслеживаем битые изображения
     const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
     // Состояние для управления автоскроллингом
@@ -28,7 +28,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({images, plantName, plantId
         return (
             <img
                 src={placeholderImage}
-                alt={`${plantName} - изображение недоступно`}
+                alt={`${goodsName} - изображение недоступно`}
                 style={{
                     width: '100%',
                     height: '250px',
@@ -43,7 +43,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({images, plantName, plantId
         return (
             <img
                 src={validImages[0]}
-                alt={plantName}
+                alt={goodsName}
                 onError={() => handleImageError(validImages[0])}
                 style={{
                     width: '100%',
@@ -65,7 +65,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({images, plantName, plantId
             }}
         >
             <Carousel
-                key={`carousel-${plantId}`}
+                key={`carousel-${goodsId}`}
                 interval={isHovered && !isManuallyPaused ? 2000 : null}
                 pause={false}
                 onSelect={(_selectedIndex, event) => {
@@ -81,7 +81,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({images, plantName, plantId
                         <img
                             className="d-block w-100"
                             src={image}
-                            alt={`${plantName} - фото ${index + 1}`}
+                            alt={`${goodsName} - фото ${index + 1}`}
                             onError={() => handleImageError(image)}
                             style={{
                                 height: '250px',

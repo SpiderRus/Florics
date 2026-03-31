@@ -1,8 +1,7 @@
 package com.example.webflux.service
 
-import com.example.webflux.repository.model.Purchase
+import com.example.webflux.domain.model.Purchase
 import com.example.webflux.repository.PurchaseRepository
-import com.example.webflux.repository.PlantRepository
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.util.*
@@ -11,11 +10,11 @@ import java.util.*
 class PurchaseService(
     private val purchaseRepository: PurchaseRepository
 ) {
-    suspend fun recordPurchase(userId: Long, plantId: String, price: Double): Purchase {
+    suspend fun recordPurchase(userId: Long, goodsId: String, price: Double): Purchase {
         val purchase = Purchase(
             id = UUID.randomUUID().toString(),
             userId = userId,
-            plantId = plantId,
+            goodsId = goodsId,
             price = price,
             purchaseDate = Instant.now()
         )
@@ -26,7 +25,7 @@ class PurchaseService(
         return purchaseRepository.findByUserId(userId)
     }
 
-    suspend fun hasPurchased(userId: Long, plantId: String): Boolean {
-        return purchaseRepository.hasPurchased(userId, plantId)
+    suspend fun hasPurchased(userId: Long, goodsId: String): Boolean {
+        return purchaseRepository.hasPurchased(userId, goodsId)
     }
 }
