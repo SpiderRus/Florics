@@ -3,6 +3,7 @@ import { Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Goods } from '../services/goodsService';
 import { reviewService } from '../services/reviewService';
+import { useAuth } from '../contexts/AuthContext';
 import MediaCarousel from './MediaCarousel';
 import AddToCartButton from './AddToCartButton';
 
@@ -12,7 +13,11 @@ interface GoodsCardProps {
 
 const GoodsCard: React.FC<GoodsCardProps> = ({goods}) => {
     const navigate = useNavigate();
+    const { user, isAuthenticated } = useAuth();
     const [rating, setRating] = useState<{ averageRating: number; totalReviews: number } | null>(null);
+
+    // Показывать кнопку "В корзину" для неавторизованных и для авторизованных с ролью BUYER
+    const canAddToCart = !isAuthenticated || user?.canPurchase;
 
     useEffect(() => {
         const loadRating = async () => {
@@ -72,9 +77,11 @@ const GoodsCard: React.FC<GoodsCardProps> = ({goods}) => {
                 <div className="goods-card-footer">
                     <div className="goods-price">{goods.price.toFixed(0)} ₽</div>
 
-                    <div onClick={(e) => e.stopPropagation()}>
-                        <AddToCartButton goodsId={goods.id} goodsName={goods.name} />
-                    </div>
+                    {canAddToCart && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <AddToCartButton goodsId={goods.id} goodsName={goods.name} />
+                        </div>
+                    )}
                 </div>
             </Card.Body>
         </Card>

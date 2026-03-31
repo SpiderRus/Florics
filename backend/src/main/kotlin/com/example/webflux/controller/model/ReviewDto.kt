@@ -6,13 +6,18 @@ import java.time.Instant
 
 @Schema(description = "Запрос на создание отзыва")
 data class CreateReviewRequest(
+    @field:jakarta.validation.constraints.NotBlank(message = "ID товара обязателен")
     @Schema(description = "ID товара", example = "1")
     val goodsId: String,
 
+    @field:jakarta.validation.constraints.Min(value = 1, message = "Рейтинг должен быть минимум 1")
+    @field:jakarta.validation.constraints.Max(value = 5, message = "Рейтинг не может превышать 5")
     @Schema(description = "Рейтинг от 1 до 5", example = "5")
     val rating: Int,
 
-    @Schema(description = "Текст отзыва", example = "Отличное растение! Быстро прижилось и радует меня каждый день.")
+    @field:jakarta.validation.constraints.NotBlank(message = "Комментарий обязателен")
+    @field:jakarta.validation.constraints.Size(min = 10, max = 1000, message = "Комментарий должен содержать от 10 до 1000 символов")
+    @Schema(description = "Текст отзыва (10-1000 символов)", example = "Отличное растение! Быстро прижилось и радует меня каждый день.")
     val comment: String
 )
 

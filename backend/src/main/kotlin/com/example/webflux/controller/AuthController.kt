@@ -31,7 +31,7 @@ class AuthController(
 
     @PostMapping("/login")
     @Operation(summary = "Вход в систему", description = "Аутентификация пользователя по email и паролю")
-    suspend fun login(@RequestBody request: AuthRequest): ResponseEntity<AuthResponse> {
+    suspend fun login(@org.springframework.validation.annotation.Validated @RequestBody request: AuthRequest): ResponseEntity<AuthResponse> {
         val tokenInfo = authenticationService.authenticate(request.email, request.password)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
 
@@ -40,7 +40,7 @@ class AuthController(
 
     @PostMapping("/register")
     @Operation(summary = "Регистрация", description = "Создание нового пользователя")
-    suspend fun register(@RequestBody request: RegisterRequest): ResponseEntity<AuthResponse> {
+    suspend fun register(@org.springframework.validation.annotation.Validated @RequestBody request: RegisterRequest): ResponseEntity<AuthResponse> {
         return try {
             val tokenInfo = authenticationService.register(
                 request.email,
@@ -83,9 +83,19 @@ class AuthController(
             accessToken = token,
             tokenType = "Bearer",
             expiresIn = ChronoUnit.SECONDS.between(Instant.now(), expiresAt),
-            user = UserDto(userId, user?.name ?: "", email, roles)
+            user = UserDto(
+                id = userId,
+                name = user?.name ?: "",
+                email = email,
+                canPurchase = user?.roles?.contains("BUYER") == true
+            )
         )
     }
 
-    private fun User.toDto() = UserDto(id, name, email, roles)
+    private fun User.toDto() = UserDto(
+        id = id,
+        name = name,
+        email = email,
+        canPurchase = roles.contains("BUYER")
+    )
 }

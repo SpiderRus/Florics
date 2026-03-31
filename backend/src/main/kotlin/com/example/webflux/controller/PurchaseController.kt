@@ -16,19 +16,19 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/purchases")
-@Tag(name = "Покупки", description = "API истории покупок курсов")
+@Tag(name = "Покупки", description = "API истории покупок товаров")
 class PurchaseController(
     private val purchaseService: PurchaseService
 ) {
     @GetMapping
     @PreAuthorize("hasRole('BUYER')")
-    @Operation(summary = "История покупок", description = "Возвращает список купленных курсов")
+    @Operation(summary = "История покупок", description = "Возвращает список купленных товаров")
     suspend fun getUserPurchases(): Flow<PurchaseDto> =
         purchaseService.getUserPurchases(SecurityUtils.requireCurrentUserId()).map { it.toDto() }
 
     @GetMapping("/has-purchased/{goodsId}")
     @PreAuthorize("hasRole('BUYER')")
-    @Operation(summary = "Проверка покупки", description = "Проверяет, купил ли пользователь курс")
+    @Operation(summary = "Проверка покупки", description = "Проверяет, купил ли пользователь товар")
     suspend fun hasPurchased(@PathVariable goodsId: String): HasPurchasedResponse =
         HasPurchasedResponse(purchaseService.hasPurchased(SecurityUtils.requireCurrentUserId(), goodsId))
 

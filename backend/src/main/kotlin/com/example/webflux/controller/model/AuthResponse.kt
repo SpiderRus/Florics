@@ -28,6 +28,6 @@ data class UserDto(
     @Schema(description = "Email пользователя")
     val email: String,
 
-    @Schema(description = "Роли пользователя")
-    val roles: Set<String>
+    @Schema(description = "Может ли пользователь совершать покупки (имеет роль BUYER)")
+    val canPurchase: Boolean
 )

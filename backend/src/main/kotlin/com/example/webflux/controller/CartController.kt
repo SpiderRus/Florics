@@ -3,6 +3,7 @@ package com.example.webflux.controller
 import com.example.webflux.controller.model.*
 import com.example.webflux.security.SecurityUtils
 import com.example.webflux.service.CartService
+import com.example.webflux.service.PurchaseService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
@@ -18,8 +19,7 @@ import org.springframework.web.bind.annotation.*
 @Tag(name = "Корзина", description = "API управления корзиной покупок")
 class CartController(
     private val cartService: CartService,
-    private val purchaseService: com.example.webflux.service.PurchaseService,
-    private val goodsService: com.example.webflux.service.GoodsService
+    private val purchaseService: PurchaseService
 ) {
     /**
      * Получить корзину текущего пользователя с расчётом итоговой суммы
@@ -36,7 +36,7 @@ class CartController(
     @PostMapping("/items")
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Добавить товар в корзину", description = "Добавляет товар в корзину или увеличивает количество если уже есть")
-    suspend fun addItem(@RequestBody request: AddToCartRequest): ResponseEntity<CartItemDto> =
+    suspend fun addItem(@org.springframework.validation.annotation.Validated @RequestBody request: AddToCartRequest): ResponseEntity<CartItemDto> =
         ResponseEntity.ok(cartService.addToCart(SecurityUtils.requireCurrentUserId(), request.goodsId, request.quantity))
 
     /**
@@ -47,7 +47,7 @@ class CartController(
     @Operation(summary = "Изменить количество товара", description = "Обновляет количество единиц товара в корзине")
     suspend fun updateQuantity(
         @PathVariable goodsId: String,
-        @RequestBody request: UpdateQuantityRequest
+        @org.springframework.validation.annotation.Validated @RequestBody request: UpdateQuantityRequest
     ): ResponseEntity<CartItemDto> {
         val item = cartService.updateQuantity(SecurityUtils.requireCurrentUserId(), goodsId, request.quantity)
             ?: return ResponseEntity.notFound().build()
@@ -86,7 +86,7 @@ class CartController(
         summary = "Синхронизировать локальную корзину",
         description = "Объединяет товары из localStorage с серверной корзиной при логине. При конфликтах суммируются количества"
     )
-    suspend fun mergeCart(@RequestBody request: MergeCartRequest): ResponseEntity<CartSummaryDto> =
+    suspend fun mergeCart(@org.springframework.validation.annotation.Validated @RequestBody request: MergeCartRequest): ResponseEntity<CartSummaryDto> =
         ResponseEntity.ok(cartService.mergeLocalCart(SecurityUtils.requireCurrentUserId(), request.items))
 
     /**

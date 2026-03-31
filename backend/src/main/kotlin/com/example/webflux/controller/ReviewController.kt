@@ -36,7 +36,7 @@ class ReviewController(
     @PostMapping
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Создать отзыв", description = "Создает новый отзыв. Доступно только авторизованным пользователям, которые купили товар.")
-    suspend fun createReview(@RequestBody request: CreateReviewRequest): ResponseEntity<ReviewDto> =
+    suspend fun createReview(@org.springframework.validation.annotation.Validated @RequestBody request: CreateReviewRequest): ResponseEntity<ReviewDto> =
         ResponseEntity.ok(reviewService.createReview(
                 userId = SecurityUtils.requireCurrentUserId(),
                 goodsId = request.goodsId,

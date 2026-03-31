@@ -9,6 +9,7 @@ import MasterClassPlayer from './components/MasterClassPlayer'
 import Login from './components/Login'
 import Register from './components/Register'
 import CartPage from './components/CartPage'
+import ProfilePage from './components/ProfilePage'
 import CartIcon from './components/CartIcon'
 import {AuthProvider, useAuth} from './contexts/AuthContext'
 import {CartProvider} from './contexts/CartContext'
@@ -72,7 +73,7 @@ function HomePage() {
 function AppContent() {
     const navigate = useNavigate()
     const location = useLocation()
-    const {user, isAuthenticated, logout} = useAuth()
+    const {isAuthenticated, logout} = useAuth()
 
     const handleLogout = async () => {
         await logout()
@@ -105,7 +106,7 @@ function AppContent() {
                             <Navbar.Text className="px-2" style={{color: '#ccc'}}>|</Navbar.Text>
                             {isAuthenticated ? (
                                 <>
-                                    <Nav.Link disabled>Привет, {user?.name}</Nav.Link>
+                                    <Nav.Link onClick={() => navigate('/profile')}>Личный кабинет</Nav.Link>
                                     <Nav.Link onClick={handleLogout}>Выход</Nav.Link>
                                 </>
                             ) : (
@@ -131,6 +132,7 @@ function AppContent() {
                 <Route path="/masterclasses" element={<MasterClassCatalog/>}/>
                 <Route path="/masterclass/:id" element={<MasterClassPlayer/>}/>
                 <Route path="/cart" element={<CartPage/>}/>
+                <Route path="/profile" element={<ProfilePage/>}/>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
             </Routes>

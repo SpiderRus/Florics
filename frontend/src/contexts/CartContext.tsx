@@ -16,6 +16,7 @@ interface CartContextType {
     clearCart: () => Promise<void>;
     refreshCart: () => Promise<void>;
     getTotalItems: () => number;
+    isInCart: (goodsId: string) => boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -381,6 +382,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return isAuthenticated ? (cart?.totalItems ?? 0) : localCartCount;
     };
 
+    const isInCart = (goodsId: string): boolean => {
+        if (isAuthenticated) {
+            return cart?.items.some(item => item.goods.id === goodsId) ?? false;
+        } else {
+            return localCartItems.some(item => item.goods.id === goodsId);
+        }
+    };
+
     return (
         <CartContext.Provider
             value={{
@@ -393,7 +402,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 removeItem,
                 clearCart,
                 refreshCart,
-                getTotalItems
+                getTotalItems,
+                isInCart
             }}
         >
             {children}

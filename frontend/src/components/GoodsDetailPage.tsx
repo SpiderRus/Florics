@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Tabs, Tab, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Tabs, Tab, Spinner, Alert, Button } from 'react-bootstrap';
 import { goodsService, Goods } from '../services/goodsService';
 import { reviewService } from '../services/reviewService';
 import { purchaseService } from '../services/purchaseService';
@@ -15,7 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 const GoodsDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+    const { user, isAuthenticated } = useAuth();
 
     const [goods, setGoods] = useState<Goods | null>(null);
     const [reviews, setReviews] = useState<Review[]>([]);
@@ -94,6 +94,14 @@ const GoodsDetailPage: React.FC = () => {
     }
 
     const canLeaveReview = isAuthenticated && hasPurchased;
+    // Показывать кнопку "В корзину" для неавторизованных и для авторизованных с ролью BUYER
+    const canAddToCart = !isAuthenticated || user?.canPurchase;
+    // Проверка, является ли товар мастер-классом
+    const isMasterClass = goods.category?.type === 'COURSE';
+    // Если мастер-класс уже куплен, показывать кнопку просмотра
+    const showWatchButton = isMasterClass && hasPurchased && isAuthenticated;
+    // Если мастер-класс уже куплен, не показывать кнопку "В корзину"
+    const showAddToCartButton = canAddToCart && !showWatchButton;
 
     return (
         <Container className="goods-detail-page my-4">
@@ -111,9 +119,41 @@ const GoodsDetailPage: React.FC = () => {
                     <div className="goods-meta mb-3">
                         <span className="badge bg-secondary me-2">{goods.category?.name || 'Без категории'}</span>
                         <span className="badge bg-info">{goods.difficulty}</span>
+                        {isMasterClass && goods.duration && (
+                            <span className="badge bg-primary ms-2">⏱ {goods.duration} мин</span>
+                        )}
                     </div>
-                    <h3 className="goods-price mb-3">{goods.price.toFixed(0)} ₽</h3>
-                    <AddToCartButton goodsId={goods.id} goodsName={goods.name} />
+
+                    {!showWatchButton && (
+                        <h3 className="goods-price mb-3">{goods.price.toFixed(0)} ₽</h3>
+                    )}
+
+                    {showWatchButton && (
+                        <Button
+                            variant="success"
+                            size="lg"
+                            onClick={() => navigate(`/masterclass/${goods.id}`)}
+                            className="mb-3"
+                        >
+                            ▶️ Смотреть мастер-класс
+                        </Button>
+                    )}
+
+                    {showAddToCartButton && (
+                        <AddToCartButton goodsId={goods.id} goodsName={goods.name} isMasterClass={isMasterClass} />
+                    )}
+
+                    {hasPurchased && !isMasterClass && (
+                        <Alert variant="success" className="mt-3">
+                            ✓ Вы уже приобрели этот товар
+                        </Alert>
+                    )}
+
+                    {isAuthenticated && !user?.canPurchase && (
+                        <Alert variant="warning" className="mt-3">
+                            У вас нет прав на покупку товаров
+                        </Alert>
+                    )}
                 </Col>
             </Row>
 

@@ -8,7 +8,7 @@ import { cartService } from '../services/cartService';
 
 const CartPage: React.FC = () => {
     const navigate = useNavigate();
-    const { isAuthenticated, loading: authLoading } = useAuth();
+    const { user, isAuthenticated, loading: authLoading } = useAuth();
     const { cart, localCartItems, loading, updateQuantity, removeItem, clearCart, refreshCart } = useCart();
 
     useEffect(() => {
@@ -139,8 +139,9 @@ const CartPage: React.FC = () => {
                                     <Button
                                         size="sm"
                                         variant="outline-secondary"
-                                        onClick={() => updateQuantity(item.goods.id, item.quantity - 1)}
-                                        disabled={loading}
+                                        onClick={() => updateQuantity(item.goods.id, Math.max(1, item.quantity - 1))}
+                                        disabled={loading || item.quantity <= 1}
+                                        title={item.quantity <= 1 ? 'Минимум 1' : ''}
                                     >
                                         −
                                     </Button>
@@ -150,8 +151,9 @@ const CartPage: React.FC = () => {
                                     <Button
                                         size="sm"
                                         variant="outline-secondary"
-                                        onClick={() => updateQuantity(item.goods.id, item.quantity + 1)}
-                                        disabled={loading}
+                                        onClick={() => updateQuantity(item.goods.id, Math.min(99, item.quantity + 1))}
+                                        disabled={loading || item.quantity >= 99}
+                                        title={item.quantity >= 99 ? 'Максимум 99' : ''}
                                     >
                                         +
                                     </Button>
@@ -200,13 +202,21 @@ const CartPage: React.FC = () => {
                     >
                         Очистить корзину
                     </Button>
-                    {isAuthenticated ? (
+                    {user?.canPurchase ? (
                         <Button
                             variant="success"
                             onClick={handleCheckout}
                             style={{ flex: 1 }}
                         >
                             Оформить заказ ✓
+                        </Button>
+                    ) : isAuthenticated ? (
+                        <Button
+                            variant="warning"
+                            disabled
+                            style={{ flex: 1 }}
+                        >
+                            У вас нет прав на покупку 🚫
                         </Button>
                     ) : (
                         <Button

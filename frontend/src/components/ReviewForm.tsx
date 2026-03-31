@@ -13,12 +13,34 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ goodsId, onReviewSubmitted }) =
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [commentError, setCommentError] = useState<string>('');
+
+    const validateComment = (value: string): string => {
+        const trimmed = value.trim();
+        if (!trimmed) return 'Комментарий обязателен';
+        if (trimmed.length < 10) return 'Минимум 10 символов';
+        if (trimmed.length > 1000) return 'Максимум 1000 символов';
+        return '';
+    };
+
+    const handleCommentChange = (value: string) => {
+        setComment(value);
+        const error = validateComment(value);
+        setCommentError(error);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (comment.trim().length < 10) {
-            toast.error('Отзыв должен содержать минимум 10 символов');
+        const error = validateComment(comment);
+        if (error) {
+            setCommentError(error);
+            toast.error(error);
+            return;
+        }
+
+        if (rating < 1 || rating > 5) {
+            toast.error('Рейтинг должен быть от 1 до 5');
             return;
         }
 
@@ -28,6 +50,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ goodsId, onReviewSubmitted }) =
             toast.success('Отзыв успешно добавлен!');
             setRating(5);
             setComment('');
+            setCommentError('');
             onReviewSubmitted();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Ошибка при добавлении отзыва');
@@ -57,20 +80,29 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ goodsId, onReviewSubmitted }) =
                         as="textarea"
                         rows={4}
                         value={comment}
-                        onChange={(e) => setComment(e.target.value)}
+                        onChange={(e) => handleCommentChange(e.target.value)}
+                        onBlur={() => {
+                            const error = validateComment(comment);
+                            setCommentError(error);
+                        }}
                         placeholder="Поделитесь своими впечатлениями о товаре..."
+                        isInvalid={!!commentError}
                         required
                         minLength={10}
+                        maxLength={1000}
                     />
+                    <Form.Control.Feedback type="invalid">
+                        {commentError}
+                    </Form.Control.Feedback>
                     <Form.Text className="text-muted">
-                        Минимум 10 символов
+                        {comment.length}/1000 символов (минимум 10)
                     </Form.Text>
                 </Form.Group>
 
-                <Button 
-                    type="submit" 
-                    variant="success" 
-                    disabled={submitting || comment.trim().length < 10}
+                <Button
+                    type="submit"
+                    variant="success"
+                    disabled={submitting || !!commentError || comment.trim().length < 10}
                 >
                     {submitting ? 'Отправка...' : 'Отправить отзыв'}
                 </Button>

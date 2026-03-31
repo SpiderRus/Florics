@@ -13,8 +13,11 @@ interface CourseCardProps {
 
 const CourseCard: React.FC<CourseCardProps> = ({goods}) => {
     const [isPurchased, setIsPurchased] = useState(false);
-    const {isAuthenticated} = useAuth();
+    const {user, isAuthenticated} = useAuth();
     const navigate = useNavigate();
+
+    // Показывать кнопку "В корзину" для неавторизованных и для авторизованных с ролью BUYER
+    const canAddToCart = !isAuthenticated || user?.canPurchase;
 
     useEffect(() => {
         if (isAuthenticated)
@@ -30,14 +33,20 @@ const CourseCard: React.FC<CourseCardProps> = ({goods}) => {
         }
     };
 
+    const handleCardClick = () => {
+        navigate(`/catalog/${goods.id}`);
+    };
+
     return (
-        <Card className="goods-card h-100" style={{position: 'relative'}}>
+        <Card className="goods-card h-100 clickable-card" onClick={handleCardClick} style={{position: 'relative', cursor: 'pointer'}}>
             {isPurchased && (
                 <div className="purchased-badge">
                     <Badge bg="success">Уже куплено ✓</Badge>
                 </div>
             )}
-            <MediaCarousel media={goods.media} goodsName={goods.name} goodsId={goods.id}/>
+            <div onClick={(e) => e.stopPropagation()}>
+                <MediaCarousel media={goods.media} goodsName={goods.name} goodsId={goods.id}/>
+            </div>
             <Card.Body className="goods-card-body">
                 <h3 className="goods-name">{goods.name}</h3>
 
@@ -56,19 +65,32 @@ const CourseCard: React.FC<CourseCardProps> = ({goods}) => {
                 <p className="goods-description">{goods.description}</p>
 
                 <div className="goods-card-footer">
-                    <div className="goods-price">{goods.price.toFixed(0)} ₽</div>
-
-                    {isPurchased ? (
-                        <Button
-                            variant="success"
-                            onClick={() => navigate(`/masterclass/${goods.id}`)}
-                            style={{width: '100%', borderRadius: '25px'}}
-                        >
-                            Смотреть курс →
-                        </Button>
-                    ) : (
-                        <AddToCartButton goodsId={goods.id} goodsName={goods.name}/>
+                    {!isPurchased && (
+                        <div className="goods-price">{goods.price.toFixed(0)} ₽</div>
                     )}
+
+                    <div onClick={(e) => e.stopPropagation()}>
+                        {isPurchased ? (
+                            <Button
+                                variant="success"
+                                onClick={() => navigate(`/masterclass/${goods.id}`)}
+                                style={{width: '100%', borderRadius: '25px', marginTop: isPurchased ? '1rem' : '0'}}
+                            >
+                                Смотреть курс →
+                            </Button>
+                        ) : canAddToCart ? (
+                            <AddToCartButton goodsId={goods.id} goodsName={goods.name} isMasterClass={true}/>
+                        ) : (
+                            <Button
+                                variant="warning"
+                                disabled
+                                style={{width: '100%', borderRadius: '25px'}}
+                                title="У вас нет прав на покупку"
+                            >
+                                Недоступно 🚫
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </Card.Body>
         </Card>

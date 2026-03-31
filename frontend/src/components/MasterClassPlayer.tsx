@@ -86,10 +86,6 @@ const MasterClassPlayer: React.FC = () => {
 
     return (
         <Container className="catalog-page" style={{paddingTop: '2rem'}}>
-            <Button className="back-button" onClick={() => navigate('/masterclasses')}>
-                ← Назад к каталогу
-            </Button>
-
             <Row className="mt-4">
                 <Col md={8}>
                     <div
@@ -120,13 +116,23 @@ const MasterClassPlayer: React.FC = () => {
                         <Card.Body>
                             <h4>{course.name}</h4>
                             <div className="mb-3">
+                                <Badge bg="success" className="me-2">
+                                    ✓ Куплено
+                                </Badge>
                                 <Badge bg="info" className="me-2">
                                     🕒 {course.duration} мин
                                 </Badge>
                                 <Badge bg="secondary">{course.difficulty}</Badge>
                             </div>
                             <p>{course.description}</p>
-                            <div className="plant-price">{course.price.toFixed(0)} ₽</div>
+                            {course.detailedDescription && (
+                                <>
+                                    <hr/>
+                                    <p style={{fontSize: '0.9rem', whiteSpace: 'pre-line'}}>
+                                        {course.detailedDescription}
+                                    </p>
+                                </>
+                            )}
                             <hr/>
                             <Button variant="outline-secondary" disabled style={{width: '100%', borderRadius: '25px'}}>
                                 📥 Скачать материалы (скоро)
