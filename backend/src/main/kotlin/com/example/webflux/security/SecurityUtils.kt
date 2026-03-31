@@ -10,18 +10,9 @@ object SecurityUtils {
         return ReactiveSecurityContextHolder.getContext()
             .mapNotNull { context ->
                 when (val authentication = context.authentication) {
-                    // Новый подход с OAuth2 Resource Server
-                    is BearerTokenAuthentication -> {
-                        val principal = authentication.tokenAttributes
-                        TokenInfo(
-                            token = authentication.token.tokenValue,
-                            userId = principal["sub"]?.toString()?.toLongOrNull() ?: 0L,
-                            email = principal["email"]?.toString() ?: "",
-                            roles = authentication.authorities.mapNotNull { it.authority?.removePrefix("ROLE_") }.toSet(),
-                            createdAt = java.time.Instant.now(), // Не сохраняем в attributes, используем текущее время
-                            expiresAt = java.time.Instant.now().plusSeconds(86400) // 24 часа
-                        )
-                    }
+                    is BearerTokenAuthentication ->
+                        // Извлекаем закэшированный TokenInfo из attributes
+                        authentication.tokenAttributes["token_info"] as? TokenInfo
                     else -> null
                 }
             }
@@ -33,9 +24,4 @@ object SecurityUtils {
     suspend fun requireCurrentUserId(): Long = getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
 
     suspend fun hasRole(role: String): Boolean = getCurrentTokenInfo()?.roles?.contains(role) ?: false
-
-    suspend fun requireRole(role: String) {
-        if (!hasRole(role))
-            throw org.springframework.security.access.AccessDeniedException("User does not have required role: $role")
-    }
 }

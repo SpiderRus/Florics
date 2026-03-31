@@ -35,8 +35,10 @@ class SecurityConfig {
                     val authorities = tokenInfo.roles.map { SimpleGrantedAuthority("ROLE_$it") }
                     val attributes = mapOf(
                             "sub" to tokenInfo.userId.toString(),
-                            "email" to tokenInfo.email
+                            "email" to tokenInfo.email,
+                            "token_info" to tokenInfo
                         )
+
                     Mono.just<OAuth2AuthenticatedPrincipal>(
                         DefaultOAuth2AuthenticatedPrincipal(tokenInfo.email, attributes, authorities)
                     )
