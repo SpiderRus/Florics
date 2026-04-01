@@ -181,10 +181,16 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 // Если товар был новый (не было оптимистичного обновления), загружаем с сервера
                 if (cart && !cart.items.find(item => item.goods.id === goodsId))
                     await loadServerCart();
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to add to cart:', error);
                 // Откат к предыдущему состоянию
                 setCart(previousCart);
+
+                // Показать специфичное сообщение для дубликата курса
+                const errorMessage = error.response?.data?.message || error.message || '';
+                if (errorMessage.includes('already in cart')) {
+                    toast.error('Этот курс уже добавлен в корзину');
+                }
                 throw error;
             }
         } else {
@@ -217,6 +223,16 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const updateQuantity = async (goodsId: string, quantity: number) => {
+        // Проверка: для мастер-классов блокируем изменение
+        const item = isAuthenticated
+            ? cart?.items.find(i => i.goods.id === goodsId)
+            : localCartItems.find(i => i.goods.id === goodsId);
+
+        if (item?.goods.category?.type === 'COURSE') {
+            toast.warning('Количество мастер-классов нельзя изменить');
+            return;
+        }
+
         if (isAuthenticated) {
             const previousCart = cart;
 

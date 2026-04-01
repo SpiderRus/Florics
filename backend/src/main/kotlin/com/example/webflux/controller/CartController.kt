@@ -36,8 +36,13 @@ class CartController(
     @PostMapping("/items")
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Добавить товар в корзину", description = "Добавляет товар в корзину или увеличивает количество если уже есть")
-    suspend fun addItem(@org.springframework.validation.annotation.Validated @RequestBody request: AddToCartRequest): ResponseEntity<CartItemDto> =
-        ResponseEntity.ok(cartService.addToCart(SecurityUtils.requireCurrentUserId(), request.goodsId, request.quantity))
+    suspend fun addItem(@org.springframework.validation.annotation.Validated @RequestBody request: AddToCartRequest): ResponseEntity<CartItemDto> {
+        return try {
+            ResponseEntity.ok(cartService.addToCart(SecurityUtils.requireCurrentUserId(), request.goodsId, request.quantity))
+        } catch (e: IllegalStateException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
 
     /**
      * Изменить количество товара в корзине
@@ -49,10 +54,14 @@ class CartController(
         @PathVariable goodsId: String,
         @org.springframework.validation.annotation.Validated @RequestBody request: UpdateQuantityRequest
     ): ResponseEntity<CartItemDto> {
-        val item = cartService.updateQuantity(SecurityUtils.requireCurrentUserId(), goodsId, request.quantity)
-            ?: return ResponseEntity.notFound().build()
+        return try {
+            val item = cartService.updateQuantity(SecurityUtils.requireCurrentUserId(), goodsId, request.quantity)
+                ?: return ResponseEntity.notFound().build()
 
-        return ResponseEntity.ok(item)
+            ResponseEntity.ok(item)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
     }
 
     /**

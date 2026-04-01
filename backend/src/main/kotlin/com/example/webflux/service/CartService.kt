@@ -61,14 +61,28 @@ class CartService(
         val goods = goodsRepository.findById(goodsId.toLong())
             ?: throw IllegalArgumentException("Goods not found: $goodsId")
 
-        // Валидация: количество положительное
-        require(quantity > 0) { "Quantity must be positive" }
+        // Получить категорию товара
+        val category = categoryRepository.findById(goods.categoryId)
+            ?: throw IllegalArgumentException("Category not found")
+
+        // Для мастер-классов: проверить дубликаты и установить quantity = 1
+        val finalQuantity = if (category.type == com.example.webflux.domain.model.GoodsType.COURSE) {
+            // Проверить, нет ли уже этого курса в корзине
+            val existingItem = cartRepository.findByUserIdAndGoodsId(userId, goodsId)
+            if (existingItem != null) {
+                throw IllegalStateException("Course is already in cart")
+            }
+            1 // Принудительно устанавливаем quantity = 1
+        } else {
+            require(quantity > 0) { "Quantity must be positive" }
+            quantity
+        }
 
         val cartItem = CartItem(
             id = UUID.randomUUID().toString(),
             userId = userId,
             goodsId = goodsId,
-            quantity = quantity,
+            quantity = finalQuantity,
             addedAt = Instant.now()
         )
 
@@ -82,11 +96,19 @@ class CartService(
     suspend fun updateQuantity(userId: Long, goodsId: String, quantity: Int): CartItemDto? {
         require(quantity > 0) { "Use removeFromCart for deleting items" }
 
-        val updated = cartRepository.updateQuantity(userId, goodsId, quantity)
-            ?: return null
-
         val goods = goodsRepository.findById(goodsId.toLong())
             ?: throw IllegalStateException("Goods not found")
+
+        val category = categoryRepository.findById(goods.categoryId)
+            ?: throw IllegalStateException("Category not found")
+
+        // Для мастер-классов запретить изменение количества
+        if (category.type == com.example.webflux.domain.model.GoodsType.COURSE && quantity != 1) {
+            throw IllegalArgumentException("Course quantity cannot be changed (must be 1)")
+        }
+
+        val updated = cartRepository.updateQuantity(userId, goodsId, quantity)
+            ?: return null
 
         return CartItemDto(updated.id, goods.toDto(), updated.quantity, updated.addedAt)
     }

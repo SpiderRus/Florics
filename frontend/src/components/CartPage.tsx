@@ -135,29 +135,35 @@ const CartPage: React.FC = () => {
                                 <strong>{item.goods.price.toFixed(0)} ₽</strong>
                             </td>
                             <td style={{ verticalAlign: 'middle' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                                    <Button
-                                        size="sm"
-                                        variant="outline-secondary"
-                                        onClick={() => updateQuantity(item.goods.id, Math.max(1, item.quantity - 1))}
-                                        disabled={loading || item.quantity <= 1}
-                                        title={item.quantity <= 1 ? 'Минимум 1' : ''}
-                                    >
-                                        −
-                                    </Button>
-                                    <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>
-                                        {item.quantity}
-                                    </span>
-                                    <Button
-                                        size="sm"
-                                        variant="outline-secondary"
-                                        onClick={() => updateQuantity(item.goods.id, Math.min(99, item.quantity + 1))}
-                                        disabled={loading || item.quantity >= 99}
-                                        title={item.quantity >= 99 ? 'Максимум 99' : ''}
-                                    >
-                                        +
-                                    </Button>
-                                </div>
+                                {item.goods.category?.type === 'COURSE' ? (
+                                    <div style={{ textAlign: 'center' }}>
+                                        <span style={{ fontWeight: 'bold' }}>1 шт</span>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                                        <Button
+                                            size="sm"
+                                            variant="outline-secondary"
+                                            onClick={() => updateQuantity(item.goods.id, Math.max(1, item.quantity - 1))}
+                                            disabled={loading || item.quantity <= 1}
+                                            title={item.quantity <= 1 ? 'Минимум 1' : ''}
+                                        >
+                                            −
+                                        </Button>
+                                        <span style={{ minWidth: '30px', textAlign: 'center', fontWeight: 'bold' }}>
+                                            {item.quantity}
+                                        </span>
+                                        <Button
+                                            size="sm"
+                                            variant="outline-secondary"
+                                            onClick={() => updateQuantity(item.goods.id, Math.min(99, item.quantity + 1))}
+                                            disabled={loading || item.quantity >= 99}
+                                            title={item.quantity >= 99 ? 'Максимум 99' : ''}
+                                        >
+                                            +
+                                        </Button>
+                                    </div>
+                                )}
                             </td>
                             <td style={{ verticalAlign: 'middle' }}>
                                 <strong style={{ color: 'var(--sage-green)', fontSize: '1.1rem' }}>
