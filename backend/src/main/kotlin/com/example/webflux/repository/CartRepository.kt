@@ -99,14 +99,11 @@ class CartRepository(
 
             if (existing != null) {
                 // Конфликт: товар есть и в серверной, и в локальной корзине
-                if (isCourse) {
-                    // Для мастер-классов НЕ суммируем, оставляем quantity = 1
-                    // Ничего не делаем, курс уже в корзине с quantity = 1
-                } else {
+                // Для мастер-классов НЕ суммируем, оставляем quantity = 1
+                // Ничего не делаем, курс уже в корзине с quantity = 1
+                if (!isCourse) {
                     // Для обычных товаров суммируем количества
-                    userCart[localItem.goodsId] = existing.copy(
-                        quantity = existing.quantity + localItem.quantity
-                    )
+                    userCart[localItem.goodsId] = existing.copy(quantity = existing.quantity + localItem.quantity)
                 }
             } else {
                 // Добавляем новый товар из localStorage

@@ -134,6 +134,7 @@ class CartService(
     suspend fun mergeLocalCart(userId: Long, localItems: List<LocalCartItem>): CartSummaryDto {
         // Merge локальной корзины с серверной
         cartRepository.mergeItems(userId, localItems)
+
         // Вернуть обновленную корзину
         return getCartSummary(userId)
     }
@@ -151,9 +152,7 @@ class CartService(
         description = description,
         price = price,
         media = media.map { it.toDto() }.sortedBy { it.order },
-        category = categoryRepository.findById(categoryId)?.let {
-            CategoryDto(it.id, it.name, it.type)
-        },
+        category = categoryRepository.findById(categoryId)?.let { CategoryDto(it.id, it.name, it.type) },
         difficulty = difficulty,
         duration = duration,
         videoUrl = videoUrl,
