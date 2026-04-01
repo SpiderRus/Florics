@@ -86,7 +86,8 @@ class SecurityConfig {
                     .pathMatchers("/webjars/**").permitAll()
                     // Статические ресурсы фронтенда
                     .pathMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.ico").permitAll()
-                    .pathMatchers("/catalog", "/catalog/*", "/login", "/register", "/cart", "/profile", "/terrariums", "/custom-terrarium", "/masterclasses", "/masterclass/*").permitAll()
+                    .pathMatchers("/catalog", "/catalog/*", "/login", "/register", "/cart", "/profile", "/terrariums",
+                        "/custom-terrarium", "/masterclasses", "/masterclass/*").permitAll()
                     // Остальное требует авторизацию (включая /api/auth/me и /api/auth/logout)
                     .anyExchange().authenticated()
             }
