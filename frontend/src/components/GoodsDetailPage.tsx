@@ -10,6 +10,7 @@ import MediaModal from './MediaModal';
 import ReviewList from './ReviewList';
 import ReviewForm from './ReviewForm';
 import AddToCartButton from './AddToCartButton';
+import MarkdownContent from './MarkdownContent';
 import { useAuth } from '../contexts/AuthContext';
 
 const GoodsDetailPage: React.FC = () => {
@@ -163,7 +164,7 @@ const GoodsDetailPage: React.FC = () => {
                         <Tab eventKey="description" title="Описание">
                             <div className="tab-content-box">
                                 {goods.detailedDescription ? (
-                                    <p style={{ whiteSpace: 'pre-line' }}>{goods.detailedDescription}</p>
+                                    <MarkdownContent content={goods.detailedDescription} />
                                 ) : (
                                     <p>{goods.description}</p>
                                 )}
@@ -172,7 +173,7 @@ const GoodsDetailPage: React.FC = () => {
                         <Tab eventKey="care" title="Уход">
                             <div className="tab-content-box">
                                 {goods.careInstructions ? (
-                                    <p style={{ whiteSpace: 'pre-line' }}>{goods.careInstructions}</p>
+                                    <MarkdownContent content={goods.careInstructions} />
                                 ) : (
                                     <p>Информация по уходу скоро появится.</p>
                                 )}

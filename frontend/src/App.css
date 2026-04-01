@@ -570,6 +570,144 @@ body {
     margin-top: -2px;
 }
 
+/* ===== Markdown Content ===== */
+.markdown-content {
+    color: var(--forest-green);
+    line-height: 1.7;
+}
+
+.markdown-paragraph {
+    margin-bottom: 1rem;
+    white-space: pre-line;
+    line-height: 1.7;
+}
+
+.markdown-h1 {
+    color: var(--forest-green);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 1.5rem 0 1rem 0;
+    border-bottom: 2px solid var(--leaf-green);
+    padding-bottom: 0.5rem;
+}
+
+.markdown-h2 {
+    color: var(--sage-green);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 1.2rem 0 0.8rem 0;
+}
+
+.markdown-h3 {
+    color: var(--sage-green);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 1rem 0 0.6rem 0;
+}
+
+.markdown-list {
+    margin: 0.8rem 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.markdown-ordered-list {
+    margin: 0.8rem 0;
+    padding-left: 1.5rem;
+}
+
+.markdown-list-item {
+    margin-bottom: 0.5rem;
+    padding-left: 1.8rem;
+    position: relative;
+}
+
+.markdown-list .markdown-list-item::before {
+    content: '🌿';
+    position: absolute;
+    left: 0;
+    font-size: 0.9rem;
+}
+
+.markdown-bold {
+    font-weight: 600;
+    color: var(--forest-green);
+}
+
+.markdown-italic {
+    font-style: italic;
+    color: var(--sage-green);
+}
+
+.markdown-link {
+    color: var(--sage-green);
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.markdown-link:hover {
+    color: var(--leaf-green);
+    text-decoration: none;
+}
+
+.markdown-inline-code {
+    background-color: var(--light-green);
+    color: var(--forest-green);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.markdown-code-block {
+    background-color: var(--light-green);
+    border-left: 4px solid var(--leaf-green);
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.markdown-code-block code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: var(--forest-green);
+}
+
+.markdown-content blockquote {
+    border-left: 4px solid var(--leaf-green);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--warm-brown);
+    font-style: italic;
+}
+
+.markdown-content hr {
+    border: none;
+    border-top: 2px solid var(--light-green);
+    margin: 2rem 0;
+}
+
+.markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    overflow-x: auto;
+    display: block;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+    border: 1px solid var(--light-green);
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.markdown-content table th {
+    background-color: var(--light-green);
+    font-weight: 600;
+}
+
 /* ===== Large Image Carousel ===== */
 .large-carousel {
     border-radius: 15px;
