@@ -7,10 +7,10 @@ import com.example.webflux.repository.r2dbc.CategoryR2dbcRepository
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.toList
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @Repository
@@ -24,16 +24,14 @@ class CategoryRepository(
     @PostConstruct
     fun init() {
         reloadScope.launch {
-            delay(10 * 1_000)
-
             while (active) {
+                delay(RELOAD_DURATION_MS)
+
                 try {
                     reloadCache()
                 } catch (th: Throwable) {
                     logger.error(th.message, th)
                 }
-
-                delay(5 * 60 * 1_000)
             }
         }
     }
@@ -45,17 +43,22 @@ class CategoryRepository(
     }
 
     private suspend fun reloadCache() {
-        val categories = categoryR2dbcRepository.findAll().toList()
-
         cache.clear()
-        categories.forEach { category -> cache[category.id.toString()] = CategoryMapper.toModel(category) }
+        categoryR2dbcRepository.findAll().collect { category ->
+            cache[category.id!!] = CategoryMapper.toModel(category)
+        }
     }
 
     /**
      * Получить все активные категории с кэшированием
      * Кэш живет 5 минут (TTL в CacheConfig)
      */
-    fun findAll(): List<Category> = cache.values.filter { it.deletedAt == null }.toList()
+    suspend fun findAll(): List<Category> {
+        if (cache.isEmpty())
+            reloadCache()
+
+        return cache.values.filter { it.deletedAt == null }.toList()
+    }
 
     /**
      * Получить категорию по ID с кэшированием
@@ -72,10 +75,12 @@ class CategoryRepository(
     /**
      * Получить категории по типу с кэшированием
      */
-    fun findAllByTypeActive(type: GoodsType): List<Category> =
-        cache.values.filter { it.deletedAt == null && it.type == type }.toList()
+    suspend fun findAllByTypeActive(type: GoodsType): List<Category> =
+        findAll().filter { it.type == type }.toList()
 
     private companion object {
-        private val logger = LoggerFactory.getLogger(CategoryRepository::class.java)
+        val RELOAD_DURATION_MS = (5 * 60 * 1_000).milliseconds
+
+        val logger = LoggerFactory.getLogger(CategoryRepository::class.java)
     }
 }
