@@ -55,9 +55,14 @@ const Login: React.FC = () => {
 
             // Получаем URL для возврата из state или localStorage
             const from = (location.state as any)?.from || localStorage.getItem('redirectAfterLogin') || '/';
+            const tab = (location.state as any)?.tab;
             localStorage.removeItem('redirectAfterLogin');
 
-            navigate(from, { replace: true });
+            if (tab) {
+                navigate(from, { replace: true, state: { tab } });
+            } else {
+                navigate(from, { replace: true });
+            }
         } catch (err) {
             setError('Неверный email или пароль');
         } finally {

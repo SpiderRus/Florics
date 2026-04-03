@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Tabs, Tab, Spinner, Alert, Button } from 'react-bootstrap';
 import { goodsService, Goods } from '../services/goodsService';
 import { reviewService } from '../services/reviewService';
@@ -11,11 +11,13 @@ import ReviewList from './ReviewList';
 import ReviewForm from './ReviewForm';
 import AddToCartButton from './AddToCartButton';
 import MarkdownContent from './MarkdownContent';
+import AiChatBot from './AiChatBot';
 import { useAuth } from '../contexts/AuthContext';
 
 const GoodsDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, isAuthenticated } = useAuth();
 
     const [goods, setGoods] = useState<Goods | null>(null);
@@ -26,6 +28,10 @@ const GoodsDetailPage: React.FC = () => {
     const [showModal, setShowModal] = useState(false);
     const [modalMediaItems, setModalMediaItems] = useState<MediaItem[]>([]);
     const [modalCurrentIndex, setModalCurrentIndex] = useState(0);
+
+    // Инициализировать activeTab из location.state если есть, иначе 'description'
+    const initialTab = (location.state as any)?.tab || 'description';
+    const [activeTab, setActiveTab] = useState<string>(initialTab);
 
     useEffect(() => {
         if (!id) return;
@@ -59,6 +65,18 @@ const GoodsDetailPage: React.FC = () => {
 
         loadData();
     }, [id, isAuthenticated]);
+
+    // Очистить state после использования вкладки
+    useEffect(() => {
+        const state = location.state as any;
+        if (state?.tab) {
+            // Очистить state чтобы не активировать вкладку повторно при следующем посещении
+            const timer = setTimeout(() => {
+                navigate(location.pathname, { replace: true, state: {} });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [location.pathname, navigate]);
 
     const handleReviewSubmitted = async () => {
         if (!id) return;
@@ -160,7 +178,7 @@ const GoodsDetailPage: React.FC = () => {
 
             <Row>
                 <Col>
-                    <Tabs defaultActiveKey="description" className="goods-tabs">
+                    <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k || 'description')} className="goods-tabs">
                         <Tab eventKey="description" title="Описание">
                             <div className="tab-content-box">
                                 {goods.detailedDescription ? (
@@ -193,6 +211,16 @@ const GoodsDetailPage: React.FC = () => {
                                         <a href="/login">Войдите</a> и купите товар, чтобы оставить отзыв
                                     </Alert>
                                 )}
+                            </div>
+                        </Tab>
+                        <Tab eventKey="chat" title="Вопрос/Ответ">
+                            <div className="tab-content-box">
+                                <AiChatBot
+                                    goodsId={Number(goods.id)}
+                                    goodsName={goods.name}
+                                    isAuthenticated={isAuthenticated}
+                                    canPurchase={user?.canPurchase || false}
+                                />
                             </div>
                         </Tab>
                     </Tabs>

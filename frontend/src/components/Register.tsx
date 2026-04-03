@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Container, Form, Alert } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -18,6 +18,7 @@ const Register: React.FC = () => {
     }>({});
     const { register } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const validateEmail = (email: string): string | undefined => {
         if (!email) return 'Email обязателен';
@@ -87,7 +88,16 @@ const Register: React.FC = () => {
 
         try {
             await register(email, name, password);
-            navigate('/');
+
+            // Получаем URL для возврата из state
+            const from = (location.state as any)?.from || '/';
+            const tab = (location.state as any)?.tab;
+
+            if (tab) {
+                navigate(from, { replace: true, state: { tab } });
+            } else {
+                navigate(from, { replace: true });
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Ошибка регистрации');
         } finally {

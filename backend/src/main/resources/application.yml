@@ -7,6 +7,14 @@ spring:
   webflux:
     static-path-pattern: /**
 
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/postgres?currentSchema=florashop
+    username: florashop   # заменить на реального пользователя БД
+    password: spider    # заменить на реальный пароль БД
+
+  flyway:
+    locations: classpath:db/migration
+
 server:
   port: 8080
 
@@ -25,3 +33,14 @@ logging:
 security:
   token:
     expiration-hours: 8760
+
+ai-agent:
+  base-url: http://localhost:8081
+  base-path: /api/v1
+  connect-timeout: 5000
+  read-timeout: 30000
+  # Connection pool настройки (опционально)
+  # По умолчанию используется глобальный elastic pool Reactor Netty
+  pool:
+    max-connections: 10      # Максимум соединений к AI Agent
+    pending-acquire-timeout: 45000  # Таймаут ожидания соединения из pool (мс)

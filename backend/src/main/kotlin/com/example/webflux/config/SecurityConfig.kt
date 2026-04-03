@@ -88,6 +88,8 @@ class SecurityConfig {
                     .pathMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.ico").permitAll()
                     .pathMatchers("/catalog", "/catalog/*", "/login", "/register", "/cart", "/profile", "/terrariums",
                         "/custom-terrarium", "/masterclasses", "/masterclass/*").permitAll()
+                    // AI чат-бот - только для авторизованных пользователей
+                    .pathMatchers("/api/aibot/**").authenticated()
                     // Остальное требует авторизацию (включая /api/auth/me и /api/auth/logout)
                     .anyExchange().authenticated()
             }
