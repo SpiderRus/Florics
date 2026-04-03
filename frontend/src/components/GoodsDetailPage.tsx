@@ -41,7 +41,7 @@ const GoodsDetailPage: React.FC = () => {
                 setLoading(true);
                 setError(null);
 
-                const goodsData = await goodsService.getGoodsById(Number(id));
+                const goodsData = await goodsService.getGoodsById(id!);
                 if (!goodsData) {
                     setError('Товар не найден');
                     return;
@@ -216,7 +216,7 @@ const GoodsDetailPage: React.FC = () => {
                         <Tab eventKey="chat" title="Вопрос/Ответ">
                             <div className="tab-content-box">
                                 <AiChatBot
-                                    goodsId={Number(goods.id)}
+                                    goodsId={goods.id}
                                     goodsName={goods.name}
                                     isAuthenticated={isAuthenticated}
                                     canPurchase={user?.canPurchase || false}

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 class CategoryService(
     private val categoryRepository: CategoryRepository
 ) {
-    fun getAllCategories(): Flow<Category> = categoryRepository.findAll()
+    suspend fun getAllCategories(): List<Category> = categoryRepository.findAll()
 
     suspend fun getCategoryById(id: String): Category? = categoryRepository.findById(id)
 }

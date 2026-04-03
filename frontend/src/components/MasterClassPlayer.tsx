@@ -24,7 +24,7 @@ const MasterClassPlayer: React.FC = () => {
 
     const loadCourse = async () => {
         try {
-            const goods = await goodsService.getGoodsById(Number(id!));
+            const goods = await goodsService.getGoodsById(id!);
             setCourse(goods);
 
             const purchased = await purchaseService.hasPurchased(id!);

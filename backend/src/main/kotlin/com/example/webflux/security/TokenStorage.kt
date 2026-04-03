@@ -29,7 +29,7 @@ class TokenStorage {
         return tokens.remove(token) != null
     }
 
-    suspend fun removeByUserId(userId: Long) {
+    suspend fun removeByUserId(userId: String) {
         tokens.entries.removeIf { it.value.userId == userId }
     }
 }

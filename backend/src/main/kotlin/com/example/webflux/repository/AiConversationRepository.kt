@@ -1,44 +1,28 @@
 package com.example.webflux.repository
 
+import com.example.webflux.entity.AiConversationEntity
+import com.example.webflux.repository.r2dbc.AiConversationR2dbcRepository
 import org.springframework.stereotype.Repository
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 
 /**
- * In-memory репозиторий для хранения маппинга AI разговоров к пользователям
+ * R2DBC репозиторий для хранения маппинга AI разговоров к пользователям
  *
- * Хранит две связи:
- * 1. conversationId (UUID из AI Agent) → userId (Long из Florics) - изоляция пользователей
- * 2. (userId, goodsId) → conversationId - привязка разговоров к товарам
+ * Хранит связи (userId, goodsId) → conversationId - привязка разговоров к товарам
  *
  * Используется для изоляции разговоров между пользователями и создания отдельных
  * conversation для каждого товара.
- *
- * Следует паттерну других in-memory репозиториев в проекте
- * (UserRepository, CartRepository, GoodsRepository).
  */
 @Repository
-class AiConversationRepository {
+class AiConversationRepository(
+    private val aiConversationR2dbcRepository: AiConversationR2dbcRepository
+) {
 
     /**
-     * Маппинг conversationId -> userId
-     */
-    private val storage = ConcurrentHashMap<UUID, Long>()
-
-    /**
-     * Маппинг (userId, goodsId) -> conversationId
-     * Используется для создания отдельного conversation для каждого товара
-     */
-    private val goodsConversations = ConcurrentHashMap<Pair<Long, Long>, UUID>()
-
-    /**
-     * Сохранить связь conversation → user
-     *
-     * @param conversationId UUID разговора из AI Agent
-     * @param userId ID пользователя из Florics
+     * Сохранить связь conversation → user (deprecated, use saveGoodsConversation)
      */
     suspend fun save(conversationId: UUID, userId: Long) {
-        storage[conversationId] = userId
+        // Deprecated - use saveGoodsConversation instead
     }
 
     /**
@@ -47,57 +31,64 @@ class AiConversationRepository {
      * @param conversationId UUID разговора
      * @return ID пользователя-владельца или null если не найдено
      */
-    suspend fun findByConversationId(conversationId: UUID): Long? {
-        return storage[conversationId]
+    suspend fun findByConversationId(conversationId: String): String? {
+        val entity = aiConversationR2dbcRepository.findByConversationId(conversationId)
+        return entity?.userId
     }
 
     /**
      * Найти все разговоры пользователя
      *
-     * @param userId ID пользователя
+     * @param userId ID пользователя (UUID string)
      * @return Список UUID разговоров, принадлежащих пользователю
      */
-    suspend fun findByUserId(userId: Long): List<UUID> {
-        return storage.entries
-            .filter { it.value == userId }
-            .map { it.key }
+    suspend fun findByUserId(userId: String): List<String> {
+        val result = mutableListOf<String>()
+        aiConversationR2dbcRepository.findByUserId(userId)
+            .collect { entity -> result.add(entity.conversationId) }
+        return result
     }
 
     /**
      * Сохранить связь conversation → (user, goods)
      *
-     * @param userId ID пользователя
-     * @param goodsId ID товара
+     * @param userId ID пользователя (UUID string)
+     * @param goodsId ID товара (UUID string)
      * @param conversationId UUID разговора
      */
-    suspend fun saveGoodsConversation(userId: Long, goodsId: Long, conversationId: UUID) {
-        goodsConversations[Pair(userId, goodsId)] = conversationId
+    suspend fun saveGoodsConversation(userId: String, goodsId: String, conversationId: String) {
+        val entity = AiConversationEntity(
+            userId = userId,
+            goodsId = goodsId,
+            conversationId = conversationId
+        )
+        aiConversationR2dbcRepository.save(entity)
     }
 
     /**
      * Найти conversation для конкретного пользователя и товара
      *
-     * @param userId ID пользователя
-     * @param goodsId ID товара
+     * @param userId ID пользователя (UUID string)
+     * @param goodsId ID товара (UUID string)
      * @return UUID разговора или null если не найдено
      */
-    suspend fun findConversationByUserAndGoods(userId: Long, goodsId: Long): UUID? {
-        return goodsConversations[Pair(userId, goodsId)]
+    suspend fun findConversationByUserAndGoods(userId: String, goodsId: String): String? {
+        val entity = aiConversationR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId)
+        return entity?.conversationId
     }
 
     /**
      * Удалить маппинг при удалении разговора
      *
-     * Очищает оба маппинга: conversationId → userId и (userId, goodsId) → conversationId
-     *
      * @param conversationId UUID разговора для удаления
      * @return true если маппинг был удален, false если не существовал
      */
-    suspend fun deleteByConversationId(conversationId: UUID): Boolean {
-        val removed = storage.remove(conversationId) != null
-        // Удалить из goodsConversations все записи с этим conversationId
-        goodsConversations.entries.removeIf { it.value == conversationId }
-        return removed
+    suspend fun deleteByConversationId(conversationId: String): Boolean {
+        val exists = aiConversationR2dbcRepository.findByConversationId(conversationId) != null
+        if (!exists) return false
+
+        aiConversationR2dbcRepository.deleteByConversationId(conversationId)
+        return true
     }
 
     /**
@@ -106,7 +97,7 @@ class AiConversationRepository {
      * @param conversationId UUID разговора
      * @return true если маппинг существует
      */
-    suspend fun exists(conversationId: UUID): Boolean {
-        return storage.containsKey(conversationId)
+    suspend fun exists(conversationId: String): Boolean {
+        return aiConversationR2dbcRepository.findByConversationId(conversationId) != null
     }
 }

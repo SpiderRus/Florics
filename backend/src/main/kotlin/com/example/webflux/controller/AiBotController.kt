@@ -78,7 +78,7 @@ class AiBotController(
      */
     @GetMapping("/conversations/by-goods/{goodsId}")
     suspend fun getConversationByGoods(
-        @PathVariable goodsId: Long
+        @PathVariable goodsId: String
     ): ResponseEntity<ConversationResponse> {
         val userId = SecurityUtils.requireCurrentUserId()
         logger.debug("User {} requesting conversation for goods {}", userId, goodsId)
@@ -99,7 +99,7 @@ class AiBotController(
      */
     @GetMapping("/conversations/{conversationId}/messages")
     suspend fun getMessages(
-        @PathVariable conversationId: UUID,
+        @PathVariable conversationId: String,
         @RequestParam(defaultValue = "50") limit: Int
     ): ResponseEntity<List<MessageResponse>> {
         val userId = SecurityUtils.requireCurrentUserId()
@@ -120,7 +120,7 @@ class AiBotController(
      */
     @PostMapping("/chat/{conversationId}")
     suspend fun sendMessage(
-        @PathVariable conversationId: UUID,
+        @PathVariable conversationId: String,
         @RequestBody request: ChatMessageRequest
     ): ResponseEntity<ChatResponse> {
         val userId = SecurityUtils.requireCurrentUserId()
@@ -144,7 +144,7 @@ class AiBotController(
      */
     @DeleteMapping("/conversations/{conversationId}")
     suspend fun deleteConversation(
-        @PathVariable conversationId: UUID
+        @PathVariable conversationId: String
     ): ResponseEntity<Void> {
         val userId = SecurityUtils.requireCurrentUserId()
         logger.debug("User {} deleting conversation {}", userId, conversationId)
@@ -157,7 +157,7 @@ class AiBotController(
      * DTO для создания conversation для товара
      */
     data class CreateConversationRequest(
-        val goodsId: Long,
+        val goodsId: String,
         val goodsName: String
     )
 

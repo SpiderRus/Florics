@@ -3,7 +3,7 @@ package com.example.webflux.controller
 import com.example.webflux.controller.model.CreateReviewRequest
 import com.example.webflux.controller.model.GoodsRatingDto
 import com.example.webflux.controller.model.ReviewDto
-import com.example.webflux.controller.model.toDto
+import com.example.webflux.controller.model.toReviewDto
 import com.example.webflux.security.SecurityUtils
 import com.example.webflux.service.ReviewService
 import io.swagger.v3.oas.annotations.Operation
@@ -23,7 +23,7 @@ class ReviewController(
     @GetMapping("/{goodsId}")
     @Operation(summary = "Получить все отзывы на товар", description = "Возвращает список отзывов на товар, отсортированный по дате (новые первыми). Доступно всем пользователям.")
     fun getReviews(@PathVariable goodsId: String): Flow<ReviewDto> =
-        reviewService.getReviewsByGoodsId(goodsId).map { it.toDto() }
+        reviewService.getReviewsByGoodsId(goodsId).map { it.toReviewDto() }
 
     @GetMapping("/rating/{goodsId}")
     @Operation(summary = "Получить средний рейтинг товара", description = "Возвращает средний рейтинг и количество отзывов. Доступно всем пользователям.")
@@ -42,7 +42,7 @@ class ReviewController(
                 goodsId = request.goodsId,
                 rating = request.rating,
                 comment = request.comment
-            ).toDto())
+            ).toReviewDto())
 
     @DeleteMapping("/{reviewId}")
     @PreAuthorize("hasRole('BUYER')")

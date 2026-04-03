@@ -1,25 +1,28 @@
 package com.example.webflux.repository
 
 import com.example.webflux.domain.model.Purchase
+import com.example.webflux.mapper.PurchaseMapper
+import com.example.webflux.repository.r2dbc.PurchaseR2dbcRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Repository
-import java.util.concurrent.ConcurrentHashMap
 
 @Repository
-class PurchaseRepository {
-    // userId -> List<Purchase>
-    private val storage = ConcurrentHashMap<Long, MutableList<Purchase>>()
+class PurchaseRepository(
+    private val purchaseR2dbcRepository: PurchaseR2dbcRepository
+) {
 
     suspend fun save(purchase: Purchase): Purchase {
-        storage.getOrPut(purchase.userId) { mutableListOf() }.add(purchase)
-
-        return purchase
+        val entity = PurchaseMapper.toEntity(purchase)
+        val saved = purchaseR2dbcRepository.save(entity)
+        return PurchaseMapper.toModel(saved)
     }
 
-    fun findByUserId(userId: Long): Flow<Purchase> = storage[userId]?.asFlow() ?: emptyFlow()
+    fun findByUserId(userId: String): Flow<Purchase> {
+        return purchaseR2dbcRepository.findByUserId(userId)
+            .map { PurchaseMapper.toModel(it) }
+    }
 
-    suspend fun hasPurchased(userId: Long, goodsId: String): Boolean =
-        storage[userId]?.any { it.goodsId == goodsId } ?: false
+    suspend fun hasPurchased(userId: String, goodsId: String): Boolean =
+        purchaseR2dbcRepository.existsByUserIdAndGoodsId(userId, goodsId)
 }

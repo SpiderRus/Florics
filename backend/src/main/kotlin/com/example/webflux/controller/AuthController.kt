@@ -74,7 +74,7 @@ class AuthController(
         val user = userRepository.findById(tokenInfo.userId)
             ?: return ResponseEntity.notFound().build()
 
-        return ResponseEntity.ok(user.toDto())
+        return ResponseEntity.ok(user.toUserDto())
     }
 
     private suspend fun TokenInfo.toAuthResponse(): AuthResponse {
@@ -91,11 +91,4 @@ class AuthController(
             )
         )
     }
-
-    private fun User.toDto() = UserDto(
-        id = id,
-        name = name,
-        email = email,
-        canPurchase = roles.contains("BUYER")
-    )
 }

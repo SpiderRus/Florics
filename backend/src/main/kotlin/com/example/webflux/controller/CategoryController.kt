@@ -1,7 +1,7 @@
 package com.example.webflux.controller
 
-import com.example.webflux.domain.model.Category
 import com.example.webflux.controller.model.CategoryDto
+import com.example.webflux.controller.model.toCategoryDto
 import com.example.webflux.service.CategoryService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -36,7 +36,7 @@ class CategoryController(
             )
         ]
     )
-    fun getAllCategories(): Flow<CategoryDto> = categoryService.getAllCategories().map { it.toDto() }
+    suspend fun getAllCategories(): List<CategoryDto> = categoryService.getAllCategories().map { it.toCategoryDto() }
 
     @GetMapping("/{id}")
     @Operation(
@@ -60,11 +60,5 @@ class CategoryController(
         @Parameter(description = "ID категории", example = "1")
         @PathVariable id: String
     ): ResponseEntity<CategoryDto> =
-        categoryService.getCategoryById(id)?.let { ResponseEntity.ok(it.toDto()) } ?: ResponseEntity.notFound().build()
-
-    private fun Category.toDto() = CategoryDto(
-        id = id,
-        name = name,
-        type = type
-    )
+        categoryService.getCategoryById(id)?.let { ResponseEntity.ok(it.toCategoryDto()) } ?: ResponseEntity.notFound().build()
 }

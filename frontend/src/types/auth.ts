@@ -1,5 +1,5 @@
 export interface User {
-    id: number;
+    id: string; // UUID
     name: string;
     email: string;
     canPurchase: boolean;

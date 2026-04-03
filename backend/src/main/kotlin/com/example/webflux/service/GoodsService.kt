@@ -17,11 +17,11 @@ class GoodsService(
         return goodsRepository.findAll()
     }
 
-    suspend fun getGoodsById(id: Long): Goods? {
+    suspend fun getGoodsById(id: String): Goods? {
         return goodsRepository.findById(id)
     }
 
-    fun getGoodsByType(type: GoodsType): Flow<Goods> {
+    suspend fun getGoodsByType(type: GoodsType): List<Goods> {
         return goodsRepository.findByType(type)
     }
 

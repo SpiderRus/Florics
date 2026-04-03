@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.*
 
 @Service
@@ -18,7 +19,7 @@ class ReviewService(
     private val purchaseService: PurchaseService,
     private val userRepository: UserRepository
 ) {
-    suspend fun createReview(userId: Long, goodsId: String, rating: Int, comment: String): Review {
+    suspend fun createReview(userId: String, goodsId: String, rating: Int, comment: String): Review {
         // Проверка: купил ли пользователь этот товар
         if (!purchaseService.hasPurchased(userId, goodsId))
             throw IllegalStateException("Вы можете оставить отзыв только на купленные товары")
@@ -38,8 +39,8 @@ class ReviewService(
             userName = user.name,
             rating = rating,
             comment = comment.trim(),
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            createdAt = OffsetDateTime.now(),
+            updatedAt = OffsetDateTime.now()
         )
 
         return reviewRepository.save(review)
@@ -55,7 +56,7 @@ class ReviewService(
         return if (reviews.isEmpty()) Pair(0.0, 0) else Pair(reviews.average(), reviews.size)
     }
 
-    suspend fun deleteReview(userId: Long, reviewId: String): Boolean {
+    suspend fun deleteReview(userId: String, reviewId: String): Boolean {
         val review = reviewRepository.findById(reviewId) ?: throw IllegalArgumentException("Отзыв не найден")
 
         // Проверка: только автор может удалить отзыв

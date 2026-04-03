@@ -33,7 +33,7 @@ export const goodsService = {
         return response.data;
     },
 
-    getGoodsById: async (id: number): Promise<Goods> => {
+    getGoodsById: async (id: string): Promise<Goods> => {
         const response = await axios.get<Goods>(`${API_BASE_URL}/goods/${id}`);
         return response.data;
     },

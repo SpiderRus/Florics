@@ -3,121 +3,130 @@ package com.example.webflux.repository
 import com.example.webflux.controller.model.LocalCartItem
 import com.example.webflux.domain.model.CartItem
 import com.example.webflux.domain.model.GoodsType
+import com.example.webflux.mapper.CartItemMapper
+import com.example.webflux.repository.r2dbc.CartItemR2dbcRepository
+import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Repository
 import java.time.Instant
-import java.util.*
-import java.util.concurrent.ConcurrentHashMap
+import java.time.OffsetDateTime
 
 /**
- * In-memory репозиторий для корзин покупок
- * Хранит корзины в виде Map<userId, Map<goodsId, CartItem>>
+ * R2DBC репозиторий для корзин покупок
  */
 @Repository
 class CartRepository(
+    private val cartItemR2dbcRepository: CartItemR2dbcRepository,
     private val goodsRepository: GoodsRepository,
     private val categoryRepository: CategoryRepository
 ) {
-    // Двухуровневое хранилище: userId -> (goodsId -> CartItem)
-    private val storage = ConcurrentHashMap<Long, MutableMap<String, CartItem>>()
 
     /**
      * Получить все товары корзины пользователя
      */
-    suspend fun findByUserId(userId: Long): List<CartItem> {
-        return storage[userId]?.values?.toList() ?: emptyList()
+    suspend fun findByUserId(userId: String): List<CartItem> {
+        return cartItemR2dbcRepository.findByUserId(userId)
+            .toList()
+            .map { CartItemMapper.toModel(it) }
     }
 
     /**
      * Добавить товар в корзину или увеличить количество если уже существует
      */
     suspend fun addOrUpdateItem(item: CartItem): CartItem {
-        val userCart = storage.getOrPut(item.userId) { mutableMapOf() }
-        val existing = userCart[item.goodsId]
+        val existing = cartItemR2dbcRepository.findByUserIdAndGoodsId(item.userId, item.goodsId)
 
-        val updatedItem = existing?.// Товар уже в корзине - суммируем количества
-                copy(quantity = existing.quantity + item.quantity)
-            ?: // Новый товар
-                item
-
-        userCart[item.goodsId] = updatedItem
-        return updatedItem
+        return if (existing != null) {
+            // Товар уже в корзине - суммируем количества
+            val updated = existing.copy(quantity = existing.quantity + item.quantity)
+            val saved = cartItemR2dbcRepository.save(updated)
+            CartItemMapper.toModel(saved)
+        } else {
+            // Новый товар
+            val entity = CartItemMapper.toEntity(item)
+            val saved = cartItemR2dbcRepository.save(entity)
+            CartItemMapper.toModel(saved)
+        }
     }
 
     /**
      * Изменить количество товара в корзине
      * Если quantity <= 0, товар удаляется
      */
-    suspend fun updateQuantity(userId: Long, goodsId: String, quantity: Int): CartItem? {
-        val userCart = storage[userId] ?: return null
-        val item = userCart[goodsId] ?: return null
+    suspend fun updateQuantity(userId: String, goodsId: String, quantity: Int): CartItem? {
+        val item = cartItemR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId) ?: return null
 
         if (quantity <= 0) {
-            userCart.remove(goodsId)
+            cartItemR2dbcRepository.deleteByUserIdAndGoodsId(userId, goodsId)
             return null
         }
 
         val updated = item.copy(quantity = quantity)
-        userCart[goodsId] = updated
-        return updated
+        val saved = cartItemR2dbcRepository.save(updated)
+        return CartItemMapper.toModel(saved)
     }
 
     /**
      * Удалить товар из корзины
      */
-    suspend fun removeItem(userId: Long, goodsId: String): Boolean {
-        return storage[userId]?.remove(goodsId) != null
+    suspend fun removeItem(userId: String, goodsId: String): Boolean {
+        if (cartItemR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId) == null) return false
+
+        cartItemR2dbcRepository.deleteByUserIdAndGoodsId(userId, goodsId)
+        return true
     }
 
     /**
      * Очистить всю корзину пользователя
      */
-    suspend fun clearCart(userId: Long): Boolean {
-        return storage.remove(userId) != null
+    suspend fun clearCart(userId: String): Boolean {
+        if (cartItemR2dbcRepository.findByUserId(userId).toList().isEmpty()) return false
+
+        cartItemR2dbcRepository.deleteByUserId(userId)
+        return true
     }
 
     /**
      * Найти товар в корзине пользователя
      */
-    suspend fun findByUserIdAndGoodsId(userId: Long, goodsId: String): CartItem? {
-        return storage[userId]?.get(goodsId)
+    suspend fun findByUserIdAndGoodsId(userId: String, goodsId: String): CartItem? {
+        val entity = cartItemR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId) ?: return null
+        return CartItemMapper.toModel(entity)
     }
 
     /**
      * Объединить локальные товары (из localStorage) с серверной корзиной
      * При конфликтах суммируются количества (кроме мастер-классов)
      */
-    suspend fun mergeItems(userId: Long, localItems: List<LocalCartItem>): List<CartItem> {
-        val userCart = storage.getOrPut(userId) { mutableMapOf() }
-
+    suspend fun mergeItems(userId: String, localItems: List<LocalCartItem>): List<CartItem> {
         localItems.forEach { localItem ->
             // Получить информацию о товаре и категории
-            val goods = goodsRepository.findById(localItem.goodsId.toLong())
+            val goods = goodsRepository.findById(localItem.goodsId)
             val category = goods?.let { categoryRepository.findById(it.categoryId) }
             val isCourse = category?.type == GoodsType.COURSE
 
-            val existing = userCart[localItem.goodsId]
+            val existing = cartItemR2dbcRepository.findByUserIdAndGoodsId(userId, localItem.goodsId)
 
             if (existing != null) {
                 // Конфликт: товар есть и в серверной, и в локальной корзине
                 // Для мастер-классов НЕ суммируем, оставляем quantity = 1
-                // Ничего не делаем, курс уже в корзине с quantity = 1
                 if (!isCourse) {
                     // Для обычных товаров суммируем количества
-                    userCart[localItem.goodsId] = existing.copy(quantity = existing.quantity + localItem.quantity)
+                    val updated = existing.copy(quantity = existing.quantity + localItem.quantity)
+                    cartItemR2dbcRepository.save(updated)
                 }
             } else {
                 // Добавляем новый товар из localStorage
                 val finalQuantity = if (isCourse) 1 else localItem.quantity
-                userCart[localItem.goodsId] = CartItem(
-                    id = UUID.randomUUID().toString(),
+                val newItem = CartItemMapper.toEntity(CartItem(
                     userId = userId,
                     goodsId = localItem.goodsId,
                     quantity = finalQuantity,
-                    addedAt = Instant.now()
-                )
+                    addedAt = OffsetDateTime.now()
+                ))
+                cartItemR2dbcRepository.save(newItem)
             }
         }
 
-        return userCart.values.toList()
+        return findByUserId(userId)
     }
 }

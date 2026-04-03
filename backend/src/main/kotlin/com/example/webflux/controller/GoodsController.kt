@@ -40,7 +40,7 @@ class GoodsController(
         ]
     )
     fun getAllGoods(): Flow<GoodsDto> = goodsService.getAllGoods().map {
-            it.toDto(goodsService.getCategoryForGoods(it))
+            it.toGoodsDto(goodsService.getCategoryForGoods(it))
         }
 
     @GetMapping("/{id}")
@@ -62,11 +62,11 @@ class GoodsController(
         ]
     )
     suspend fun getGoodsById(
-        @Parameter(description = "ID товара", example = "1")
-        @PathVariable id: Long
+        @Parameter(description = "ID товара", example = "550e8400-e29b-41d4-a716-446655440000")
+        @PathVariable id: String
     ): ResponseEntity<GoodsDto> =
         goodsService.getGoodsById(id)?.let {
-            ResponseEntity.ok(it.toDto(goodsService.getCategoryForGoods(it)))
+            ResponseEntity.ok(it.toGoodsDto(goodsService.getCategoryForGoods(it)))
         } ?: ResponseEntity.notFound().build()
 
     @GetMapping("/type/{type}")
@@ -87,30 +87,9 @@ class GoodsController(
             )
         ]
     )
-    fun getGoodsByType(
+
+    suspend fun getGoodsByType(
         @Parameter(description = "Тип товара (PLANT, TERRARIUM, COURSE)", example = "PLANT")
-        @PathVariable type: GoodsType
-    ): Flow<GoodsDto> = goodsService.getGoodsByType(type).map { it.toDto(goodsService.getCategoryForGoods(it)) }
-
-    // Extension функция для преобразования Media в MediaDto
-    private fun Media.toDto(): MediaDto = when (this) {
-        is Image -> ImageDto(url = url, order = order)
-        is Video -> VideoDto(url = url, order = order)
-    }
-
-    // Extension функция для преобразования domain entity в DTO
-    private fun Goods.toDto(category: Category?) = GoodsDto(
-        id = id,
-        name = name,
-        description = description,
-        price = price,
-        media = media.map { it.toDto() }.sortedBy { it.order },
-        category = category?.let { CategoryDto(it.id, it.name, it.type) },
-        difficulty = difficulty,
-        duration = duration,
-        videoUrl = videoUrl,
-        previewUrl = previewUrl,
-        detailedDescription = detailedDescription,
-        careInstructions = careInstructions
-    )
+        @PathVariable type: GoodsType): List<GoodsDto> =
+            goodsService.getGoodsByType(type).map { it.toGoodsDto(goodsService.getCategoryForGoods(it)) }
 }

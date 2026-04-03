@@ -71,5 +71,5 @@ class LocalAuthenticationService(
         return tokenStorage.save(tokenInfo)
     }
 
-    private fun generateUserId(): Long = System.currentTimeMillis()
+    private fun generateUserId(): String = UUID.randomUUID().toString()
 }

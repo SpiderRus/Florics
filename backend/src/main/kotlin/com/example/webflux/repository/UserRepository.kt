@@ -1,47 +1,52 @@
 package com.example.webflux.repository
 
 import com.example.webflux.domain.model.User
-import kotlinx.coroutines.delay
+import com.example.webflux.mapper.UserMapper
+import com.example.webflux.repository.r2dbc.UserR2dbcRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Repository
+import java.util.UUID
 
 @Repository
-class UserRepository {
+class UserRepository(
+    private val userR2dbcRepository: UserR2dbcRepository
+) {
 
-    // BCrypt hash для "password123"
-    private val storage = mutableMapOf(
-        1L to User(1, "Alice", "alice@example.com", "\$2a\$10\$GLV9oczk1dvKX9vJ2gHlhOn41DInakVQiRSDzJehbIE7Uqr2VLZIy", setOf("USER", "BUYER")),
-        2L to User(2, "Bob", "bob@example.com", "\$2a\$10\$GLV9oczk1dvKX9vJ2gHlhOn41DInakVQiRSDzJehbIE7Uqr2VLZIy", setOf("USER", "BUYER")),
-        3L to User(3, "Admin", "admin@example.com", "\$2a\$10\$GLV9oczk1dvKX9vJ2gHlhOn41DInakVQiRSDzJehbIE7Uqr2VLZIy", setOf("USER", "ADMIN", "BUYER"))
-    )
-
-    suspend fun findById(id: Long): User? {
-        return storage[id]
+    suspend fun findById(id: String): User? {
+        val entity = userR2dbcRepository.findById(id) ?: return null
+        if (entity.deletedAt != null) return null
+        return UserMapper.toModel(entity)
     }
 
     suspend fun save(user: User): User {
-        storage[user.id] = user
-        return user
+        val entity = UserMapper.toEntity(user)
+        val saved = userR2dbcRepository.save(entity)
+        return UserMapper.toModel(saved)
     }
 
     fun findAll(): Flow<User> {
-        return storage.values.asFlow()
+        return userR2dbcRepository.findAllActive()
+            .map { UserMapper.toModel(it) }
     }
 
-    suspend fun deleteById(id: Long): Boolean {
-        return storage.remove(id) != null
+    suspend fun deleteById(id: String): Boolean {
+        if (!existsById(id)) return false
+        userR2dbcRepository.softDelete(id)
+        return true
     }
 
-    suspend fun existsById(id: Long): Boolean {
-        return storage.containsKey(id)
+    suspend fun existsById(id: String): Boolean {
+        val entity = userR2dbcRepository.findById(id) ?: return false
+        return entity.deletedAt == null
     }
 
     suspend fun findByEmail(email: String): User? {
-        return storage.values.find { it.email == email }
+        val entity = userR2dbcRepository.findByEmail(email) ?: return null
+        return UserMapper.toModel(entity)
     }
 
     suspend fun existsByEmail(email: String): Boolean {
-        return storage.values.any { it.email == email }
+        return userR2dbcRepository.findByEmail(email) != null
     }
 }

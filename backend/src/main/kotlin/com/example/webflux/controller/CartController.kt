@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import java.time.OffsetDateTime
+import java.util.UUID.randomUUID
 
 /**
  * REST контроллер для управления корзиной покупок
@@ -28,7 +30,7 @@ class CartController(
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Получить корзину", description = "Возвращает содержимое корзины с расчетом итоговой суммы")
     suspend fun getCart(): ResponseEntity<CartSummaryDto> =
-        ResponseEntity.ok(cartService.getCartSummary(SecurityUtils.requireCurrentUserId()))
+        ResponseEntity.ok(cartService.getCartSummary(SecurityUtils.requireCurrentUserId()).toCartSummaryDto())
 
     /**
      * Добавить товар в корзину
@@ -38,7 +40,7 @@ class CartController(
     @Operation(summary = "Добавить товар в корзину", description = "Добавляет товар в корзину или увеличивает количество если уже есть")
     suspend fun addItem(@org.springframework.validation.annotation.Validated @RequestBody request: AddToCartRequest): ResponseEntity<CartItemDto> {
         return try {
-            ResponseEntity.ok(cartService.addToCart(SecurityUtils.requireCurrentUserId(), request.goodsId, request.quantity))
+            ResponseEntity.ok(cartService.addToCart(SecurityUtils.requireCurrentUserId(), request.goodsId, request.quantity).toCartItemDto())
         } catch (e: IllegalStateException) {
             ResponseEntity.badRequest().build()
         }
@@ -58,7 +60,7 @@ class CartController(
             val item = cartService.updateQuantity(SecurityUtils.requireCurrentUserId(), goodsId, request.quantity)
                 ?: return ResponseEntity.notFound().build()
 
-            ResponseEntity.ok(item)
+            ResponseEntity.ok(item.toCartItemDto())
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
         }
@@ -96,7 +98,7 @@ class CartController(
         description = "Объединяет товары из localStorage с серверной корзиной при логине. При конфликтах суммируются количества"
     )
     suspend fun mergeCart(@org.springframework.validation.annotation.Validated @RequestBody request: MergeCartRequest): ResponseEntity<CartSummaryDto> =
-        ResponseEntity.ok(cartService.mergeLocalCart(SecurityUtils.requireCurrentUserId(), request.items))
+        ResponseEntity.ok(cartService.mergeLocalCart(SecurityUtils.requireCurrentUserId(), request.items).toCartSummaryDto())
 
     /**
      * Оформить заказ
@@ -128,17 +130,14 @@ class CartController(
             )
         }
 
-        val orderId = java.util.UUID.randomUUID().toString()
-        val purchaseDate = java.time.Instant.now()
-
         // Очищаем корзину
         cartService.clearCart(userId)
 
         return ResponseEntity.ok(CheckoutResponse(
-            orderId = orderId,
+            orderId = randomUUID().toString(),
             totalPrice = cart.totalPrice,
             items = purchasedItems,
-            purchaseDate = purchaseDate
+            purchaseDate = OffsetDateTime.now()
         ))
     }
 }

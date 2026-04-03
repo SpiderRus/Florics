@@ -1,8 +1,6 @@
 package com.example.webflux.service.aibot.dto
 
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.util.*
 
 /**
  * DTO для представления разговора в ответах
@@ -14,7 +12,7 @@ import java.util.*
  * @property messageCount Количество сообщений в разговоре
  */
 data class ConversationResponse(
-    val id: UUID,
+    val id: String,
     val title: String,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime,

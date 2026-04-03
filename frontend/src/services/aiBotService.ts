@@ -29,9 +29,9 @@ export const aiBotService = {
      * @param goodsName Название товара
      * @returns Promise<Conversation>
      */
-    createOrGetConversation: async (goodsId: number, goodsName: string): Promise<Conversation> => {
+    createOrGetConversation: async (goodsId: string, goodsName: string): Promise<Conversation> => {
         const request: CreateConversationRequest = {
-            goodsId,
+            goodId: goodsId,
             goodsName
         };
         const response = await axios.post<Conversation>(`${API_BASE_URL}/conversations`, request);
@@ -44,7 +44,7 @@ export const aiBotService = {
      * @param goodsId ID товара
      * @returns Promise<Conversation | null> - null если conversation не найден
      */
-    getConversationByGoods: async (goodsId: number): Promise<Conversation | null> => {
+    getConversationByGoods: async (goodsId: string): Promise<Conversation | null> => {
         try {
             const response = await axios.get<Conversation>(`${API_BASE_URL}/conversations/by-goods/${goodsId}`);
             return response.data;

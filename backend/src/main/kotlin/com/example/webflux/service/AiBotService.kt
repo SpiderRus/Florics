@@ -1,20 +1,16 @@
 package com.example.webflux.service
 
 import com.example.webflux.repository.AiConversationRepository
-import com.example.webflux.service.aibot.*
+import com.example.webflux.service.aibot.AiBotServiceException
+import com.example.webflux.service.aibot.AiBotTimeoutException
+import com.example.webflux.service.aibot.ConversationAccessDeniedException
+import com.example.webflux.service.aibot.ConversationNotFoundException
 import com.example.webflux.service.aibot.dto.*
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
-import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.WebClientRequestException
-import org.springframework.web.reactive.function.client.awaitBody
-import org.springframework.web.reactive.function.client.awaitBodilessEntity
-import org.springframework.web.reactive.function.client.bodyToFlow
-import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.*
 import reactor.core.publisher.Mono
 import java.util.*
 import java.util.concurrent.TimeoutException
@@ -34,11 +30,6 @@ class AiBotService(
     @Qualifier("aiAgentWebClient") private val webClient: WebClient,
     private val conversationRepository: AiConversationRepository
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AiBotService::class.java)
-    }
-
     /**
      * Создать новый разговор с AI ассистентом
      *
@@ -47,7 +38,7 @@ class AiBotService(
      * @return Созданный разговор
      * @throws AiBotServiceException при ошибке связи с AI Agent
      */
-    suspend fun createConversation(userId: Long, title: String): ConversationResponse {
+    suspend fun createConversation(userId: String, title: String): ConversationResponse {
         logger.debug("Creating conversation for user {}: {}", userId, title)
 
         val request = ConversationCreateRequest(title)
@@ -68,9 +59,8 @@ class AiBotService(
             throw AiBotTimeoutException("AI Agent request timed out", e)
         }
 
-        // Сохранить маппинг conversationId -> userId
-        conversationRepository.save(response.id, userId)
-        logger.debug("Conversation created: {}, mapped to user {}", response.id, userId)
+        // Note: маппинг conversation → user сохраняется через saveGoodsConversation в контроллере
+        logger.debug("Conversation created: {}", response.id)
 
         return response
     }
@@ -82,7 +72,7 @@ class AiBotService(
      * @return Список разговоров пользователя
      * @throws AiBotServiceException при ошибке связи с AI Agent
      */
-    suspend fun listUserConversations(userId: Long): List<ConversationResponse> {
+    suspend fun listUserConversations(userId: String): List<ConversationResponse> {
         logger.debug("Listing conversations for user {}", userId)
 
         // Получить список conversationIds пользователя
@@ -120,7 +110,7 @@ class AiBotService(
      * @throws ConversationAccessDeniedException если пользователь не владелец
      * @throws AiBotServiceException при ошибке связи с AI Agent
      */
-    suspend fun getConversation(userId: Long, conversationId: UUID): ConversationResponse {
+    suspend fun getConversation(userId: String, conversationId: String): ConversationResponse {
         logger.debug("Getting conversation {} for user {}", conversationId, userId)
         validateOwnership(userId, conversationId)
 
@@ -151,7 +141,7 @@ class AiBotService(
      * @throws ConversationAccessDeniedException если пользователь не владелец
      * @throws AiBotServiceException при ошибке связи с AI Agent
      */
-    suspend fun getMessages(userId: Long, conversationId: UUID, limit: Int = 50): List<MessageResponse> {
+    suspend fun getMessages(userId: String, conversationId: String, limit: Int = 50): List<MessageResponse> {
         logger.debug("Getting messages for conversation {} (user {}, limit {})", conversationId, userId, limit)
         validateOwnership(userId, conversationId)
 
@@ -187,7 +177,7 @@ class AiBotService(
      * @throws ConversationAccessDeniedException если пользователь не владелец
      * @throws AiBotServiceException при ошибке связи с AI Agent
      */
-    suspend fun deleteConversation(userId: Long, conversationId: UUID) {
+    suspend fun deleteConversation(userId: String, conversationId: String) {
         logger.debug("Deleting conversation {} for user {}", conversationId, userId)
         validateOwnership(userId, conversationId)
 
@@ -226,8 +216,8 @@ class AiBotService(
      * @throws AiBotServiceException при ошибке связи с AI Agent
      */
     suspend fun sendMessage(
-        userId: Long,
-        conversationId: UUID,
+        userId: String,
+        conversationId: String,
         message: String,
         useRag: Boolean = true
     ): ChatResponse {
@@ -263,7 +253,7 @@ class AiBotService(
      * @throws ConversationNotFoundException если разговор не найден в локальном маппинге
      * @throws ConversationAccessDeniedException если пользователь не владелец
      */
-    private suspend fun validateOwnership(userId: Long, conversationId: UUID) {
+    private suspend fun validateOwnership(userId: String, conversationId: String) {
         val ownerId = conversationRepository.findByConversationId(conversationId)
             ?: throw ConversationNotFoundException(conversationId)
 
@@ -293,5 +283,9 @@ class AiBotService(
         response.bodyToMono<String>().map { body ->
             AiBotServiceException("AI Agent server error (${response.statusCode()}): $body")
         }.defaultIfEmpty(AiBotServiceException("AI Agent server error: ${response.statusCode()}"))
+    }
+
+    private companion object {
+        private val logger = LoggerFactory.getLogger(AiBotService::class.java)
     }
 }

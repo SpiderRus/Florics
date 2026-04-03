@@ -1,9 +1,6 @@
 package com.example.webflux.controller
 
-import com.example.webflux.domain.model.User
-import com.example.webflux.controller.model.UserResponseDto
-import com.example.webflux.controller.model.CreateUserRequest
-import com.example.webflux.controller.model.UpdateUserRequest
+import com.example.webflux.controller.model.*
 import com.example.webflux.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -31,7 +28,7 @@ class UserController(private val userService: UserService) {
         ApiResponse(responseCode = "200", description = "Успешная операция", content = [Content(schema = Schema(implementation = UserResponseDto::class))])
     ])
     fun getAllUsers(): Flow<UserResponseDto> {
-        return userService.getAllUsers().map { it.toResponseDto() }
+        return userService.getAllUsers().map { it.toUserResponseDto() }
     }
 
     @GetMapping("/{id}")
@@ -42,11 +39,11 @@ class UserController(private val userService: UserService) {
         ApiResponse(responseCode = "404", description = "Пользователь не найден", content = [Content()])
     ])
     suspend fun getUserById(
-        @Parameter(description = "ID пользователя", required = true, example = "1")
-        @PathVariable id: Long
+        @Parameter(description = "ID пользователя", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+        @PathVariable id: String
     ): ResponseEntity<UserResponseDto> {
         return userService.getUserById(id)
-            ?.let { ResponseEntity.ok(it.toResponseDto()) }
+            ?.let { ResponseEntity.ok(it.toUserResponseDto()) }
             ?: ResponseEntity.notFound().build()
     }
 
@@ -61,9 +58,9 @@ class UserController(private val userService: UserService) {
         @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Данные нового пользователя", required = true)
         @RequestBody request: CreateUserRequest
     ): ResponseEntity<UserResponseDto> {
-        val userId = System.currentTimeMillis() // Простая генерация ID
+        val userId = java.util.UUID.randomUUID().toString()
         val user = request.toDomain(userId)
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(user).toResponseDto())
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(user).toUserResponseDto())
     }
 
     @PutMapping("/{id}")
@@ -74,15 +71,15 @@ class UserController(private val userService: UserService) {
         ApiResponse(responseCode = "404", description = "Пользователь не найден", content = [Content()])
     ])
     suspend fun updateUser(
-        @Parameter(description = "ID пользователя", required = true, example = "1")
-        @PathVariable id: Long,
+        @Parameter(description = "ID пользователя", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+        @PathVariable id: String,
         @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Обновленные данные пользователя", required = true)
         @RequestBody request: UpdateUserRequest
     ): ResponseEntity<UserResponseDto> {
         val existingUser = userService.getUserById(id) ?: return ResponseEntity.notFound().build()
         val updatedUser = request.applyTo(existingUser)
         return userService.updateUser(id, updatedUser)
-            ?.let { ResponseEntity.ok(it.toResponseDto()) }
+            ?.let { ResponseEntity.ok(it.toUserResponseDto()) }
             ?: ResponseEntity.notFound().build()
     }
 
@@ -94,8 +91,8 @@ class UserController(private val userService: UserService) {
         ApiResponse(responseCode = "404", description = "Пользователь не найден", content = [Content()])
     ])
     suspend fun deleteUser(
-        @Parameter(description = "ID пользователя", required = true, example = "1")
-        @PathVariable id: Long
+        @Parameter(description = "ID пользователя", required = true, example = "550e8400-e29b-41d4-a716-446655440000")
+        @PathVariable id: String
     ): ResponseEntity<Void> {
         return if (userService.deleteUser(id))
             ResponseEntity.noContent().build()
@@ -103,26 +100,4 @@ class UserController(private val userService: UserService) {
             ResponseEntity.notFound().build()
     }
 
-    // Extension функции для преобразования между domain entities и DTOs
-    private fun User.toResponseDto() = UserResponseDto(
-        id = id,
-        name = name,
-        email = email,
-        roles = roles
-    )
-
-    private fun CreateUserRequest.toDomain(id: Long) = User(
-        id = id,
-        name = name,
-        email = email,
-        password = password,
-        roles = roles
-    )
-
-    private fun UpdateUserRequest.applyTo(user: User) = user.copy(
-        name = name ?: user.name,
-        email = email ?: user.email,
-        password = password ?: user.password,
-        roles = roles ?: user.roles
-    )
 }

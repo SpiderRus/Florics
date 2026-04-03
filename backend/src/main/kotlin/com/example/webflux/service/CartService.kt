@@ -1,23 +1,14 @@
 package com.example.webflux.service
 
-import com.example.webflux.controller.model.CartItemDto
-import com.example.webflux.controller.model.CartSummaryDto
 import com.example.webflux.controller.model.LocalCartItem
-import com.example.webflux.controller.model.GoodsDto
-import com.example.webflux.controller.model.CategoryDto
-import com.example.webflux.controller.model.MediaDto
-import com.example.webflux.controller.model.ImageDto
-import com.example.webflux.controller.model.VideoDto
-import com.example.webflux.domain.model.CartItem
-import com.example.webflux.domain.model.Goods
-import com.example.webflux.domain.model.Media
-import com.example.webflux.domain.model.Image
-import com.example.webflux.domain.model.Video
+import com.example.webflux.domain.model.*
 import com.example.webflux.repository.CartRepository
 import com.example.webflux.repository.GoodsRepository
 import com.example.webflux.repository.CategoryRepository
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.*
 
 /**
@@ -32,33 +23,40 @@ class CartService(
     /**
      * Получить сводку корзины с полной информацией о товарах и расчётом итогов
      */
-    suspend fun getCartSummary(userId: Long): CartSummaryDto {
+    suspend fun getCartSummary(userId: String): CartSummary {
         val cartItems = cartRepository.findByUserId(userId)
 
         // Получаем полную информацию о товарах и фильтруем несуществующие
-        val itemDtos = cartItems.mapNotNull { item ->
-            val goods = goodsRepository.findById(item.goodsId.toLong())
+        val itemsWithGoods = cartItems.mapNotNull { item ->
+            val goods = goodsRepository.findById(item.goodsId)
             if (goods != null) {
-                CartItemDto(item.id, goods.toDto(), item.quantity, item.addedAt)
+                val category = categoryRepository.findById(goods.categoryId)
+                CartItemWithGoods(
+                    id = generateId(item),
+                    goods = goods,
+                    category = category,
+                    quantity = item.quantity,
+                    addedAt = item.addedAt
+                )
             } else {
                 // Товар удален из каталога - пропускаем
                 null
             }
         }
 
-        return CartSummaryDto(
-            items = itemDtos,
-            totalItems = itemDtos.sumOf { it.quantity },
-            totalPrice = itemDtos.sumOf { (it.goods.price * it.quantity).toDouble() }
+        return CartSummary(
+            items = itemsWithGoods,
+            totalItems = itemsWithGoods.sumOf { it.quantity },
+            totalPrice = itemsWithGoods.sumOf { (it.goods.price * BigDecimal.valueOf(it.quantity.toLong())) }
         )
     }
 
     /**
      * Добавить товар в корзину
      */
-    suspend fun addToCart(userId: Long, goodsId: String, quantity: Int): CartItemDto {
+    suspend fun addToCart(userId: String, goodsId: String, quantity: Int): CartItemWithGoods {
         // Валидация: товар существует
-        val goods = goodsRepository.findById(goodsId.toLong())
+        val goods = goodsRepository.findById(goodsId)
             ?: throw IllegalArgumentException("Goods not found: $goodsId")
 
         // Получить категорию товара
@@ -79,24 +77,29 @@ class CartService(
         }
 
         val cartItem = CartItem(
-            id = UUID.randomUUID().toString(),
             userId = userId,
             goodsId = goodsId,
             quantity = finalQuantity,
-            addedAt = Instant.now()
+            addedAt = OffsetDateTime.now()
         )
 
         val savedItem = cartRepository.addOrUpdateItem(cartItem)
-        return CartItemDto(savedItem.id, goods.toDto(), savedItem.quantity, savedItem.addedAt)
+        return CartItemWithGoods(
+            id = generateId(savedItem),
+            goods = goods,
+            category = category,
+            quantity = savedItem.quantity,
+            addedAt = savedItem.addedAt
+        )
     }
 
     /**
      * Изменить количество товара в корзине
      */
-    suspend fun updateQuantity(userId: Long, goodsId: String, quantity: Int): CartItemDto? {
+    suspend fun updateQuantity(userId: String, goodsId: String, quantity: Int): CartItemWithGoods? {
         require(quantity > 0) { "Use removeFromCart for deleting items" }
 
-        val goods = goodsRepository.findById(goodsId.toLong())
+        val goods = goodsRepository.findById(goodsId)
             ?: throw IllegalStateException("Goods not found")
 
         val category = categoryRepository.findById(goods.categoryId)
@@ -110,20 +113,26 @@ class CartService(
         val updated = cartRepository.updateQuantity(userId, goodsId, quantity)
             ?: return null
 
-        return CartItemDto(updated.id, goods.toDto(), updated.quantity, updated.addedAt)
+        return CartItemWithGoods(
+            id = generateId(updated),
+            goods = goods,
+            category = category,
+            quantity = updated.quantity,
+            addedAt = updated.addedAt
+        )
     }
 
     /**
      * Удалить товар из корзины
      */
-    suspend fun removeFromCart(userId: Long, goodsId: String): Boolean {
+    suspend fun removeFromCart(userId: String, goodsId: String): Boolean {
         return cartRepository.removeItem(userId, goodsId)
     }
 
     /**
      * Очистить всю корзину пользователя
      */
-    suspend fun clearCart(userId: Long): Boolean {
+    suspend fun clearCart(userId: String): Boolean {
         return cartRepository.clearCart(userId)
     }
 
@@ -131,7 +140,7 @@ class CartService(
      * Синхронизировать локальную корзину (из localStorage) с серверной
      * При конфликтах суммируются количества
      */
-    suspend fun mergeLocalCart(userId: Long, localItems: List<LocalCartItem>): CartSummaryDto {
+    suspend fun mergeLocalCart(userId: String, localItems: List<LocalCartItem>): CartSummary {
         // Merge локальной корзины с серверной
         cartRepository.mergeItems(userId, localItems)
 
@@ -139,25 +148,8 @@ class CartService(
         return getCartSummary(userId)
     }
 
-    // Extension функция для преобразования Media в MediaDto
-    private fun Media.toDto(): MediaDto = when (this) {
-        is Image -> ImageDto(url = url, order = order)
-        is Video -> VideoDto(url = url, order = order)
+    private companion object {
+        fun generateId(cardItem: CartItem): String =
+            "${cardItem.userId}-${cardItem.goodsId}" // Composite key as string
     }
-
-    // Extension функция для преобразования Goods в GoodsDto
-    private suspend fun Goods.toDto() = GoodsDto(
-        id = id,
-        name = name,
-        description = description,
-        price = price,
-        media = media.map { it.toDto() }.sortedBy { it.order },
-        category = categoryRepository.findById(categoryId)?.let { CategoryDto(it.id, it.name, it.type) },
-        difficulty = difficulty,
-        duration = duration,
-        videoUrl = videoUrl,
-        previewUrl = previewUrl,
-        detailedDescription = detailedDescription,
-        careInstructions = careInstructions
-    )
 }

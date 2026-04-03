@@ -1,7 +1,5 @@
 package com.example.webflux.service.aibot
 
-import java.util.*
-
 /**
  * Базовое исключение для AI Bot операций
  */
@@ -19,7 +17,7 @@ class AiBotServiceException(message: String, cause: Throwable? = null) : AiBotEx
  *
  * Возникает когда запрашиваемый conversation не существует в AI Agent
  */
-class ConversationNotFoundException(conversationId: UUID) :
+class ConversationNotFoundException(conversationId: String) :
     AiBotException("Conversation not found: $conversationId")
 
 /**
@@ -27,7 +25,7 @@ class ConversationNotFoundException(conversationId: UUID) :
  *
  * Возникает когда пользователь пытается получить доступ к conversation другого пользователя
  */
-class ConversationAccessDeniedException(conversationId: UUID) :
+class ConversationAccessDeniedException(conversationId: String) :
     AiBotException("Access denied to conversation: $conversationId")
 
 /**

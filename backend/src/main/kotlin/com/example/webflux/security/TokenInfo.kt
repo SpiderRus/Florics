@@ -4,7 +4,7 @@ import java.time.Instant
 
 data class TokenInfo(
     val token: String,
-    val userId: Long,
+    val userId: String,
     val email: String,
     val roles: Set<String>,
     val createdAt: Instant,

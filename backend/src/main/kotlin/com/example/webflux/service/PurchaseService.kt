@@ -4,27 +4,29 @@ import com.example.webflux.domain.model.Purchase
 import com.example.webflux.repository.PurchaseRepository
 import kotlinx.coroutines.flow.Flow
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.*
 
 @Service
 class PurchaseService(
     private val purchaseRepository: PurchaseRepository
 ) {
-    suspend fun recordPurchase(userId: Long, goodsId: String, price: Double): Purchase {
+    suspend fun recordPurchase(userId: String, goodsId: String, price: BigDecimal): Purchase {
         val purchase = Purchase(
             id = UUID.randomUUID().toString(),
             userId = userId,
             goodsId = goodsId,
             price = price,
-            purchaseDate = Instant.now()
+            purchaseDate = OffsetDateTime.now()
         )
         return purchaseRepository.save(purchase)
     }
 
-    fun getUserPurchases(userId: Long): Flow<Purchase> = purchaseRepository.findByUserId(userId)
+    fun getUserPurchases(userId: String): Flow<Purchase> = purchaseRepository.findByUserId(userId)
 
-    suspend fun hasPurchased(userId: Long, goodsId: String): Boolean {
+    suspend fun hasPurchased(userId: String, goodsId: String): Boolean {
         return purchaseRepository.hasPurchased(userId, goodsId)
     }
 }

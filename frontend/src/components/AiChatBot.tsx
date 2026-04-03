@@ -6,7 +6,7 @@ import { Conversation, Message } from '../types/aibot';
 import MarkdownContent from './MarkdownContent';
 
 interface AiChatBotProps {
-    goodsId: number;
+    goodsId: string;
     goodsName: string;
     isAuthenticated: boolean;
     canPurchase: boolean;
