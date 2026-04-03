@@ -2,11 +2,16 @@ package com.example.webflux.repository
 
 import com.example.webflux.domain.model.Goods
 import com.example.webflux.domain.model.GoodsType
+import com.example.webflux.entity.MediaEntity
 import com.example.webflux.mapper.GoodsMapper
 import com.example.webflux.mapper.MediaMapper
 import com.example.webflux.repository.r2dbc.GoodsR2dbcRepository
 import com.example.webflux.repository.r2dbc.MediaR2dbcRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Repository
@@ -37,13 +42,18 @@ class GoodsRepository(
         return GoodsMapper.toModel(entity, media)
     }
 
-    suspend fun findByType(type: GoodsType): List<Goods> {
+    fun findByType(type: GoodsType): Flow<Goods> = flow {
         val categories = categoryRepository.findAllByTypeActive(type)
-        val goods = goodsR2dbcRepository.findAllByCategoryIdInActive(categories.map { it.id }.toTypedArray()).toList()
-        val medias = mediaR2dbcRepository.findByGoodsIdIn(goods.map { it.id!! }.toTypedArray()).toList().groupBy { it.goodsId }
+        val goods = goodsR2dbcRepository.findAllByCategoryIdInActive(categories.map { it.id }).toList()
+        val medias = mediaR2dbcRepository.findByGoodsIdIn(goods.map { it.id!! })
+            .fold(mutableMapOf<String, MutableList<MediaEntity>>()) { acc, value ->
+                acc.apply { getOrPut(value.goodsId) { mutableListOf() }.add(value) }
+            }
 
-        return goods.map { entity ->
-            GoodsMapper.toModel(entity, medias[entity.id]?.map { MediaMapper.toModel(it) } ?: emptyList() ) }
+        goods.forEach { entity ->
+            emit(GoodsMapper.toModel(entity, medias[entity.id]
+                    ?.map { MediaMapper.toModel(it) } ?: emptyList() ))
+        }
     }
 
     suspend fun save(goods: Goods): Goods {

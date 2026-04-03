@@ -87,9 +87,10 @@ class GoodsController(
             )
         ]
     )
-
-    suspend fun getGoodsByType(
+    fun getGoodsByType(
         @Parameter(description = "Тип товара (PLANT, TERRARIUM, COURSE)", example = "PLANT")
-        @PathVariable type: GoodsType): List<GoodsDto> =
-            goodsService.getGoodsByType(type).map { it.toGoodsDto(goodsService.getCategoryForGoods(it)) }
+        @PathVariable type: GoodsType): Flow<GoodsDto> =
+            goodsService.getGoodsByType(type).map {
+                it.toGoodsDto(goodsService.getCategoryForGoods(it))
+            }
 }

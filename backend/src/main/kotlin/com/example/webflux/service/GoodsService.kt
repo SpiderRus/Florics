@@ -21,9 +21,7 @@ class GoodsService(
         return goodsRepository.findById(id)
     }
 
-    suspend fun getGoodsByType(type: GoodsType): List<Goods> {
-        return goodsRepository.findByType(type)
-    }
+    fun getGoodsByType(type: GoodsType): Flow<Goods> = goodsRepository.findByType(type)
 
     suspend fun getCategoryForGoods(goods: Goods): Category? {
         return categoryRepository.findById(goods.categoryId)
