@@ -19,11 +19,8 @@ class UserRepository(
         return UserMapper.toModel(entity)
     }
 
-    suspend fun save(user: User): User {
-        val entity = UserMapper.toEntity(user)
-        val saved = userR2dbcRepository.save(entity)
-        return UserMapper.toModel(saved)
-    }
+    suspend fun save(user: User): User =
+        UserMapper.toModel(userR2dbcRepository.save(UserMapper.toEntity(user)))
 
     fun findAll(): Flow<User> {
         return userR2dbcRepository.findAllActive()
