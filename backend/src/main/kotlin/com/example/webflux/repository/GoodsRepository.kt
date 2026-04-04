@@ -1,5 +1,6 @@
 package com.example.webflux.repository
 
+import com.example.webflux.domain.model.Category
 import com.example.webflux.domain.model.Goods
 import com.example.webflux.domain.model.GoodsType
 import com.example.webflux.entity.MediaEntity
@@ -7,6 +8,8 @@ import com.example.webflux.mapper.GoodsMapper
 import com.example.webflux.mapper.MediaMapper
 import com.example.webflux.repository.r2dbc.GoodsR2dbcRepository
 import com.example.webflux.repository.r2dbc.MediaR2dbcRepository
+import com.example.webflux.util.emitAll
+import com.example.webflux.util.groupBy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.emitAll
@@ -44,16 +47,15 @@ class GoodsRepository(
 
     fun findByType(type: GoodsType): Flow<Goods> = flow {
         val categories = categoryRepository.findAllByTypeActive(type)
-        val goods = goodsR2dbcRepository.findAllByCategoryIdInActive(categories.map { it.id }).toList()
+        val goods = goodsR2dbcRepository.findAllByCategoryIdInActive(categories
+                        .map(Category::id)).toList()
         val medias = mediaR2dbcRepository.findByGoodsIdIn(goods.map { it.id!! })
-            .fold(mutableMapOf<String, MutableList<MediaEntity>>()) { acc, value ->
-                acc.apply { getOrPut(value.goodsId) { mutableListOf() }.add(value) }
-            }
+                        .groupBy(MediaEntity::goodsId, goods.size)
 
-        goods.forEach { entity ->
-            emit(GoodsMapper.toModel(entity, medias[entity.id]
-                    ?.map { MediaMapper.toModel(it) } ?: emptyList() ))
-        }
+        emitAll(goods.map { entity ->
+            GoodsMapper.toModel(entity, medias[entity.id]
+                ?.map { MediaMapper.toModel(it) } ?: emptyList() )
+        })
     }
 
     suspend fun save(goods: Goods): Goods {
