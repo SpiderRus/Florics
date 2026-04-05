@@ -22,6 +22,7 @@ object UserMapper {
 
     fun toEntity(user: User): UserEntity {
         return UserEntity(
+            // При создании нового пользователя передаём null, чтобы БД сгенерировала ID
             id = user.id,
             name = user.name,
             email = user.email,

@@ -48,8 +48,8 @@ class GoodsRepository(
     fun findByType(type: GoodsType): Flow<Goods> = flow {
         val categories = categoryRepository.findAllByTypeActive(type)
         val goods = goodsR2dbcRepository.findAllByCategoryIdInActive(categories
-                        .map(Category::id)).toList()
-        val medias = mediaR2dbcRepository.findByGoodsIdIn(goods.map { it.id!! })
+                        .map(Category::id).toTypedArray()).toList()
+        val medias = mediaR2dbcRepository.findByGoodsIdIn(goods.map { it.id!! }.toTypedArray())
                         .groupBy(MediaEntity::goodsId, goods.size)
 
         emitAll(goods.map { entity ->

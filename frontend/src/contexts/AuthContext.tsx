@@ -66,10 +66,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const register = async (email: string, name: string, password: string) => {
         const response = await authService.register(email, name, password);
-        setUser(response.user);
-        setToken(response.accessToken);
+
+        // ВАЖНО: Сначала сохраняем токен в localStorage, чтобы interceptor его подхватил
         localStorage.setItem('token', response.accessToken);
         localStorage.setItem('user', JSON.stringify(response.user));
+
+        // Затем обновляем state - это вызовет useEffect в CartContext
+        setUser(response.user);
+        setToken(response.accessToken);
     };
 
     const logout = async () => {

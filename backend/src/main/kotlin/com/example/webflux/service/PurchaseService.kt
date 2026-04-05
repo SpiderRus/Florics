@@ -15,7 +15,7 @@ class PurchaseService(
 ) {
     suspend fun recordPurchase(userId: String, goodsId: String, price: BigDecimal): Purchase {
         val purchase = Purchase(
-            id = UUID.randomUUID().toString(),
+            id = null, // БД сгенерирует ID автоматически
             userId = userId,
             goodsId = goodsId,
             price = price,

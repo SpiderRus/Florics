@@ -23,7 +23,4 @@ interface GoodsR2dbcRepository : CoroutineCrudRepository<GoodsEntity, String> {
 
     @Query("SELECT * FROM goods WHERE category_id = ANY(:categoryIds) AND deleted_at IS NULL ORDER BY created_at DESC")
     fun findAllByCategoryIdInActive(categoryIds: Array<String>): Flow<GoodsEntity>
-
-    fun findAllByCategoryIdInActive(categoryIds: Collection<String>): Flow<GoodsEntity> =
-        findAllByCategoryIdInActive(categoryIds.toTypedArray())
 }

@@ -2,8 +2,13 @@ package com.example.webflux.security
 
 import com.example.webflux.domain.model.User
 import com.example.webflux.repository.UserRepository
+import kotlinx.coroutines.reactive.awaitSingle
+import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.reactive.TransactionalOperator
+import org.springframework.transaction.reactive.executeAndAwait
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -12,10 +17,12 @@ import java.util.*
 class LocalAuthenticationService(
     private val userRepository: UserRepository,
     private val tokenStorage: TokenStorage,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val transactionalOperator: TransactionalOperator
 ) : AuthenticationService {
 
     companion object {
+        private val log = LoggerFactory.getLogger(LocalAuthenticationService::class.java)
         private const val TOKEN_EXPIRATION_HOURS = 8760L
     }
 
@@ -28,14 +35,21 @@ class LocalAuthenticationService(
         return generateTokenInfo(user)
     }
 
+    @Transactional
     override suspend fun register(email: String, name: String, password: String): TokenInfo {
-        // Проверка на существующий email
-        if (userRepository.existsByEmail(email))
-            throw IllegalArgumentException("Email уже зарегистрирован")
+        log.info("Starting registration for email: $email")
 
+        // Проверка на существующий email
+        if (userRepository.existsByEmail(email)) {
+            log.warn("Registration failed: email already exists - $email")
+            throw IllegalArgumentException("Email уже зарегистрирован")
+        }
+
+        log.debug("Hashing password for user: $email")
         val hashedPassword = passwordEncoder.encode(password) ?: throw IllegalStateException("Failed to hash password")
+
         val newUser = User(
-            id = generateUserId(),
+            id = null,
             name = name,
             email = email,
             password = hashedPassword,
@@ -43,7 +57,12 @@ class LocalAuthenticationService(
         )
 
         val savedUser = userRepository.save(newUser)
-        return generateTokenInfo(savedUser)
+        log.info("User saved successfully: id=${savedUser.id}, email=${savedUser.email}")
+
+        val tokenInfo = generateTokenInfo(savedUser)
+        log.info("Token generated for user: ${savedUser.email}, token=${tokenInfo.token}")
+
+        return tokenInfo
     }
 
     override suspend fun validateToken(token: String): TokenInfo? {
@@ -61,7 +80,7 @@ class LocalAuthenticationService(
 
         val tokenInfo = TokenInfo(
             token = token,
-            userId = user.id,
+            userId = user.id!!,
             email = user.email,
             roles = user.roles,
             createdAt = now,
@@ -70,6 +89,4 @@ class LocalAuthenticationService(
 
         return tokenStorage.save(tokenInfo)
     }
-
-    private fun generateUserId(): String = UUID.randomUUID().toString()
 }

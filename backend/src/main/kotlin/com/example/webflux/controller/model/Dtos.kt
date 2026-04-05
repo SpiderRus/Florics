@@ -405,20 +405,20 @@ data class GoodsRatingDto(
 
 // User mappers
 fun User.toUserDto() = UserDto(
-    id = id,
+    id = id ?: throw IllegalStateException("User must have an ID"),
     name = name,
     email = email,
     canPurchase = roles.contains("BUYER")
 )
 
 fun User.toUserResponseDto() = UserResponseDto(
-    id = id,
+    id = id ?: throw IllegalStateException("User must have an ID"),
     name = name,
     email = email,
     roles = roles
 )
 
-fun CreateUserRequest.toDomain(id: String) = User(
+fun CreateUserRequest.toDomain(id: String? = null) = User(
     id = id,
     name = name,
     email = email,
@@ -464,7 +464,7 @@ fun Goods.toGoodsDto(category: Category?) = GoodsDto(
 
 // Purchase mapper
 fun Purchase.toPurchaseDto() = PurchaseDto(
-    id = id,
+    id = id ?: throw IllegalStateException("Purchase must have an ID"),
     goodsId = goodsId,
     price = price,
     purchaseDate = purchaseDate,
@@ -473,7 +473,7 @@ fun Purchase.toPurchaseDto() = PurchaseDto(
 
 // Review mapper
 fun Review.toReviewDto() = ReviewDto(
-    id = id,
+    id = id ?: throw IllegalStateException("Review must have an ID"),
     goodsId = goodsId,
     userName = userName,
     rating = rating,

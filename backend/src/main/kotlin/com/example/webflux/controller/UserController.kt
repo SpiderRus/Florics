@@ -58,8 +58,8 @@ class UserController(private val userService: UserService) {
         @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Данные нового пользователя", required = true)
         @RequestBody request: CreateUserRequest
     ): ResponseEntity<UserResponseDto> {
-        val userId = java.util.UUID.randomUUID().toString()
-        val user = request.toDomain(userId)
+        // БД сгенерирует ID автоматически
+        val user = request.toDomain(null)
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(user).toUserResponseDto())
     }
 

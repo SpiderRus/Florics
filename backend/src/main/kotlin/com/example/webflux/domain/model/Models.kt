@@ -19,7 +19,7 @@ enum class GoodsType {
 // USER MODEL
 // =====================================================
 data class User(
-    val id: String, // UUID
+    val id: String?, // UUID
     val name: String,
     val email: String,
     val password: String,
@@ -114,7 +114,7 @@ data class CartSummary(
 // PURCHASE MODEL
 // =====================================================
 data class Purchase(
-    val id: String,
+    val id: String?, // UUID - null для новых записей, БД генерирует автоматически
     val userId: String,
     val goodsId: String,
     val price: BigDecimal,
@@ -126,7 +126,7 @@ data class Purchase(
 // REVIEW MODEL
 // =====================================================
 data class Review(
-    val id: String,
+    val id: String?, // UUID - null для новых записей, БД генерирует автоматически
     val goodsId: String,
     val userId: String,
     val userName: String,

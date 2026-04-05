@@ -90,6 +90,8 @@ class SecurityConfig {
                         "/custom-terrarium", "/masterclasses", "/masterclass/*").permitAll()
                     // AI чат-бот - только для авторизованных пользователей
                     .pathMatchers("/api/aibot/**").authenticated()
+                    // Загрузка документов - только для авторизованных пользователей
+                    .pathMatchers("/api/documents/**").authenticated()
                     // Остальное требует авторизацию (включая /api/auth/me и /api/auth/logout)
                     .anyExchange().authenticated()
             }

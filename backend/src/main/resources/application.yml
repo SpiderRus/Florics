@@ -29,6 +29,9 @@ logging:
   level:
     root: INFO
     com.example.webflux: DEBUG
+    io.r2dbc.postgresql.QUERY: DEBUG
+    io.r2dbc.postgresql.PARAM: DEBUG
+    org.springframework.r2dbc: DEBUG
 
 security:
   token:

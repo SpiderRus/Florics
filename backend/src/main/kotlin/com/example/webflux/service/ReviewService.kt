@@ -33,7 +33,7 @@ class ReviewService(
             ?: throw IllegalStateException("Пользователь не найден")
 
         val review = Review(
-            id = UUID.randomUUID().toString(),
+            id = null, // БД сгенерирует ID автоматически
             goodsId = goodsId,
             userId = userId,
             userName = user.name,
