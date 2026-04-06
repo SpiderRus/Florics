@@ -135,3 +135,19 @@ data class Review(
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime
 )
+
+// =====================================================
+// GOODS TYPE DOCUMENT MODEL
+// =====================================================
+/**
+ * Связь между типом товара и документом AI Agent
+ *
+ * Представляет документ, загруженный в AI Agent и ассоциированный
+ * с конкретным типом товаров (PLANT, TERRARIUM, COURSE). Документ
+ * становится доступен для RAG запросов при чате о товарах этого типа.
+ */
+data class GoodsTypeDocument(
+    val documentId: String,        // UUID из AI Agent DocumentResponse.id
+    val goodsType: GoodsType,      // PLANT, TERRARIUM или COURSE
+    val createdAt: OffsetDateTime  // Когда создана связь
+)

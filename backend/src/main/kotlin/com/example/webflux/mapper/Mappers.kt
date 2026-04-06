@@ -8,14 +8,6 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 // =====================================================
-// UUID STRING CONVERSION HELPERS
-// =====================================================
-/**
- * Convert String userId to UUID for database storage
- */
-fun String.toUserUuid(): UUID = UUID.fromString(this)
-
-// =====================================================
 // USER MAPPER
 // =====================================================
 object UserMapper {
@@ -216,6 +208,28 @@ object ReviewMapper {
             comment = entity.comment,
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt
+        )
+    }
+}
+
+// =====================================================
+// GOODS TYPE DOCUMENT MAPPER
+// =====================================================
+object GoodsTypeDocumentMapper {
+
+    fun toEntity(model: GoodsTypeDocument): GoodsTypeDocumentEntity {
+        return GoodsTypeDocumentEntity(
+            documentId = model.documentId,
+            goodsType = model.goodsType.name,
+            createdAt = model.createdAt
+        )
+    }
+
+    fun toModel(entity: GoodsTypeDocumentEntity): GoodsTypeDocument {
+        return GoodsTypeDocument(
+            documentId = entity.documentId,
+            goodsType = GoodsType.valueOf(entity.goodsType),
+            createdAt = entity.createdAt
         )
     }
 }

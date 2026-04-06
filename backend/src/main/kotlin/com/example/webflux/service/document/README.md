@@ -125,6 +125,47 @@ try {
 }
 ```
 
+### Удаление документа
+
+```kotlin
+suspend fun deleteOldDocument(documentId: String) {
+    try {
+        documentUploadService.deleteDocument(documentId)
+        logger.info("Document deleted: {}", documentId)
+    } catch (e: DocumentServiceException) {
+        // Ошибка связи с AI Agent или неверный формат ID
+        logger.error("Failed to delete document: {}", documentId, e)
+    }
+}
+```
+
+**Примечание**: Операция идемпотентна - повторное удаление того же документа не вызовет ошибку.
+
+## REST API для удаления
+
+**DELETE** `/api/documents/{id}`
+
+Требует аутентификацию (Bearer token).
+
+**Request:**
+```bash
+curl -X DELETE http://localhost:8080/api/documents/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response (204 No Content):**
+Пустой ответ при успешном удалении.
+
+**Идемпотентность:**
+Повторное удаление того же документа также вернет 204 (операция идемпотентна).
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "error": "Invalid document ID format"
+}
+```
+
 ## Интеграция с Chat API
 
 После загрузки документ автоматически доступен для RAG:

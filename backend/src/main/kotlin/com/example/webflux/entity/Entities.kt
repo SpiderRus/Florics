@@ -230,3 +230,19 @@ data class AiConversationEntity(
     @Column("updated_at")
     val updatedAt: OffsetDateTime = OffsetDateTime.now()
 )
+
+// =====================================================
+// GOODS TYPE DOCUMENT ENTITY
+// =====================================================
+@Table("goods_type_documents")
+data class GoodsTypeDocumentEntity(
+    @Id
+    @Column("document_id")
+    val documentId: String,
+
+    @Column("goods_type")
+    val goodsType: String, // PLANT, TERRARIUM, COURSE
+
+    @Column("created_at")
+    val createdAt: OffsetDateTime = OffsetDateTime.now()
+)
