@@ -122,11 +122,7 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
                 }, 200);
             } catch (err: any) {
                 console.error('Failed to initialize conversation:', err);
-                if (err.response?.status === 503) {
-                    setError('AI консультант временно недоступен. Попробуйте позже.');
-                } else {
-                    setError('Не удалось загрузить чат. Попробуйте обновить страницу.');
-                }
+                setError('Наш эксперт сейчас не на связи, но мы уже работаем над этим! Пожалуйста, загляните сюда чуть позже — мы будем рады ответить на все ваши вопросы.');
             } finally {
                 setLoading(false);
             }

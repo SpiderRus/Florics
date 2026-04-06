@@ -143,10 +143,6 @@ const GoodsDetailPage: React.FC = () => {
                         )}
                     </div>
 
-                    {!showWatchButton && (
-                        <h3 className="goods-price mb-3">{goods.price.toFixed(0)} ₽</h3>
-                    )}
-
                     {showWatchButton && (
                         <Button
                             variant="success"
@@ -158,8 +154,13 @@ const GoodsDetailPage: React.FC = () => {
                         </Button>
                     )}
 
-                    {showAddToCartButton && (
-                        <AddToCartButton goodsId={goods.id} goodsName={goods.name} isMasterClass={isMasterClass} />
+                    {!showWatchButton && (
+                        <div className="goods-detail-price-section mb-3">
+                            <h3 className="goods-price">{goods.price.toFixed(0)} ₽</h3>
+                            {showAddToCartButton && (
+                                <AddToCartButton goodsId={goods.id} goodsName={goods.name} isMasterClass={isMasterClass} />
+                            )}
+                        </div>
                     )}
 
                     {hasPurchased && !isMasterClass && (

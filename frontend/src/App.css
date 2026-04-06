@@ -227,6 +227,11 @@ body {
 
 .goods-card-footer {
   margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.5rem;
 }
 
 .goods-name {
@@ -240,14 +245,14 @@ body {
   color: var(--warm-brown);
   font-size: 0.95rem;
   line-height: 1.5;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 
 .goods-price {
   color: var(--sage-green);
   font-size: 1.8rem;
   font-weight: 700;
-  margin-top: 1rem;
+  margin: 0;
 }
 
 .goods-meta {
@@ -393,10 +398,22 @@ body {
 }
 
 /* Add to Cart Button */
+.add-to-cart-section {
+  display: flex;
+  align-items: center;
+}
+
+.add-to-cart-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .add-to-cart-btn {
   border-radius: 25px;
   font-weight: 500;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .add-to-cart-btn:hover:not(:disabled) {
@@ -499,6 +516,14 @@ body {
     font-size: 2rem;
     font-weight: bold;
     color: var(--sage-green);
+    margin: 0;
+}
+
+.goods-detail-price-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2rem;
 }
 
 /* Стиль вкладок как в записной книжке */
@@ -824,7 +849,7 @@ body {
 }
 
 .large-carousel .carousel-item video {
-    height: 500px;
+    height: 400px;
 }
 
 .image-modal-content video {

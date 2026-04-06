@@ -105,48 +105,46 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({ goodsId, goodsName, i
     };
 
     return (
-        <div className="add-to-cart-section" style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                    {/* Для мастер-классов не показываем поле количества */}
-                    {!isMasterClass && (
-                        <Form.Control
-                            type="number"
-                            min="1"
-                            max="99"
-                            value={quantity}
-                            onChange={(e) => handleQuantityChange(e.target.value)}
-                            isInvalid={!!quantityError}
-                            style={{ width: '80px' }}
-                        />
-                    )}
-                    <Button
-                        variant={isDisabled ? "secondary" : "success"}
-                        onClick={handleAddToCart}
-                        disabled={adding || !canAddToCart || !!quantityError || isDisabled}
-                        className="add-to-cart-btn"
-                        title={
-                            !canAddToCart
-                                ? "У вас нет прав на покупку"
-                                : isDisabled
-                                    ? "Уже в корзине"
-                                    : ""
-                        }
-                    >
-                        {isDisabled
-                            ? '✓ В корзине'
-                            : adding
-                                ? 'Добавление...'
-                                : '🛒 В корзину'
-                        }
-                    </Button>
-                </div>
-                {quantityError && !isMasterClass && (
-                    <small style={{ color: '#dc3545', marginTop: '-0.25rem' }}>
-                        {quantityError}
-                    </small>
+        <div className="add-to-cart-section">
+            <div className="add-to-cart-controls">
+                {/* Для мастер-классов не показываем поле количества */}
+                {!isMasterClass && (
+                    <Form.Control
+                        type="number"
+                        min="1"
+                        max="99"
+                        value={quantity}
+                        onChange={(e) => handleQuantityChange(e.target.value)}
+                        isInvalid={!!quantityError}
+                        style={{ width: '80px' }}
+                    />
                 )}
+                <Button
+                    variant={isDisabled ? "secondary" : "success"}
+                    onClick={handleAddToCart}
+                    disabled={adding || !canAddToCart || !!quantityError || isDisabled}
+                    className="add-to-cart-btn"
+                    title={
+                        !canAddToCart
+                            ? "У вас нет прав на покупку"
+                            : isDisabled
+                                ? "Уже в корзине"
+                                : ""
+                    }
+                >
+                    {isDisabled
+                        ? '✓ В корзине'
+                        : adding
+                            ? 'Добавление...'
+                            : '🛒 В корзину'
+                    }
+                </Button>
             </div>
+            {quantityError && !isMasterClass && (
+                <small style={{ color: '#dc3545', position: 'absolute', marginTop: '3rem' }}>
+                    {quantityError}
+                </small>
+            )}
         </div>
     );
 };

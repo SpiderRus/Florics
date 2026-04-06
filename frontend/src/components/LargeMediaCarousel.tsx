@@ -65,7 +65,7 @@ const LargeMediaCarousel: React.FC<LargeMediaCarouselProps> = ({
                             src={item.url}
                             alt={item.alt}
                             onClick={() => handleMediaClick(index)}
-                            style={{ cursor: 'pointer', height: '500px', objectFit: 'cover' }}
+                            style={{ cursor: 'pointer', height: '400px', objectFit: 'contain' }}
                         />
                     ) : (
                         <div onClick={() => handleMediaClick(index)} style={{ cursor: 'pointer' }}>
@@ -80,8 +80,8 @@ const LargeMediaCarousel: React.FC<LargeMediaCarouselProps> = ({
                                 loop={true}
                                 style={{
                                     width: '100%',
-                                    height: '500px',
-                                    objectFit: 'cover'
+                                    height: '400px',
+                                    objectFit: 'contain'
                                 }}
                             />
                         </div>
