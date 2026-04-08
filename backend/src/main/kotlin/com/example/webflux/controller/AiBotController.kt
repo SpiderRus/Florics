@@ -1,11 +1,14 @@
 package com.example.webflux.controller
 
 import com.example.webflux.repository.AiConversationRepository
+import com.example.webflux.repository.CategoryRepository
+import com.example.webflux.repository.GoodsRepository
 import com.example.webflux.service.AiBotService
 import com.example.webflux.service.aibot.dto.ConversationResponse
 import com.example.webflux.service.aibot.dto.MessageResponse
 import com.example.webflux.service.aibot.dto.ChatResponse
 import com.example.webflux.security.SecurityUtils
+import jdk.javadoc.internal.doclets.formats.html.markup.HtmlStyle
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -25,7 +28,9 @@ import java.util.*
 @RequestMapping("/api/aibot")
 class AiBotController(
     private val aiBotService: AiBotService,
-    private val conversationRepository: AiConversationRepository
+    private val conversationRepository: AiConversationRepository,
+    private val goodsRepository: GoodsRepository,
+    private val categoryRepository: CategoryRepository
 ) {
 
     companion object {
@@ -55,10 +60,20 @@ class AiBotController(
             logger.debug("Found existing conversation {} for user {} and goods {}", existingConversationId, userId, request.goodsId)
             aiBotService.getConversation(userId, existingConversationId)
         } else {
+            val goods = goodsRepository.findById(request.goodsId);
+            val category = goods?.let { categoryRepository.findById(it.categoryId) }
+
             // Создать новый conversation
-            val title = "Вопросы о товаре: ${request.goodsName}"
-            logger.debug("Creating new conversation for user {} and goods {}: {}", userId, request.goodsId, title)
-            val newConversation = aiBotService.createConversation(userId, title)
+            val context = """
+                    Товар: ${request.goodsName}
+                    
+                    ${category?.let { "Категория товара: " + it.name } ?: ""}
+                     
+                    Описание товара:
+                    ${goods?.detailedDescription ?: (goods?.description ?: "")}
+                    """
+            logger.debug("Creating new conversation for user {} and goods {}: {}", userId, request.goodsId, request.goodsName)
+            val newConversation = aiBotService.createConversation(userId, request.goodsName, context)
 
             // Сохранить маппинг (userId, goodsId) → conversationId
             conversationRepository.saveGoodsConversation(userId, request.goodsId, newConversation.id)

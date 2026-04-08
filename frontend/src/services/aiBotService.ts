@@ -31,7 +31,7 @@ export const aiBotService = {
      */
     createOrGetConversation: async (goodsId: string, goodsName: string): Promise<Conversation> => {
         const request: CreateConversationRequest = {
-            goodId: goodsId,
+            goodsId,
             goodsName
         };
         const response = await axios.post<Conversation>(`${API_BASE_URL}/conversations`, request);

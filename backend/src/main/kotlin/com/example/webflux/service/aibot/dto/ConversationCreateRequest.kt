@@ -6,5 +6,6 @@ package com.example.webflux.service.aibot.dto
  * @property title Название разговора
  */
 data class ConversationCreateRequest(
-    val title: String
+    val title: String,
+    val context: String? = null
 )

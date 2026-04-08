@@ -2,7 +2,6 @@ package com.example.webflux.domain.model
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import io.r2dbc.postgresql.message.frontend.Bind
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 
@@ -14,6 +13,16 @@ enum class GoodsType {
     TERRARIUM,  // Флорариумы
     COURSE      // Мастер-классы и курсы
 }
+
+// =====================================================
+// TOKEN MODEL
+// =====================================================
+data class Token(
+    val token: String,
+    val userId: String,
+    val createdAt: OffsetDateTime,
+    val expiresAt: OffsetDateTime
+)
 
 // =====================================================
 // USER MODEL
@@ -123,10 +132,9 @@ data class Purchase(
 )
 
 // =====================================================
-// REVIEW MODEL
+// REVIEW MODEL (Composite PK: goodsId + userId)
 // =====================================================
 data class Review(
-    val id: String?, // UUID - null для новых записей, БД генерирует автоматически
     val goodsId: String,
     val userId: String,
     val userName: String,

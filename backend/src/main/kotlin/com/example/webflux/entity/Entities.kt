@@ -7,6 +7,25 @@ import java.math.BigDecimal
 import java.time.OffsetDateTime
 
 // =====================================================
+// TOKEN ENTITY
+// =====================================================
+@Table("tokens")
+data class TokenEntity(
+    @Id
+    @Column("token")
+    val token: String? = null,
+
+    @Column("user_id")
+    val userId: String,
+
+    @Column("created_at")
+    val createdAt: OffsetDateTime = OffsetDateTime.now(),
+
+    @Column("expires_at")
+    val expiresAt: OffsetDateTime
+)
+
+// =====================================================
 // USER ENTITY
 // =====================================================
 @Table("users")
@@ -178,13 +197,10 @@ data class PurchaseEntity(
 )
 
 // =====================================================
-// REVIEW ENTITY
+// REVIEW ENTITY (Composite PK: goods_id + user_id)
 // =====================================================
 @Table("reviews")
 data class ReviewEntity(
-    @Id
-    val id: String? = null,
-
     @Column("goods_id")
     val goodsId: String,
 

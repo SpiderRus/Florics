@@ -44,7 +44,7 @@ export interface ChatResponse {
  * Request для создания conversation для товара
  */
 export interface CreateConversationRequest {
-    goodId: string;
+    goodsId: string;
     goodsName: string;
 }
 

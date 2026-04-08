@@ -17,9 +17,5 @@ export const reviewService = {
     createReview: async (request: CreateReviewRequest): Promise<Review> => {
         const response = await axios.post<Review>(`${API_BASE_URL}/reviews`, request);
         return response.data;
-    },
-
-    deleteReview: async (reviewId: string): Promise<void> => {
-        await axios.delete(`${API_BASE_URL}/reviews/${reviewId}`);
     }
 };

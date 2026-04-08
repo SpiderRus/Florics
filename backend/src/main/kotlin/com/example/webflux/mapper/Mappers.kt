@@ -3,9 +3,34 @@ package com.example.webflux.mapper
 import com.example.webflux.domain.model.*
 import com.example.webflux.entity.*
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+
+// =====================================================
+// TOKEN MAPPER
+// =====================================================
+object TokenMapper {
+
+    fun toEntity(token: Token): TokenEntity {
+        return TokenEntity(
+            token = null, // БД сгенерирует UUID автоматически
+            userId = token.userId,
+            createdAt = token.createdAt,
+            expiresAt = token.expiresAt
+        )
+    }
+
+    fun toModel(entity: TokenEntity): Token {
+        return Token(
+            token = entity.token ?: throw IllegalStateException("Token entity must have a token value"),
+            userId = entity.userId,
+            createdAt = entity.createdAt,
+            expiresAt = entity.expiresAt
+        )
+    }
+}
 
 // =====================================================
 // USER MAPPER
@@ -187,7 +212,6 @@ object ReviewMapper {
 
     fun toEntity(review: Review): ReviewEntity {
         return ReviewEntity(
-            id = review.id,
             goodsId = review.goodsId,
             userId = review.userId,
             userName = review.userName,
@@ -200,7 +224,6 @@ object ReviewMapper {
 
     fun toModel(entity: ReviewEntity): Review {
         return Review(
-            id = entity.id ?: throw IllegalStateException("Review entity must have an ID"),
             goodsId = entity.goodsId,
             userId = entity.userId,
             userName = entity.userName,

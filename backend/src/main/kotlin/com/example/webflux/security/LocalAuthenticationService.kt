@@ -1,24 +1,21 @@
 package com.example.webflux.security
 
+import com.example.webflux.domain.model.Token
 import com.example.webflux.domain.model.User
+import com.example.webflux.repository.TokenRepository
 import com.example.webflux.repository.UserRepository
-import kotlinx.coroutines.reactive.awaitSingle
 import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.reactive.TransactionalOperator
-import org.springframework.transaction.reactive.executeAndAwait
-import java.time.Instant
+import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
-import java.util.*
 
 @Service
 class LocalAuthenticationService(
     private val userRepository: UserRepository,
-    private val tokenStorage: TokenStorage,
-    private val passwordEncoder: PasswordEncoder,
-    private val transactionalOperator: TransactionalOperator
+    private val tokenRepository: TokenRepository,
+    private val passwordEncoder: PasswordEncoder
 ) : AuthenticationService {
 
     companion object {
@@ -26,6 +23,7 @@ class LocalAuthenticationService(
         private const val TOKEN_EXPIRATION_HOURS = 8760L
     }
 
+    @Transactional
     override suspend fun authenticate(email: String, password: String): TokenInfo? {
         val user = userRepository.findByEmail(email) ?: return null
 
@@ -45,7 +43,6 @@ class LocalAuthenticationService(
             throw IllegalArgumentException("Email уже зарегистрирован")
         }
 
-        log.debug("Hashing password for user: $email")
         val hashedPassword = passwordEncoder.encode(password) ?: throw IllegalStateException("Failed to hash password")
 
         val newUser = User(
@@ -66,27 +63,44 @@ class LocalAuthenticationService(
     }
 
     override suspend fun validateToken(token: String): TokenInfo? {
-        return tokenStorage.findByToken(token)
+        val tokenModel = tokenRepository.findValidToken(token) ?: return null
+        val user = userRepository.findById(tokenModel.userId) ?: return null
+
+        return TokenInfo(
+            token = tokenModel.token,
+            userId = tokenModel.userId,
+            email = user.email,
+            roles = user.roles,
+            createdAt = tokenModel.createdAt,
+            expiresAt = tokenModel.expiresAt
+        )
     }
 
     override suspend fun revokeToken(token: String): Boolean {
-        return tokenStorage.remove(token)
+        return tokenRepository.deleteByToken(token)
     }
 
     private suspend fun generateTokenInfo(user: User): TokenInfo {
-        val token = UUID.randomUUID().toString()
-        val now = Instant.now()
+        val now = OffsetDateTime.now()
         val expiresAt = now.plus(TOKEN_EXPIRATION_HOURS, ChronoUnit.HOURS)
 
-        val tokenInfo = TokenInfo(
-            token = token,
+        // БД сама сгенерирует UUID для токена через DEFAULT gen_random_uuid()
+        val token = Token(
+            token = "", // Заглушка, БД заменит на сгенерированный UUID
             userId = user.id!!,
-            email = user.email,
-            roles = user.roles,
             createdAt = now,
             expiresAt = expiresAt
         )
 
-        return tokenStorage.save(tokenInfo)
+        val savedToken = tokenRepository.save(token)
+
+        return TokenInfo(
+            token = savedToken.token,
+            userId = user.id!!,
+            email = user.email,
+            roles = user.roles,
+            createdAt = savedToken.createdAt,
+            expiresAt = savedToken.expiresAt
+        )
     }
 }

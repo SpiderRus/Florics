@@ -28,6 +28,7 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // Автоматическая прокрутка вниз при новых сообщениях
     const scrollToBottom = (instant: boolean = false) => {
@@ -131,6 +132,13 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
         initConversation();
     }, [goodsId, goodsName, isAuthenticated, canPurchase]);
 
+    // Установить фокус на поле ввода после инициализации чата
+    useEffect(() => {
+        if (!loading && conversation && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [loading, conversation]);
+
     // Отправка сообщения
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -179,6 +187,10 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
             }
         } finally {
             setSending(false);
+            // Вернуть фокус на поле ввода после получения ответа
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
         }
     };
 
@@ -320,6 +332,7 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
             <div className="chat-input-box">
                 <Form onSubmit={handleSendMessage} className="d-flex w-100">
                     <Form.Control
+                        ref={inputRef}
                         type="text"
                         placeholder="Задайте вопрос о товаре..."
                         value={inputMessage}

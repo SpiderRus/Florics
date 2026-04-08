@@ -33,7 +33,6 @@ class ReviewService(
             ?: throw IllegalStateException("Пользователь не найден")
 
         val review = Review(
-            id = null, // БД сгенерирует ID автоматически
             goodsId = goodsId,
             userId = userId,
             userName = user.name,
@@ -43,7 +42,7 @@ class ReviewService(
             updatedAt = OffsetDateTime.now()
         )
 
-        return reviewRepository.save(review)
+        return reviewRepository.save(review) // upsert — создаст новый или обновит существующий
     }
 
     fun getReviewsByGoodsId(goodsId: String): Flow<Review> = flow {
@@ -56,13 +55,4 @@ class ReviewService(
         return if (reviews.isEmpty()) Pair(0.0, 0) else Pair(reviews.average(), reviews.size)
     }
 
-    suspend fun deleteReview(userId: String, reviewId: String): Boolean {
-        val review = reviewRepository.findById(reviewId) ?: throw IllegalArgumentException("Отзыв не найден")
-
-        // Проверка: только автор может удалить отзыв
-        if (review.userId != userId)
-            throw IllegalStateException("Вы можете удалить только свой отзыв")
-
-        return reviewRepository.deleteById(reviewId)
-    }
 }

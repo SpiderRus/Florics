@@ -27,7 +27,7 @@ const ReviewList: React.FC<ReviewListProps> = ({ reviews }) => {
     return (
         <div className="review-list">
             {reviews.map((review) => (
-                <div key={review.id} className="review-card">
+                <div key={`${review.goodsId}-${review.userId}`} className="review-card">
                     <div className="review-header">
                         <div className="review-author">
                             <strong>{review.userName}</strong>

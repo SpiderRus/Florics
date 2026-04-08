@@ -23,6 +23,7 @@ const GoodsDetailPage: React.FC = () => {
     const [goods, setGoods] = useState<Goods | null>(null);
     const [reviews, setReviews] = useState<Review[]>([]);
     const [hasPurchased, setHasPurchased] = useState(false);
+    const [userReview, setUserReview] = useState<Review | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
@@ -54,6 +55,10 @@ const GoodsDetailPage: React.FC = () => {
                 if (isAuthenticated) {
                     const purchased = await purchaseService.hasPurchased(id);
                     setHasPurchased(purchased);
+
+                    // Проверяем, оставлял ли текущий пользователь отзыв
+                    const currentUserReview = reviewsData.find(review => review.userId === user?.id);
+                    setUserReview(currentUserReview || null);
                 }
             } catch (err: any) {
                 setError('Ошибка при загрузке данных');
@@ -82,6 +87,12 @@ const GoodsDetailPage: React.FC = () => {
         if (!id) return;
         const updatedReviews = await reviewService.getReviews(id);
         setReviews(updatedReviews);
+
+        // Обновляем отзыв текущего пользователя после отправки
+        if (user?.id) {
+            const currentUserReview = updatedReviews.find(review => review.userId === user.id);
+            setUserReview(currentUserReview || null);
+        }
     };
 
     const handleMediaClick = (mediaItems: MediaItem[], index: number) => {
@@ -202,7 +213,13 @@ const GoodsDetailPage: React.FC = () => {
                             <div className="tab-content-box">
                                 <ReviewList reviews={reviews} />
                                 {canLeaveReview ? (
-                                    <ReviewForm goodsId={goods.id} onReviewSubmitted={handleReviewSubmitted} />
+                                    userReview ? (
+                                        <Alert variant="success" className="mt-3">
+                                            ✓ Вы уже оставили отзыв на этот товар
+                                        </Alert>
+                                    ) : (
+                                        <ReviewForm goodsId={goods.id} onReviewSubmitted={handleReviewSubmitted} />
+                                    )
                                 ) : isAuthenticated ? (
                                     <Alert variant="info" className="mt-3">
                                         Купите товар, чтобы оставить отзыв

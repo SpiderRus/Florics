@@ -38,10 +38,10 @@ class AiBotService(
      * @return Созданный разговор
      * @throws AiBotServiceException при ошибке связи с AI Agent
      */
-    suspend fun createConversation(userId: String, title: String): ConversationResponse {
+    suspend fun createConversation(userId: String, title: String, context: String?): ConversationResponse {
         logger.debug("Creating conversation for user {}: {}", userId, title)
 
-        val request = ConversationCreateRequest(title)
+        val request = ConversationCreateRequest(title, context)
 
         val response = try {
             webClient.post()

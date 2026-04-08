@@ -1,12 +1,12 @@
 package com.example.webflux.security
 
-import java.time.Instant
+import java.time.OffsetDateTime
 
 data class TokenInfo(
     val token: String,
     val userId: String,
     val email: String,
     val roles: Set<String>,
-    val createdAt: Instant,
-    val expiresAt: Instant
+    val createdAt: OffsetDateTime,
+    val expiresAt: OffsetDateTime
 )

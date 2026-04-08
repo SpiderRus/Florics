@@ -34,7 +34,7 @@ class SecurityConfig {
                 .flatMap { tokenInfo ->
                     val authorities = tokenInfo.roles.map { SimpleGrantedAuthority("ROLE_$it") }
                     val attributes = mapOf(
-                            "sub" to tokenInfo.userId.toString(),
+                            "sub" to tokenInfo.userId,
                             "email" to tokenInfo.email,
                             "token_info" to tokenInfo
                         )

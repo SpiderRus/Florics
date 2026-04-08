@@ -13,25 +13,21 @@ class ReviewRepository(
 ) {
 
     suspend fun save(review: Review): Review {
-        val entity = ReviewMapper.toEntity(review)
-        val saved = reviewR2dbcRepository.save(entity)
+        val saved = reviewR2dbcRepository.upsert(
+            goodsId = review.goodsId,
+            userId = review.userId,
+            userName = review.userName,
+            rating = review.rating,
+            comment = review.comment
+        )
         return ReviewMapper.toModel(saved)
     }
 
     fun findByGoodsId(goodsId: String): Flow<Review> =
         reviewR2dbcRepository.findByGoodsId(goodsId).map { ReviewMapper.toModel(it) }
 
-    suspend fun findById(reviewId: String): Review? {
-        val entity = reviewR2dbcRepository.findById(reviewId) ?: return null
-        if (entity.deletedAt != null) return null
+    suspend fun findByGoodsIdAndUserId(goodsId: String, userId: String): Review? {
+        val entity = reviewR2dbcRepository.findByGoodsIdAndUserId(goodsId, userId) ?: return null
         return ReviewMapper.toModel(entity)
-    }
-
-    suspend fun deleteById(reviewId: String): Boolean {
-        val exists = reviewR2dbcRepository.findById(reviewId)
-        if (exists == null || exists.deletedAt != null) return false
-
-        reviewR2dbcRepository.softDelete(reviewId)
-        return true
     }
 }

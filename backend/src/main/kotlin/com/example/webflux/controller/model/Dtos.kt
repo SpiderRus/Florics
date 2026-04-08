@@ -368,11 +368,11 @@ data class CreateReviewRequest(
 
 @Schema(description = "Отзыв о товаре")
 data class ReviewDto(
-    @Schema(description = "ID отзыва")
-    val id: String,
-
     @Schema(description = "ID товара")
     val goodsId: String,
+
+    @Schema(description = "ID пользователя")
+    val userId: String,
 
     @Schema(description = "Имя автора")
     val userName: String,
@@ -473,8 +473,8 @@ fun Purchase.toPurchaseDto() = PurchaseDto(
 
 // Review mapper
 fun Review.toReviewDto() = ReviewDto(
-    id = id ?: throw IllegalStateException("Review must have an ID"),
     goodsId = goodsId,
+    userId = userId,
     userName = userName,
     rating = rating,
     comment = comment,

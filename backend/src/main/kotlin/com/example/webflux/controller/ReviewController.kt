@@ -44,12 +44,4 @@ class ReviewController(
                 comment = request.comment
             ).toReviewDto())
 
-    @DeleteMapping("/{reviewId}")
-    @PreAuthorize("hasRole('BUYER')")
-    @Operation(summary = "Удалить отзыв", description = "Удаляет отзыв. Только автор может удалить свой отзыв.")
-    suspend fun deleteReview(@PathVariable reviewId: String): ResponseEntity<Void> {
-        reviewService.deleteReview(SecurityUtils.requireCurrentUserId(), reviewId)
-
-        return ResponseEntity.noContent().build()
-    }
 }
