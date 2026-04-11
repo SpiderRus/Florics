@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Container, Table, Button, Badge, Card } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
@@ -8,6 +8,7 @@ import { cartService } from '../services/cartService';
 
 const CartPage: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, isAuthenticated, loading: authLoading } = useAuth();
     const { cart, localCartItems, loading, updateQuantity, removeItem, clearCart, refreshCart } = useCart();
 
@@ -16,6 +17,38 @@ const CartPage: React.FC = () => {
         if (!authLoading)
             refreshCart();
     }, [authLoading]);
+
+    // Функция для определения пути возврата из корзины
+    const getReturnPath = (): string => {
+        // Проверяем state из navigation (откуда пришли)
+        const state = location.state as { from?: string; categoryType?: string } | null;
+
+        if (state?.from) {
+            // Если пришли из конкретной страницы, возвращаем на соответствующий каталог
+            if (state.from.startsWith('/catalog/') && state.categoryType) {
+                // Пришли со страницы товара - вернуться в каталог по типу категории
+                switch (state.categoryType) {
+                    case 'PLANT':
+                        return '/catalog';
+                    case 'TERRARIUM':
+                        return '/terrariums';
+                    case 'COURSE':
+                        return '/masterclasses';
+                    default:
+                        return '/catalog';
+                }
+            }
+            // Иначе возвращаем на ту страницу, откуда пришли
+            return state.from;
+        }
+
+        // По умолчанию - каталог растений
+        return '/catalog';
+    };
+
+    const handleContinueShopping = () => {
+        navigate(getReturnPath());
+    };
 
     if (loading || authLoading)
         return <Container style={{ paddingTop: '3rem' }}><p>Загрузка корзины...</p></Container>;
@@ -40,7 +73,7 @@ const CartPage: React.FC = () => {
                         <p className="text-muted">Добавьте растения из каталога</p>
                         <Button
                             variant="success"
-                            onClick={() => navigate('/catalog')}
+                            onClick={handleContinueShopping}
                             style={{ marginTop: '1rem' }}
                         >
                             Перейти в каталог 🌿
@@ -78,8 +111,8 @@ const CartPage: React.FC = () => {
             toast.info(`Итого: ${response.totalPrice.toFixed(0)} ₽ (${response.items.length} товаров)`);
 
             await refreshCart();
-            // Можно показать модальное окно с деталями заказа, но для простоты просто перенаправляем
-            navigate('/catalog');
+            // Перенаправляем на страницу, с которой пришли
+            navigate(getReturnPath());
         } catch (error: any) {
             console.error('Checkout error:', error);
             const errorMessage = error.response?.data?.message || 'Ошибка при оформлении заказа';
@@ -92,7 +125,7 @@ const CartPage: React.FC = () => {
         <Container className="cart-page" style={{ paddingTop: '2rem', paddingBottom: '3rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h2 style={{ color: 'var(--forest-green)' }}>🛒 Ваша корзина</h2>
-                <Button variant="outline-secondary" onClick={() => navigate('/catalog')}>
+                <Button variant="outline-secondary" onClick={handleContinueShopping}>
                     Продолжить покупки
                 </Button>
             </div>

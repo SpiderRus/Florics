@@ -22,7 +22,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading: authLoading } = useAuth();
     const [cart, setCart] = useState<CartSummary | null>(null);
     const [localCartCount, setLocalCartCount] = useState(0);
     const [localCartItems, setLocalCartItems] = useState<CartItem[]>([]);
@@ -31,12 +31,15 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Инициализация: загружаем счётчик из localStorage при первом рендере
     useEffect(() => {
-        if (!isAuthenticated)
+        if (!authLoading && !isAuthenticated)
             updateLocalCartCount();
-    }, []);
+    }, [authLoading, isAuthenticated]);
 
     // КРИТИЧЕСКАЯ ЛОГИКА: Синхронизация при переходе из неавторизованного в авторизованное состояние
     useEffect(() => {
+        // Ждем пока AuthContext инициализируется
+        if (authLoading) return;
+
         const authStateChanged = previousAuthState !== isAuthenticated;
 
         if (authStateChanged) {
@@ -53,7 +56,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
         // Автоматическое обновление после смены состояния убрано
         // refreshCart() вызывается явно из компонентов при необходимости
-    }, [isAuthenticated]);
+    }, [isAuthenticated, authLoading]);
 
     const syncAndLoadCart = async () => {
         setLoading(true);
@@ -77,6 +80,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 await loadServerCart();
             }
         } catch (error: any) {
+            // Игнорируем 401 - токен невалиден, interceptor перенаправит на логин
+            if (error.response?.status === 401) {
+                return;
+            }
+
             console.error('Failed to sync cart:', error);
 
             // Проверяем статус ошибки
@@ -105,8 +113,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
             const cartData = await cartService.getCart();
             setCart(cartData);
-        } catch (error) {
-            console.error('Failed to load cart:', error);
+        } catch (error: any) {
+            // Игнорируем 401 - токен невалиден или отсутствует (перенаправление на логин обрабатывается interceptor'ом)
+            if (error.response?.status !== 401) {
+                console.error('Failed to load cart:', error);
+            }
         } finally {
             setLoading(false);
         }

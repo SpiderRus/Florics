@@ -8,12 +8,9 @@ import com.example.webflux.service.aibot.dto.ConversationResponse
 import com.example.webflux.service.aibot.dto.MessageResponse
 import com.example.webflux.service.aibot.dto.ChatResponse
 import com.example.webflux.security.SecurityUtils
-import jdk.javadoc.internal.doclets.formats.html.markup.HtmlStyle
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 /**
  * REST контроллер для AI чат-бота
@@ -32,10 +29,6 @@ class AiBotController(
     private val goodsRepository: GoodsRepository,
     private val categoryRepository: CategoryRepository
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AiBotController::class.java)
-    }
 
     /**
      * Создать или получить conversation для товара
@@ -76,10 +69,10 @@ class AiBotController(
             val newConversation = aiBotService.createConversation(userId, request.goodsName, context)
 
             // Сохранить маппинг (userId, goodsId) → conversationId
-            conversationRepository.saveGoodsConversation(userId, request.goodsId, newConversation.id)
-            logger.debug("Saved goods conversation mapping: ({}, {}) -> {}", userId, request.goodsId, newConversation.id)
-
-            newConversation
+            conversationRepository.saveOrCreateGoodsConversation(userId, request.goodsId, newConversation.id).let {
+                logger.debug("Saved goods conversation mapping: ({}, {}) -> {}", userId, request.goodsId, it.conversationId)
+                newConversation
+            }
         }
 
         return ResponseEntity.ok(conversation)
@@ -101,8 +94,7 @@ class AiBotController(
         val conversationId = conversationRepository.findConversationByUserAndGoods(userId, goodsId)
             ?: return ResponseEntity.notFound().build()
 
-        val conversation = aiBotService.getConversation(userId, conversationId)
-        return ResponseEntity.ok(conversation)
+        return ResponseEntity.ok(aiBotService.getConversation(userId, conversationId))
     }
 
     /**
@@ -120,8 +112,7 @@ class AiBotController(
         val userId = SecurityUtils.requireCurrentUserId()
         logger.debug("User {} requesting messages for conversation {} (limit: {})", userId, conversationId, limit)
 
-        val messages = aiBotService.getMessages(userId, conversationId, limit)
-        return ResponseEntity.ok(messages)
+        return ResponseEntity.ok(aiBotService.getMessages(userId, conversationId, limit))
     }
 
     /**
@@ -164,8 +155,7 @@ class AiBotController(
         val userId = SecurityUtils.requireCurrentUserId()
         logger.debug("User {} deleting conversation {}", userId, conversationId)
 
-        aiBotService.deleteConversation(userId, conversationId)
-        return ResponseEntity.noContent().build()
+        return aiBotService.deleteConversation(userId, conversationId).let { ResponseEntity.noContent().build() }  // Дожидаемся выполнения
     }
 
     /**
@@ -182,4 +172,8 @@ class AiBotController(
     data class ChatMessageRequest(
         val message: String
     )
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AiBotController::class.java)
+    }
 }

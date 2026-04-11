@@ -3,6 +3,7 @@ export interface User {
     name: string;
     email: string;
     canPurchase: boolean;
+    isAdmin?: boolean; // true для админов, null/undefined для обычных пользователей
 }
 
 export interface AuthRequest {

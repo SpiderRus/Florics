@@ -1,15 +1,16 @@
 package com.example.webflux.service
 
 import com.example.webflux.controller.model.LocalCartItem
-import com.example.webflux.domain.model.*
+import com.example.webflux.domain.model.CartItem
+import com.example.webflux.domain.model.CartItemWithGoods
+import com.example.webflux.domain.model.CartSummary
+import com.example.webflux.domain.model.GoodsType
 import com.example.webflux.repository.CartRepository
-import com.example.webflux.repository.GoodsRepository
 import com.example.webflux.repository.CategoryRepository
+import com.example.webflux.repository.GoodsRepository
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.time.Instant
 import java.time.OffsetDateTime
-import java.util.*
 
 /**
  * Сервис для управления корзиной покупок
@@ -28,19 +29,14 @@ class CartService(
 
         // Получаем полную информацию о товарах и фильтруем несуществующие
         val itemsWithGoods = cartItems.mapNotNull { item ->
-            val goods = goodsRepository.findById(item.goodsId)
-            if (goods != null) {
-                val category = categoryRepository.findById(goods.categoryId)
+           goodsRepository.findById(item.goodsId)?.let { goods ->
                 CartItemWithGoods(
                     id = generateId(item),
                     goods = goods,
-                    category = category,
+                    category = categoryRepository.findById(goods.categoryId),
                     quantity = item.quantity,
                     addedAt = item.addedAt
                 )
-            } else {
-                // Товар удален из каталога - пропускаем
-                null
             }
         }
 
@@ -56,25 +52,19 @@ class CartService(
      */
     suspend fun addToCart(userId: String, goodsId: String, quantity: Int): CartItemWithGoods {
         // Валидация: товар существует
-        val goods = goodsRepository.findById(goodsId)
-            ?: throw IllegalArgumentException("Goods not found: $goodsId")
+        val goods = goodsRepository.findById(goodsId) ?: throw IllegalArgumentException("Goods not found: $goodsId")
 
         // Получить категорию товара
-        val category = categoryRepository.findById(goods.categoryId)
-            ?: throw IllegalArgumentException("Category not found")
+        val category = categoryRepository.findById(goods.categoryId) ?: throw IllegalArgumentException("Category not found")
 
         // Для мастер-классов: проверить дубликаты и установить quantity = 1
-        val finalQuantity = if (category.type == com.example.webflux.domain.model.GoodsType.COURSE) {
-            // Проверить, нет ли уже этого курса в корзине
-            val existingItem = cartRepository.findByUserIdAndGoodsId(userId, goodsId)
-            if (existingItem != null) {
-                throw IllegalStateException("Course is already in cart")
+        val finalQuantity = if (category.type == GoodsType.COURSE) {
+                cartRepository.findByUserIdAndGoodsId(userId, goodsId)
+                    ?.let { throw IllegalStateException("Course is already in cart") } ?: 1
+            } else {
+                require(quantity > 0) { "Quantity must be positive" }
+                quantity
             }
-            1 // Принудительно устанавливаем quantity = 1
-        } else {
-            require(quantity > 0) { "Quantity must be positive" }
-            quantity
-        }
 
         val cartItem = CartItem(
             userId = userId,
@@ -99,19 +89,15 @@ class CartService(
     suspend fun updateQuantity(userId: String, goodsId: String, quantity: Int): CartItemWithGoods? {
         require(quantity > 0) { "Use removeFromCart for deleting items" }
 
-        val goods = goodsRepository.findById(goodsId)
-            ?: throw IllegalStateException("Goods not found")
+        val goods = goodsRepository.findById(goodsId) ?: throw IllegalStateException("Goods not found")
 
-        val category = categoryRepository.findById(goods.categoryId)
-            ?: throw IllegalStateException("Category not found")
+        val category = categoryRepository.findById(goods.categoryId) ?: throw IllegalStateException("Category not found")
 
         // Для мастер-классов запретить изменение количества
-        if (category.type == com.example.webflux.domain.model.GoodsType.COURSE && quantity != 1) {
+        if (category.type == GoodsType.COURSE && quantity != 1)
             throw IllegalArgumentException("Course quantity cannot be changed (must be 1)")
-        }
 
-        val updated = cartRepository.updateQuantity(userId, goodsId, quantity)
-            ?: return null
+        val updated = cartRepository.updateQuantity(userId, goodsId, quantity) ?: return null
 
         return CartItemWithGoods(
             id = generateId(updated),
@@ -125,16 +111,12 @@ class CartService(
     /**
      * Удалить товар из корзины
      */
-    suspend fun removeFromCart(userId: String, goodsId: String): Boolean {
-        return cartRepository.removeItem(userId, goodsId)
-    }
+    suspend fun removeFromCart(userId: String, goodsId: String): Boolean = cartRepository.removeItem(userId, goodsId)
 
     /**
      * Очистить всю корзину пользователя
      */
-    suspend fun clearCart(userId: String): Boolean {
-        return cartRepository.clearCart(userId)
-    }
+    suspend fun clearCart(userId: String): Boolean = cartRepository.clearCart(userId)
 
     /**
      * Синхронизировать локальную корзину (из localStorage) с серверной

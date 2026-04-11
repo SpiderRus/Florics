@@ -20,6 +20,7 @@ class ReviewRepository(
             rating = review.rating,
             comment = review.comment
         )
+
         return ReviewMapper.toModel(saved)
     }
 

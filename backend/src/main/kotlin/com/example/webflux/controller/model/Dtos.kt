@@ -76,7 +76,10 @@ data class UserDto(
     val email: String,
 
     @Schema(description = "Может ли пользователь совершать покупки (имеет роль BUYER)")
-    val canPurchase: Boolean
+    val canPurchase: Boolean,
+
+    @Schema(description = "Является ли пользователь администратором (только для UI подсказок)")
+    val isAdmin: Boolean? = null
 )
 
 @Schema(description = "Данные пользователя (без пароля)")
@@ -198,9 +201,6 @@ data class GoodsDto(
 
     @Schema(description = "ID видео в Kinescope для курсов", example = "kinescope_stub_12345")
     val videoUrl: String? = null,
-
-    @Schema(description = "URL превью видео")
-    val previewUrl: String? = null,
 
     @Schema(description = "Расширенное описание товара")
     val detailedDescription: String? = null,
@@ -408,7 +408,8 @@ fun User.toUserDto() = UserDto(
     id = id ?: throw IllegalStateException("User must have an ID"),
     name = name,
     email = email,
-    canPurchase = roles.contains("BUYER")
+    canPurchase = roles.contains("BUYER"),
+    isAdmin = if (roles.contains("ADMIN")) true else null
 )
 
 fun User.toUserResponseDto() = UserResponseDto(
@@ -457,7 +458,6 @@ fun Goods.toGoodsDto(category: Category?) = GoodsDto(
     difficulty = difficulty,
     duration = duration,
     videoUrl = videoUrl,
-    previewUrl = previewUrl,
     detailedDescription = detailedDescription,
     careInstructions = careInstructions
 )
@@ -494,4 +494,118 @@ fun CartSummary.toCartSummaryDto() = CartSummaryDto(
     items = items.map { it.toCartItemDto() },
     totalItems = totalItems,
     totalPrice = totalPrice
+)
+
+// ============================================================================
+// Admin - Goods Management DTOs
+// ============================================================================
+
+@Schema(description = "Запрос на создание товара (только для администраторов)")
+data class CreateGoodsRequest(
+    @field:NotBlank(message = "Название обязательно")
+    @field:Size(min = 3, max = 500, message = "Название должно содержать от 3 до 500 символов")
+    @Schema(description = "Название товара", example = "Монстера деликатесная")
+    val name: String,
+
+    @field:NotBlank(message = "Описание обязательно")
+    @field:Size(min = 10, max = 2000, message = "Описание должно содержать от 10 до 2000 символов")
+    @Schema(description = "Краткое описание товара", example = "Популярная тропическая лиана с крупными резными листьями")
+    val description: String,
+
+    @field:DecimalMin(value = "0.0", message = "Цена не может быть отрицательной")
+    @Schema(description = "Цена товара в рублях", example = "1500.0")
+    val price: BigDecimal,
+
+    @field:NotBlank(message = "Категория обязательна")
+    @Schema(description = "ID категории товара")
+    val categoryId: String,
+
+    @field:Size(max = 100, message = "Поле difficulty не может превышать 100 символов")
+    @Schema(description = "Уровень сложности", example = "Легко")
+    val difficulty: String? = null,
+
+    @field:Min(value = 1, message = "Длительность должна быть минимум 1 минута")
+    @Schema(description = "Длительность курса в минутах (только для курсов)", example = "90")
+    val duration: Int? = null,
+
+    @field:Size(max = 500, message = "URL видео не может превышать 500 символов")
+    @Schema(description = "URL видео в Kinescope (только для курсов)")
+    val videoUrl: String? = null,
+
+    @field:Size(max = 10000, message = "Детальное описание не может превышать 10000 символов")
+    @Schema(description = "Расширенное описание товара (поддерживает Markdown)")
+    val detailedDescription: String? = null,
+
+    @field:Size(max = 5000, message = "Инструкции по уходу не могут превышать 5000 символов")
+    @Schema(description = "Рекомендации по уходу (поддерживает Markdown)")
+    val careInstructions: String? = null
+)
+
+// ============================================================================
+// Pagination DTOs
+// ============================================================================
+
+@Schema(description = "Постраничный ответ со списком товаров")
+data class PagedGoodsResponse(
+    @Schema(description = "Список товаров на текущей странице")
+    val content: List<GoodsDto>,
+
+    @Schema(description = "Номер текущей страницы (с 0)")
+    val page: Int,
+
+    @Schema(description = "Размер страницы")
+    val size: Int,
+
+    @Schema(description = "Общее количество товаров")
+    val totalElements: Long,
+
+    @Schema(description = "Общее количество страниц")
+    val totalPages: Int,
+
+    @Schema(description = "Есть ли следующая страница")
+    val hasNext: Boolean,
+
+    @Schema(description = "Есть ли предыдущая страница")
+    val hasPrevious: Boolean
+)
+
+@Schema(description = "Запрос на обновление товара (только для администраторов)")
+data class UpdateGoodsRequest(
+    @field:NotBlank(message = "Название обязательно")
+    @field:Size(min = 3, max = 500, message = "Название должно содержать от 3 до 500 символов")
+    @Schema(description = "Название товара", example = "Монстера деликатесная")
+    val name: String,
+
+    @field:NotBlank(message = "Описание обязательно")
+    @field:Size(min = 10, max = 2000, message = "Описание должно содержать от 10 до 2000 символов")
+    @Schema(description = "Краткое описание товара", example = "Популярная тропическая лиана с крупными резными листьями")
+    val description: String,
+
+    @field:DecimalMin(value = "0.0", message = "Цена не может быть отрицательной")
+    @Schema(description = "Цена товара в рублях", example = "1500.0")
+    val price: BigDecimal,
+
+    @field:NotBlank(message = "Категория обязательна")
+    @Schema(description = "ID категории товара")
+    val categoryId: String,
+
+    @field:Size(max = 100, message = "Поле difficulty не может превышать 100 символов")
+    @Schema(description = "Уровень сложности", example = "Легко")
+    val difficulty: String? = null,
+
+    @field:Min(value = 1, message = "Длительность должна быть минимум 1 минута")
+    @Schema(description = "Длительность курса в минутах (только для курсов)", example = "90")
+    val duration: Int? = null,
+
+    @field:Size(max = 500, message = "URL видео не может превышать 500 символов")
+    @Schema(description = "URL видео в Kinescope (только для курсов)")
+    val videoUrl: String? = null,
+
+    @field:Size(max = 10000, message = "Детальное описание не может превышать 10000 символов")
+    @Schema(description = "Расширенное описание товара (поддерживает Markdown)")
+    val detailedDescription: String? = null,
+
+    @field:Size(max = 5000, message = "Инструкции по уходу не могут превышать 5000 символов")
+    @Schema(description = "Рекомендации по уходу (поддерживает Markdown)")
+    val careInstructions: String? = null
 )

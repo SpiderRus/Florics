@@ -1,7 +1,5 @@
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import { Purchase } from '../types/purchase';
-
-const API_BASE_URL = '/api';
 
 interface HasPurchasedResponse {
     purchased: boolean;
@@ -9,14 +7,14 @@ interface HasPurchasedResponse {
 
 export const purchaseService = {
     getUserPurchases: async (): Promise<Purchase[]> => {
-        const response = await axios.get<Purchase[]>(`${API_BASE_URL}/purchases`);
+        const response = await axiosInstance.get<Purchase[]>('/purchases');
         return response.data;
     },
 
     hasPurchased: async (goodsId: string): Promise<boolean> => {
         try {
-            const response = await axios.get<HasPurchasedResponse>(
-                `${API_BASE_URL}/purchases/has-purchased/${goodsId}`
+            const response = await axiosInstance.get<HasPurchasedResponse>(
+                `/purchases/has-purchased/${goodsId}`
             );
             return response.data.purchased;
         } catch (error) {

@@ -13,10 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/goods")
@@ -43,6 +40,7 @@ class GoodsController(
             it.toGoodsDto(goodsService.getCategoryForGoods(it))
         }
 
+
     @GetMapping("/{id}")
     @Operation(
         summary = "Получить товар по ID",
@@ -68,6 +66,7 @@ class GoodsController(
         goodsService.getGoodsById(id)?.let {
             ResponseEntity.ok(it.toGoodsDto(goodsService.getCategoryForGoods(it)))
         } ?: ResponseEntity.notFound().build()
+
 
     @GetMapping("/type/{type}")
     @Operation(

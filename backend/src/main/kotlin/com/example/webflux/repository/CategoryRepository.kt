@@ -6,8 +6,12 @@ import com.example.webflux.mapper.CategoryMapper
 import com.example.webflux.repository.r2dbc.CategoryR2dbcRepository
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
@@ -15,10 +19,11 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Repository
 class CategoryRepository(
-    private val categoryR2dbcRepository: CategoryR2dbcRepository
+    private val categoryR2dbcRepository: CategoryR2dbcRepository,
+    @param:Qualifier("asyncJobScope") private val reloadScope: CoroutineScope
 ) {
     private val cache = ConcurrentHashMap<String, Category>()
-    private val reloadScope = CoroutineScope(Dispatchers.IO)
+
     @Volatile private var active = true
 
     @PostConstruct
@@ -27,11 +32,7 @@ class CategoryRepository(
             while (active) {
                 delay(RELOAD_DURATION_MS)
 
-                try {
-                    reloadCache()
-                } catch (th: Throwable) {
-                    logger.error(th.message, th)
-                }
+                reloadCache()
             }
         }
     }
@@ -43,9 +44,13 @@ class CategoryRepository(
     }
 
     private suspend fun reloadCache() {
-        cache.clear()
-        categoryR2dbcRepository.findAll().collect { category ->
-            cache[category.id!!] = CategoryMapper.toModel(category)
+        try {
+            cache.clear()
+            categoryR2dbcRepository.findAll().collect { category ->
+                cache[category.id!!] = CategoryMapper.toModel(category)
+            }
+        } catch (th: Throwable) {
+            logger.error(th.message, th)
         }
     }
 
@@ -78,9 +83,11 @@ class CategoryRepository(
     suspend fun findAllByTypeActive(type: GoodsType): List<Category> =
         findAll().filter { it.type == type }.toList()
 
+    fun invalidateCache() = reloadScope.launch { reloadCache() }
+
     private companion object {
         val RELOAD_DURATION_MS = (5 * 60 * 1_000).milliseconds
 
-        val logger = LoggerFactory.getLogger(CategoryRepository::class.java)
+        private val logger = LoggerFactory.getLogger(CategoryRepository::class.java)
     }
 }

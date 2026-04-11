@@ -81,7 +81,6 @@ data class Goods(
     val difficulty: String,
     val duration: Int? = null,
     val videoUrl: String? = null,
-    val previewUrl: String? = null,
     val detailedDescription: String? = null,
     val careInstructions: String? = null
 )

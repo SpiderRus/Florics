@@ -144,7 +144,7 @@ INSERT INTO goods (id, name, description, price, category_id, difficulty, detail
 -- =====================================================
 -- 5. GOODS (Master Classes)
 -- =====================================================
-INSERT INTO goods (id, name, description, price, category_id, difficulty, duration, video_url, preview_url) VALUES
+INSERT INTO goods (id, name, description, price, category_id, difficulty, duration, video_url) VALUES
 (
     '550e8400-e29b-41d4-a716-446655440301',
     'Создание флорариума своими руками',
@@ -153,8 +153,7 @@ INSERT INTO goods (id, name, description, price, category_id, difficulty, durati
     '550e8400-e29b-41d4-a716-446655440012',
     'Легко',
     90,
-    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    'https://images.unsplash.com/photo-1466781783364-36c955e42a7f?w=800&h=600&fit=crop'
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
 ),
 (
     '550e8400-e29b-41d4-a716-446655440302',
@@ -164,8 +163,7 @@ INSERT INTO goods (id, name, description, price, category_id, difficulty, durati
     '550e8400-e29b-41d4-a716-446655440012',
     'Легко',
     60,
-    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    'https://images.unsplash.com/photo-1463320726281-696a485928c7?w=800&h=600&fit=crop'
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'
 );
 
 -- =====================================================

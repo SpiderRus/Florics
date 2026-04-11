@@ -1,7 +1,13 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
+
+// Create axios instance
+const axiosInstance = axios.create({
+    baseURL: '/api'
+});
 
 export const setupAxiosInterceptors = () => {
-    axios.interceptors.request.use(
+    axiosInstance.interceptors.request.use(
         (config) => {
             // Читаем токен напрямую из localStorage, чтобы избежать race condition с React state
             const token = localStorage.getItem('token');
@@ -17,7 +23,7 @@ export const setupAxiosInterceptors = () => {
         (error) => Promise.reject(error)
     );
 
-    axios.interceptors.response.use(
+    axiosInstance.interceptors.response.use(
         (response) => response,
         (error) => {
             if (error.response?.status === 401) {
@@ -31,8 +37,18 @@ export const setupAxiosInterceptors = () => {
                     localStorage.setItem('redirectAfterLogin', currentPath);
 
                 window.location.href = '/login';
+            } else if (error.response?.status === 403) {
+                // Доступ запрещен
+                toast.error('Доступ запрещен. У вас нет прав для выполнения этого действия.');
+                // Опционально: редирект на главную для admin страниц
+                if (window.location.pathname.startsWith('/admin')) {
+                    window.location.href = '/';
+                }
             }
             return Promise.reject(error);
         }
     );
 };
+
+// Export axios instance as default
+export default axiosInstance;

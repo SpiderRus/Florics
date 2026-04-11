@@ -88,6 +88,10 @@ class SecurityConfig {
                     .pathMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/*.ico").permitAll()
                     .pathMatchers("/catalog", "/catalog/*", "/login", "/register", "/cart", "/profile", "/terrariums",
                         "/custom-terrarium", "/masterclasses", "/masterclass/*").permitAll()
+                    // Admin панель (SPA fallback, проверка прав на backend)
+                    .pathMatchers("/admin", "/admin/**").permitAll()
+                    // Загруженные файлы (изображения/видео)
+                    .pathMatchers("/uploads/**").permitAll()
                     // AI чат-бот - только для авторизованных пользователей
                     .pathMatchers("/api/aibot/**").authenticated()
                     // Загрузка документов - только для авторизованных пользователей

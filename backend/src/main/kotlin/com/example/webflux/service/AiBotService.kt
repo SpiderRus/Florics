@@ -27,7 +27,7 @@ import java.util.concurrent.TimeoutException
  */
 @Service
 class AiBotService(
-    @Qualifier("aiAgentWebClient") private val webClient: WebClient,
+    @param:Qualifier("aiAgentWebClient") private val webClient: WebClient,
     private val conversationRepository: AiConversationRepository
 ) {
     /**
@@ -43,26 +43,21 @@ class AiBotService(
 
         val request = ConversationCreateRequest(title, context)
 
-        val response = try {
-            webClient.post()
-                .uri("/conversations")
-                .bodyValue(request)
-                .retrieve()
-                .onStatus({ it.is4xxClientError }, errorHandler4xx)
-                .onStatus({ it.is5xxServerError }, errorHandler5xx)
-                .awaitBody<ConversationResponse>()
-        } catch (e: WebClientRequestException) {
-            logger.error("Failed to connect to AI Agent service", e)
-            throw AiBotServiceException("Failed to connect to AI Agent service", e)
-        } catch (e: TimeoutException) {
-            logger.error("AI Agent request timed out", e)
-            throw AiBotTimeoutException("AI Agent request timed out", e)
-        }
-
-        // Note: маппинг conversation → user сохраняется через saveGoodsConversation в контроллере
-        logger.debug("Conversation created: {}", response.id)
-
-        return response
+        return try {
+                webClient.post()
+                    .uri("/conversations")
+                    .bodyValue(request)
+                    .retrieve()
+                    .onStatus({ it.is4xxClientError }, errorHandler4xx)
+                    .onStatus({ it.is5xxServerError }, errorHandler5xx)
+                    .awaitBody<ConversationResponse>()
+            } catch (e: WebClientRequestException) {
+                logger.error("Failed to connect to AI Agent service", e)
+                throw AiBotServiceException("Failed to connect to AI Agent service", e)
+            } catch (e: TimeoutException) {
+                logger.error("AI Agent request timed out", e)
+                throw AiBotTimeoutException("AI Agent request timed out", e)
+            }.also { logger.debug("Conversation created: {}", it.id) }
     }
 
     /**
@@ -94,8 +89,7 @@ class AiBotService(
                 logger.warn("Failed to fetch conversation {}: {}", id, e.message)
                 // Conversation мог быть удален в AI Agent, но маппинг остался
                 // Удаляем устаревший маппинг
-                conversationRepository.deleteByConversationId(id)
-                null
+                conversationRepository.deleteByConversationId(id).let { null }
             }
         }
     }
@@ -197,8 +191,7 @@ class AiBotService(
         }
 
         // Удалить маппинг
-        conversationRepository.deleteByConversationId(conversationId)
-        logger.debug("Conversation {} deleted", conversationId)
+        conversationRepository.deleteByConversationId(conversationId).also { logger.debug("Conversation {} deleted", conversationId) }
     }
 
     /**
@@ -263,29 +256,29 @@ class AiBotService(
         }
     }
 
-    /**
-     * Error handler для 4xx ошибок
-     */
-    private val errorHandler4xx: (org.springframework.web.reactive.function.client.ClientResponse) -> Mono<out Throwable> = { response ->
-        response.bodyToMono<String>().map { body ->
-            when (response.statusCode().value()) {
-                404 -> AiBotServiceException("Resource not found in AI Agent")
-                400 -> AiBotServiceException("Bad request to AI Agent: $body")
-                else -> AiBotServiceException("AI Agent client error (${response.statusCode()}): $body")
-            }
-        }.defaultIfEmpty(AiBotServiceException("AI Agent client error: ${response.statusCode()}"))
-    }
-
-    /**
-     * Error handler для 5xx ошибок
-     */
-    private val errorHandler5xx: (org.springframework.web.reactive.function.client.ClientResponse) -> Mono<out Throwable> = { response ->
-        response.bodyToMono<String>().map { body ->
-            AiBotServiceException("AI Agent server error (${response.statusCode()}): $body")
-        }.defaultIfEmpty(AiBotServiceException("AI Agent server error: ${response.statusCode()}"))
-    }
-
     private companion object {
+        /**
+         * Error handler для 4xx ошибок
+         */
+        private val errorHandler4xx: (ClientResponse) -> Mono<out Throwable> = { response ->
+            response.bodyToMono<String>().map { body ->
+                when (response.statusCode().value()) {
+                    404 -> AiBotServiceException("Resource not found in AI Agent")
+                    400 -> AiBotServiceException("Bad request to AI Agent: $body")
+                    else -> AiBotServiceException("AI Agent client error (${response.statusCode()}): $body")
+                }
+            }.defaultIfEmpty(AiBotServiceException("AI Agent client error: ${response.statusCode()}"))
+        }
+
+        /**
+         * Error handler для 5xx ошибок
+         */
+        private val errorHandler5xx: (ClientResponse) -> Mono<out Throwable> = { response ->
+            response.bodyToMono<String>().map { body ->
+                AiBotServiceException("AI Agent server error (${response.statusCode()}): $body")
+            }.defaultIfEmpty(AiBotServiceException("AI Agent server error: ${response.statusCode()}"))
+        }
+
         private val logger = LoggerFactory.getLogger(AiBotService::class.java)
     }
 }

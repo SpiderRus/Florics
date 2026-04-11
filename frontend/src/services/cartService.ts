@@ -1,19 +1,19 @@
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import { CartSummary, CartItem, LocalCartItem, AddToCartRequest, UpdateQuantityRequest, MergeCartRequest, CheckoutResponse } from '../types/cart';
 
-const API_BASE_URL = '/api/cart';
+const API_BASE_URL = '/cart';
 const LOCAL_CART_KEY = 'localCart';
 
 export const cartService = {
     // ========== Серверные операции (требуют авторизации) ==========
 
     getCart: async (): Promise<CartSummary> => {
-        const response = await axios.get<CartSummary>(`${API_BASE_URL}`);
+        const response = await axiosInstance.get<CartSummary>(`${API_BASE_URL}`);
         return response.data;
     },
 
     addToCart: async (goodsId: string, quantity: number): Promise<CartItem> => {
-        const response = await axios.post<CartItem>(
+        const response = await axiosInstance.post<CartItem>(
             `${API_BASE_URL}/items`,
             { goodsId, quantity } as AddToCartRequest
         );
@@ -21,7 +21,7 @@ export const cartService = {
     },
 
     updateQuantity: async (goodsId: string, quantity: number): Promise<CartItem> => {
-        const response = await axios.put<CartItem>(
+        const response = await axiosInstance.put<CartItem>(
             `${API_BASE_URL}/items/${goodsId}`,
             { quantity } as UpdateQuantityRequest
         );
@@ -29,15 +29,15 @@ export const cartService = {
     },
 
     removeItem: async (goodsId: string): Promise<void> => {
-        await axios.delete(`${API_BASE_URL}/items/${goodsId}`);
+        await axiosInstance.delete(`${API_BASE_URL}/items/${goodsId}`);
     },
 
     clearCart: async (): Promise<void> => {
-        await axios.delete(`${API_BASE_URL}`);
+        await axiosInstance.delete(`${API_BASE_URL}`);
     },
 
     mergeCart: async (localItems: LocalCartItem[]): Promise<CartSummary> => {
-        const response = await axios.post<CartSummary>(
+        const response = await axiosInstance.post<CartSummary>(
             `${API_BASE_URL}/merge`,
             { items: localItems } as MergeCartRequest
         );
@@ -45,7 +45,7 @@ export const cartService = {
     },
 
     checkout: async (): Promise<CheckoutResponse> => {
-        const response = await axios.post<CheckoutResponse>(`${API_BASE_URL}/checkout`);
+        const response = await axiosInstance.post<CheckoutResponse>(`${API_BASE_URL}/checkout`);
         return response.data;
     },
 

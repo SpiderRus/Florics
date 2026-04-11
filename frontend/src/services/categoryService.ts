@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = '/api';
+import axiosInstance from '../utils/axiosConfig';
 
 export interface Category {
     id: string;
@@ -10,12 +8,12 @@ export interface Category {
 
 export const categoryService = {
     getAllCategories: async (): Promise<Category[]> => {
-        const response = await axios.get<Category[]>(`${API_BASE_URL}/categories`);
+        const response = await axiosInstance.get<Category[]>('/categories');
         return response.data;
     },
 
     getCategoryById: async (id: string): Promise<Category> => {
-        const response = await axios.get<Category>(`${API_BASE_URL}/categories/${id}`);
+        const response = await axiosInstance.get<Category>(`/categories/${id}`);
         return response.data;
     }
 };

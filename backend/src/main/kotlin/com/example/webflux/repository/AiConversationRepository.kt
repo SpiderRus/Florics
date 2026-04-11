@@ -1,29 +1,46 @@
 package com.example.webflux.repository
 
 import com.example.webflux.entity.AiConversationEntity
-import com.example.webflux.repository.r2dbc.AiConversationR2dbcRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactor.awaitSingle
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
+import org.springframework.data.r2dbc.repository.Query
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
-import java.util.*
+
+interface AiConversationR2dbcRepository : CoroutineCrudRepository<AiConversationEntity, String> {
+
+    @Query("SELECT * FROM ai_conversations WHERE user_id = :userId")
+    fun findByUserId(userId: String): Flow<AiConversationEntity>
+
+    @Query("SELECT * FROM ai_conversations WHERE user_id = :userId AND goods_id = :goodsId")
+    suspend fun findByUserIdAndGoodsId(userId: String, goodsId: String): AiConversationEntity?
+
+    @Query("DELETE FROM ai_conversations WHERE user_id = :userId AND goods_id = :goodsId")
+    suspend fun deleteByUserIdAndGoodsId(userId: String, goodsId: String)
+
+    // Удалены избыточные методы, заменены стандартными CoroutineCrudRepository методами:
+    // - findByConversationId -> используйте findById(conversationId)
+    // - deleteByConversationId -> используйте deleteById(conversationId)
+}
 
 /**
  * R2DBC репозиторий для хранения маппинга AI разговоров к пользователям
  *
- * Хранит связи (userId, goodsId) → conversationId - привязка разговоров к товарам
+ * Хранит связи conversationId → (userId, goodsId?) - привязка внешних разговоров из AI Agent
+ * к пользователям и опционально к товарам.
  *
  * Используется для изоляции разговоров между пользователями и создания отдельных
- * conversation для каждого товара.
+ * conversations для каждого товара (когда goodsId != null).
  */
 @Repository
 class AiConversationRepository(
-    private val aiConversationR2dbcRepository: AiConversationR2dbcRepository
+    private val aiConversationR2dbcRepository: AiConversationR2dbcRepository,
+    private val entityTemplate: R2dbcEntityTemplate
 ) {
-
-    /**
-     * Сохранить связь conversation → user (deprecated, use saveGoodsConversation)
-     */
-    suspend fun save(conversationId: UUID, userId: Long) {
-        // Deprecated - use saveGoodsConversation instead
-    }
 
     /**
      * Найти владельца разговора
@@ -31,10 +48,8 @@ class AiConversationRepository(
      * @param conversationId UUID разговора
      * @return ID пользователя-владельца или null если не найдено
      */
-    suspend fun findByConversationId(conversationId: String): String? {
-        val entity = aiConversationR2dbcRepository.findByConversationId(conversationId)
-        return entity?.userId
-    }
+    suspend fun findByConversationId(conversationId: String): String? =
+            aiConversationR2dbcRepository.findById(conversationId)?.userId
 
     /**
      * Найти все разговоры пользователя
@@ -42,27 +57,29 @@ class AiConversationRepository(
      * @param userId ID пользователя (UUID string)
      * @return Список UUID разговоров, принадлежащих пользователю
      */
-    suspend fun findByUserId(userId: String): List<String> {
-        val result = mutableListOf<String>()
-        aiConversationR2dbcRepository.findByUserId(userId)
-            .collect { entity -> result.add(entity.conversationId) }
-        return result
-    }
+    suspend fun findByUserId(userId: String): List<String> =
+        aiConversationR2dbcRepository.findByUserId(userId).map { it.conversationId }.toList()
 
     /**
      * Сохранить связь conversation → (user, goods)
      *
      * @param userId ID пользователя (UUID string)
-     * @param goodsId ID товара (UUID string)
-     * @param conversationId UUID разговора
+     * @param goodsId ID товара (UUID string), может быть null для общих разговоров
+     * @param conversationId UUID разговора (PRIMARY KEY)
+     * @return Сохраненная entity
      */
-    suspend fun saveGoodsConversation(userId: String, goodsId: String, conversationId: String) {
+    suspend fun saveOrCreateGoodsConversation(userId: String, goodsId: String?, conversationId: String): AiConversationEntity {
         val entity = AiConversationEntity(
+            conversationId = conversationId,  // PK первым параметром
             userId = userId,
-            goodsId = goodsId,
-            conversationId = conversationId
+            goodsId = goodsId  // Nullable - может быть null
         )
-        aiConversationR2dbcRepository.save(entity)
+
+        return try {
+                entityTemplate.insert(entity)
+            } catch (e: DataIntegrityViolationException) {
+                entityTemplate.update(entity)
+            }.awaitSingle()
     }
 
     /**
@@ -72,10 +89,8 @@ class AiConversationRepository(
      * @param goodsId ID товара (UUID string)
      * @return UUID разговора или null если не найдено
      */
-    suspend fun findConversationByUserAndGoods(userId: String, goodsId: String): String? {
-        val entity = aiConversationR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId)
-        return entity?.conversationId
-    }
+    suspend fun findConversationByUserAndGoods(userId: String, goodsId: String): String? =
+        aiConversationR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId)?.conversationId
 
     /**
      * Удалить маппинг при удалении разговора
@@ -84,11 +99,9 @@ class AiConversationRepository(
      * @return true если маппинг был удален, false если не существовал
      */
     suspend fun deleteByConversationId(conversationId: String): Boolean {
-        val exists = aiConversationR2dbcRepository.findByConversationId(conversationId) != null
-        if (!exists) return false
+        if (!aiConversationR2dbcRepository.existsById(conversationId)) return false
 
-        aiConversationR2dbcRepository.deleteByConversationId(conversationId)
-        return true
+        return aiConversationR2dbcRepository.deleteById(conversationId).let { true }
     }
 
     /**
@@ -97,7 +110,22 @@ class AiConversationRepository(
      * @param conversationId UUID разговора
      * @return true если маппинг существует
      */
-    suspend fun exists(conversationId: String): Boolean {
-        return aiConversationR2dbcRepository.findByConversationId(conversationId) != null
+    suspend fun exists(conversationId: String): Boolean = aiConversationR2dbcRepository.existsById(conversationId)
+
+    /**
+     * Сохранить общий разговор без привязки к товару
+     *
+     * @param userId ID пользователя (UUID string)
+     * @param conversationId UUID разговора (PRIMARY KEY)
+     * @return Сохраненная entity
+     */
+    suspend fun saveGeneralConversation(userId: String, conversationId: String): AiConversationEntity {
+        val entity = AiConversationEntity(
+            conversationId = conversationId,
+            userId = userId,
+            goodsId = null  // Общий разговор без привязки к товару
+        )
+
+        return aiConversationR2dbcRepository.save(entity)
     }
 }

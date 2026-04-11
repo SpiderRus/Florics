@@ -79,7 +79,11 @@ const CourseCard: React.FC<CourseCardProps> = ({goods}) => {
                                 Смотреть курс →
                             </Button>
                         ) : canAddToCart ? (
-                            <AddToCartButton goodsId={goods.id} goodsName={goods.name} isMasterClass={true}/>
+                            <AddToCartButton
+                                goodsId={goods.id}
+                                goodsName={goods.name}
+                                isMasterClass={true}
+                            />
                         ) : (
                             <Button
                                 variant="warning"

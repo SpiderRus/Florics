@@ -130,7 +130,6 @@ object GoodsMapper {
             difficulty = goods.difficulty,
             duration = goods.duration,
             videoUrl = goods.videoUrl,
-            previewUrl = goods.previewUrl,
             detailedDescription = goods.detailedDescription,
             careInstructions = goods.careInstructions
         )
@@ -147,7 +146,6 @@ object GoodsMapper {
             difficulty = entity.difficulty,
             duration = entity.duration,
             videoUrl = entity.videoUrl,
-            previewUrl = entity.previewUrl,
             detailedDescription = entity.detailedDescription,
             careInstructions = entity.careInstructions
         )

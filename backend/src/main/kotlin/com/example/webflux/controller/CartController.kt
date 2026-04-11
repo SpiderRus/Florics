@@ -83,10 +83,8 @@ class CartController(
     @DeleteMapping
     @PreAuthorize("hasRole('BUYER')")
     @Operation(summary = "Очистить корзину", description = "Удаляет все товары из корзины")
-    suspend fun clearCart(): ResponseEntity<Void> {
-        cartService.clearCart(SecurityUtils.requireCurrentUserId())
-        return ResponseEntity.noContent().build()
-    }
+    suspend fun clearCart(): ResponseEntity<Void> =
+        cartService.clearCart(SecurityUtils.requireCurrentUserId()).let { ResponseEntity.noContent().build() }
 
     /**
      * Синхронизировать локальную корзину с серверной при логине
@@ -130,14 +128,13 @@ class CartController(
             )
         }
 
-        // Очищаем корзину
-        cartService.clearCart(userId)
-
-        return ResponseEntity.ok(CheckoutResponse(
-            orderId = randomUUID().toString(),
-            totalPrice = cart.totalPrice,
-            items = purchasedItems,
-            purchaseDate = OffsetDateTime.now()
-        ))
+        return cartService.clearCart(userId).let {
+            ResponseEntity.ok(CheckoutResponse(
+                orderId = randomUUID().toString(),
+                totalPrice = cart.totalPrice,
+                items = purchasedItems,
+                purchaseDate = OffsetDateTime.now()
+            ))
+        }
     }
 }

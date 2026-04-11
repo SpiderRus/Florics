@@ -79,7 +79,10 @@ const GoodsCard: React.FC<GoodsCardProps> = ({goods}) => {
 
                     {canAddToCart && (
                         <div onClick={(e) => e.stopPropagation()}>
-                            <AddToCartButton goodsId={goods.id} goodsName={goods.name} />
+                            <AddToCartButton
+                                goodsId={goods.id}
+                                goodsName={goods.name}
+                            />
                         </div>
                     )}
                 </div>

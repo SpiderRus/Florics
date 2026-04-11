@@ -19,7 +19,7 @@ interface CartItemR2dbcRepository : CoroutineCrudRepository<CartItemEntity, Stri
     suspend fun deleteByUserIdAndGoodsId(userId: String, goodsId: String)
 
     @Query("DELETE FROM cart_items WHERE user_id = :userId")
-    suspend fun deleteByUserId(userId: String)
+    suspend fun deleteByUserId(userId: String): Int?
 
     @Query("""
         INSERT INTO cart_items (user_id, goods_id, quantity, added_at)

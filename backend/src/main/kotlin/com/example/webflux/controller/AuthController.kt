@@ -1,6 +1,5 @@
 package com.example.webflux.controller
 
-import com.example.webflux.domain.model.User
 import com.example.webflux.controller.model.*
 import com.example.webflux.repository.UserRepository
 import com.example.webflux.security.AuthenticationService
@@ -8,6 +7,7 @@ import com.example.webflux.security.SecurityUtils
 import com.example.webflux.security.TokenInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -74,21 +74,21 @@ class AuthController(
         val user = userRepository.findById(tokenInfo.userId)
             ?: return ResponseEntity.notFound().build()
 
-        return ResponseEntity.ok(user.toUserDto())
+        return ResponseEntity.ok(user.toUserDto().also { log.info("User entity: $it") })
     }
 
     private suspend fun TokenInfo.toAuthResponse(): AuthResponse {
         val user = userRepository.findById(userId)
+            ?: throw IllegalStateException("User not found for token")
         return AuthResponse(
             accessToken = token,
             tokenType = "Bearer",
             expiresIn = ChronoUnit.SECONDS.between(Instant.now(), expiresAt),
-            user = UserDto(
-                id = userId,
-                name = user?.name ?: "",
-                email = email,
-                canPurchase = user?.roles?.contains("BUYER") == true
-            )
+            user = user.toUserDto()
         )
+    }
+
+    private companion object {
+        val log = LoggerFactory.getLogger(AuthController::class.java)
     }
 }

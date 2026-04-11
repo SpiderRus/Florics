@@ -3,6 +3,7 @@ package com.example.webflux.repository
 import com.example.webflux.domain.model.Category
 import com.example.webflux.domain.model.Goods
 import com.example.webflux.domain.model.GoodsType
+import com.example.webflux.entity.GoodsEntity
 import com.example.webflux.entity.MediaEntity
 import com.example.webflux.mapper.GoodsMapper
 import com.example.webflux.mapper.MediaMapper
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Repository
+import kotlin.collections.get
 
 @Repository
 class GoodsRepository(
@@ -62,9 +64,9 @@ class GoodsRepository(
         val entity = GoodsMapper.toEntity(goods)
         val saved = goodsR2dbcRepository.save(entity)
 
-        // Save media
+        // Save media - дожидаемся сохранения каждого элемента
         goods.media.forEach { media ->
-            mediaR2dbcRepository.save(MediaMapper.toEntity(media, saved.id!!))
+            mediaR2dbcRepository.save(MediaMapper.toEntity(media, saved.id!!)).let { }
         }
 
         val media = mediaR2dbcRepository.findByGoodsId(saved.id!!)
@@ -81,4 +83,60 @@ class GoodsRepository(
         mediaR2dbcRepository.softDeleteByGoodsId(id)
         return true
     }
+
+    suspend fun findAllPaged(
+        page: Int,
+        size: Int,
+        sortBy: String,
+        sortOrder: String
+    ): Pair<List<Goods>, Long> {
+        val offset = page * size
+        val sortField = if (sortBy == "category") "created_at" else sortBy
+
+        // Загрузить entities с пагинацией
+        val entities = goodsR2dbcRepository.findAllActivePaged(
+            sortBy = sortField,
+            sortOrder = sortOrder.uppercase(),
+            limit = size,
+            offset = offset
+        ).toList()
+
+        val totalElements = goodsR2dbcRepository.countActive()
+
+        // Batch загрузка media для всех товаров на странице
+        val goodsIds = entities.map { it.id!! }
+        val mediaMap = if (goodsIds.isNotEmpty()) {
+            mediaR2dbcRepository.findByGoodsIdIn(goodsIds.toTypedArray())
+                .groupBy(MediaEntity::goodsId, goodsIds.size)
+        } else {
+            emptyMap()
+        }
+
+        var goods = entities.map { entity ->
+            GoodsMapper.toModel(
+                entity,
+                mediaMap[entity.id]?.map { MediaMapper.toModel(it) } ?: emptyList()
+            )
+        }
+
+        // Применить сортировку по категории (in-memory) если нужно
+        if (sortBy == "category") {
+            val categories = categoryRepository.findAll()
+                .fold(mutableMapOf<String, String>()) { acc, cat ->
+                    acc[cat.id] = cat.name
+                    acc
+                }
+
+            goods = if (sortOrder.uppercase() == "ASC") {
+                goods.sortedBy { categories[it.categoryId] ?: "" }
+            } else {
+                goods.sortedByDescending { categories[it.categoryId] ?: "" }
+            }
+        }
+
+        return goods to totalElements
+    }
+
+    fun findByIdsIn(ids: Collection<String>): Flow<Goods> =
+        goodsR2dbcRepository.findByIdsIn(ids.toTypedArray()).map { GoodsMapper.toModel(it, emptyList()) }
 }

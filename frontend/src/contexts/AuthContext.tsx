@@ -11,6 +11,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, name: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,6 +91,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem('user');
     };
 
+    const refreshUser = async () => {
+        const savedToken = localStorage.getItem('token');
+        if (!savedToken) return;
+
+        try {
+            const currentUser = await authService.getCurrentUser(savedToken);
+            setUser(currentUser);
+            localStorage.setItem('user', JSON.stringify(currentUser));
+        } catch (error) {
+            console.error('Failed to refresh user:', error);
+            // Если токен невалиден, разлогиниваем
+            await logout();
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -99,7 +115,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 loading,
                 login,
                 register,
-                logout
+                logout,
+                refreshUser
             }}
         >
             {children}

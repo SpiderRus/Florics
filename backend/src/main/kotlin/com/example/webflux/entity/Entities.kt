@@ -105,9 +105,6 @@ data class GoodsEntity(
     @Column("video_url")
     val videoUrl: String? = null,
 
-    @Column("preview_url")
-    val previewUrl: String? = null,
-
     @Column("detailed_description")
     val detailedDescription: String? = null,
 
@@ -227,18 +224,19 @@ data class ReviewEntity(
 )
 
 // =====================================================
-// AI CONVERSATION ENTITY (Composite PK)
+// AI CONVERSATION ENTITY
 // =====================================================
 @Table("ai_conversations")
 data class AiConversationEntity(
+    @Id
+    @Column("conversation_id")
+    val conversationId: String,  // PRIMARY KEY - UUID из AI Agent сервиса
+
     @Column("user_id")
     val userId: String,
 
     @Column("goods_id")
-    val goodsId: String,
-
-    @Column("conversation_id")
-    val conversationId: String,
+    val goodsId: String?,  // NULLABLE - разговоры могут быть не только о товарах
 
     @Column("created_at")
     val createdAt: OffsetDateTime = OffsetDateTime.now(),

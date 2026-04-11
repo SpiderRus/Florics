@@ -11,6 +11,7 @@ import Register from './components/Register'
 import CartPage from './components/CartPage'
 import ProfilePage from './components/ProfilePage'
 import CartIcon from './components/CartIcon'
+import {AdminPanel} from './components/admin/AdminPanel'
 import {AuthProvider, useAuth} from './contexts/AuthContext'
 import {CartProvider} from './contexts/CartContext'
 import {ToastContainer} from 'react-toastify'
@@ -135,6 +136,7 @@ function AppContent() {
                 <Route path="/profile" element={<ProfilePage/>}/>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
+                <Route path="/admin" element={<AdminPanel/>}/>
             </Routes>
 
             <footer className="footer">

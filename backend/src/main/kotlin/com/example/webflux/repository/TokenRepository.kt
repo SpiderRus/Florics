@@ -21,9 +21,7 @@ class TokenRepository(
      */
     suspend fun save(token: Token): Token {
         log.debug("Saving token: ${token.token} for userId: ${token.userId}")
-        val entity = TokenMapper.toEntity(token)
-        val savedEntity = tokenR2dbcRepository.save(entity)
-        return TokenMapper.toModel(savedEntity)
+        return TokenMapper.toModel(tokenR2dbcRepository.save(TokenMapper.toEntity(token)))
     }
 
     /**
@@ -33,35 +31,30 @@ class TokenRepository(
     suspend fun findValidToken(token: String): Token? {
         val entity = tokenR2dbcRepository.findValidToken(token, OffsetDateTime.now())
 
-        if (entity == null) {
-            log.debug("Token not found or expired: $token")
-            return null
-        }
-
-        return TokenMapper.toModel(entity)
+        return if (entity == null) {
+                log.debug("Token not found or expired: $token")
+                null
+            } else
+                TokenMapper.toModel(entity)
     }
 
     /**
      * Найти все валидные токены пользователя
      */
-    suspend fun findValidTokensByUserId(userId: String): List<Token> {
-        val entities = tokenR2dbcRepository.findValidTokensByUserId(userId, OffsetDateTime.now())
-        return entities.map { TokenMapper.toModel(it) }
-    }
+    suspend fun findValidTokensByUserId(userId: String): List<Token> =
+       tokenR2dbcRepository.findValidTokensByUserId(userId, OffsetDateTime.now())
+           .map { TokenMapper.toModel(it) }
 
     /**
      * Удалить конкретный токен
      */
-    suspend fun deleteByToken(token: String): Boolean {
-        return try {
-            tokenR2dbcRepository.deleteById(token)
-            log.debug("Token deleted: $token")
-            true
+    suspend fun deleteByToken(token: String): Boolean =
+        try {
+            tokenR2dbcRepository.deleteById(token).let { true }.also { log.debug("Token deleted: $token") }
         } catch (e: Exception) {
             log.warn("Failed to delete token: $token", e)
             false
         }
-    }
 
     /**
      * Удалить все токены пользователя (при logout из всех устройств)
@@ -77,16 +70,13 @@ class TokenRepository(
      */
     suspend fun deleteExpiredTokens(): Int {
         val count = tokenR2dbcRepository.deleteExpiredTokens(OffsetDateTime.now())
-        if (count > 0) {
+        if (count > 0)
             log.info("Deleted $count expired tokens")
-        }
         return count
     }
 
     /**
      * Проверить существование валидного токена
      */
-    suspend fun existsValidToken(token: String): Boolean {
-        return findValidToken(token) != null
-    }
+    suspend fun existsValidToken(token: String): Boolean = findValidToken(token) != null
 }

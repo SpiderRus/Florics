@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import {
     Conversation,
     Message,
@@ -7,7 +7,7 @@ import {
     ChatMessageRequest
 } from '../types/aibot';
 
-const API_BASE_URL = '/api/aibot';
+const API_BASE_URL = '/aibot';
 
 /**
  * Сервис для работы с AI чат-ботом
@@ -34,7 +34,7 @@ export const aiBotService = {
             goodsId,
             goodsName
         };
-        const response = await axios.post<Conversation>(`${API_BASE_URL}/conversations`, request);
+        const response = await axiosInstance.post<Conversation>(`${API_BASE_URL}/conversations`, request);
         return response.data;
     },
 
@@ -46,7 +46,7 @@ export const aiBotService = {
      */
     getConversationByGoods: async (goodsId: string): Promise<Conversation | null> => {
         try {
-            const response = await axios.get<Conversation>(`${API_BASE_URL}/conversations/by-goods/${goodsId}`);
+            const response = await axiosInstance.get<Conversation>(`${API_BASE_URL}/conversations/by-goods/${goodsId}`);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 404) {
@@ -64,7 +64,7 @@ export const aiBotService = {
      * @returns Promise<Message[]>
      */
     getMessages: async (conversationId: string, limit: number = 50): Promise<Message[]> => {
-        const response = await axios.get<Message[]>(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
+        const response = await axiosInstance.get<Message[]>(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
             params: { limit }
         });
         return response.data;
@@ -79,7 +79,7 @@ export const aiBotService = {
      */
     sendMessage: async (conversationId: string, message: string): Promise<ChatResponse> => {
         const request: ChatMessageRequest = { message };
-        const response = await axios.post<ChatResponse>(`${API_BASE_URL}/chat/${conversationId}`, request);
+        const response = await axiosInstance.post<ChatResponse>(`${API_BASE_URL}/chat/${conversationId}`, request);
         return response.data;
     },
 
@@ -90,6 +90,6 @@ export const aiBotService = {
      * @returns Promise<void>
      */
     deleteConversation: async (conversationId: string): Promise<void> => {
-        await axios.delete(`${API_BASE_URL}/conversations/${conversationId}`);
+        await axiosInstance.delete(`${API_BASE_URL}/conversations/${conversationId}`);
     }
 };

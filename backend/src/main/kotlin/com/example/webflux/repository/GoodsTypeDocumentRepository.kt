@@ -26,11 +26,8 @@ class GoodsTypeDocumentRepository(
      * @return Сохраненный документ
      * @throws DataIntegrityViolationException если документ уже существует (нарушение PRIMARY KEY)
      */
-    suspend fun save(document: GoodsTypeDocument): GoodsTypeDocument {
-        val entity = GoodsTypeDocumentMapper.toEntity(document)
-        val saved = r2dbcRepository.save(entity)
-        return GoodsTypeDocumentMapper.toModel(saved)
-    }
+    suspend fun save(document: GoodsTypeDocument): GoodsTypeDocument =
+        GoodsTypeDocumentMapper.toModel(r2dbcRepository.save(GoodsTypeDocumentMapper.toEntity(document)))
 
     /**
      * Найти все документы для конкретного типа товара
@@ -40,10 +37,9 @@ class GoodsTypeDocumentRepository(
      * @param goodsType Тип товара (PLANT, TERRARIUM, COURSE)
      * @return Flow документов для этого типа
      */
-    fun findByGoodsType(goodsType: GoodsType): Flow<GoodsTypeDocument> {
-        return r2dbcRepository.findByGoodsType(goodsType.name)
+    fun findByGoodsType(goodsType: GoodsType): Flow<GoodsTypeDocument> =
+        r2dbcRepository.findByGoodsType(goodsType.name)
             .map { GoodsTypeDocumentMapper.toModel(it) }
-    }
 
     /**
      * Найти все документы для нескольких типов товаров
@@ -51,11 +47,9 @@ class GoodsTypeDocumentRepository(
      * @param goodsTypes Список типов товаров для поиска
      * @return Flow документов
      */
-    fun findByGoodsTypes(goodsTypes: List<GoodsType>): Flow<GoodsTypeDocument> {
-        val typeNames = goodsTypes.map { it.name }.toTypedArray()
-        return r2dbcRepository.findByGoodsTypeIn(typeNames)
+    fun findByGoodsTypes(goodsTypes: List<GoodsType>): Flow<GoodsTypeDocument> =
+        r2dbcRepository.findByGoodsTypeIn(goodsTypes.map { it.name }.toTypedArray())
             .map { GoodsTypeDocumentMapper.toModel(it) }
-    }
 
     /**
      * Найти конкретный документ по его ID
@@ -63,10 +57,9 @@ class GoodsTypeDocumentRepository(
      * @param documentId UUID документа
      * @return Документ если найден, null в противном случае
      */
-    suspend fun findByDocumentId(documentId: String): GoodsTypeDocument? {
-        return r2dbcRepository.findById(documentId)
+    suspend fun findByDocumentId(documentId: String): GoodsTypeDocument? =
+        r2dbcRepository.findById(documentId)
             ?.let { GoodsTypeDocumentMapper.toModel(it) }
-    }
 
     /**
      * Проверить существование документа
@@ -74,9 +67,8 @@ class GoodsTypeDocumentRepository(
      * @param documentId UUID документа
      * @return true если документ существует
      */
-    suspend fun existsByDocumentId(documentId: String): Boolean {
-        return r2dbcRepository.existsByDocumentId(documentId)
-    }
+    suspend fun existsByDocumentId(documentId: String): Boolean =
+        r2dbcRepository.existsByDocumentId(documentId)
 
     /**
      * Удалить связь документа с типом товара
@@ -84,9 +76,8 @@ class GoodsTypeDocumentRepository(
      *
      * @param documentId UUID документа
      */
-    suspend fun deleteByDocumentId(documentId: String) {
+    suspend fun deleteByDocumentId(documentId: String) =
         r2dbcRepository.deleteByDocumentId(documentId)
-    }
 
     /**
      * Удалить все документы для конкретного типа товара
@@ -94,9 +85,8 @@ class GoodsTypeDocumentRepository(
      *
      * @param goodsType Тип товара
      */
-    suspend fun deleteByGoodsType(goodsType: GoodsType) {
+    suspend fun deleteByGoodsType(goodsType: GoodsType) =
         r2dbcRepository.deleteByGoodsType(goodsType.name)
-    }
 
     /**
      * Получить все ID документов для типа товара (для RAG запросов)
@@ -104,9 +94,6 @@ class GoodsTypeDocumentRepository(
      * @param goodsType Тип товара
      * @return Список ID документов
      */
-    suspend fun getDocumentIds(goodsType: GoodsType): List<String> {
-        return findByGoodsType(goodsType)
-            .map { it.documentId }
-            .toList()
-    }
+    suspend fun getDocumentIds(goodsType: GoodsType): List<String> =
+        findByGoodsType(goodsType).map { it.documentId }.toList()
 }

@@ -1,10 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Badge, Nav } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 
 const CartIcon: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { getTotalItems } = useCart();
     const badgeRef = useRef<HTMLSpanElement>(null);
     const [prevCount, setPrevCount] = useState(0);
@@ -22,9 +23,17 @@ const CartIcon: React.FC = () => {
         setPrevCount(totalItems);
     }, [totalItems, prevCount]);
 
+    const handleCartClick = () => {
+        navigate('/cart', {
+            state: {
+                from: location.pathname
+            }
+        });
+    };
+
     return (
         <Nav.Link
-            onClick={() => navigate('/cart')}
+            onClick={handleCartClick}
             style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
             className="cart-icon-container"
         >

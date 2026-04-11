@@ -169,7 +169,11 @@ const GoodsDetailPage: React.FC = () => {
                         <div className="goods-detail-price-section mb-3">
                             <h3 className="goods-price">{goods.price.toFixed(0)} ₽</h3>
                             {showAddToCartButton && (
-                                <AddToCartButton goodsId={goods.id} goodsName={goods.name} isMasterClass={isMasterClass} />
+                                <AddToCartButton
+                                    goodsId={goods.id}
+                                    goodsName={goods.name}
+                                    isMasterClass={isMasterClass}
+                                />
                             )}
                         </div>
                     )}
