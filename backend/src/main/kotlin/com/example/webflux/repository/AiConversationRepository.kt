@@ -11,6 +11,15 @@ import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
 
+/**
+ * R2DBC репозиторий для хранения маппинга AI разговоров к пользователям
+ *
+ * Хранит связи conversationId → (userId, goodsId?) - привязка внешних разговоров из AI Agent
+ * к пользователям и опционально к товарам.
+ *
+ * Используется для изоляции разговоров между пользователями и создания отдельных
+ * conversations для каждого товара (когда goodsId != null).
+ */
 interface AiConversationR2dbcRepository : CoroutineCrudRepository<AiConversationEntity, String> {
 
     @Query("SELECT * FROM ai_conversations WHERE user_id = :userId")
@@ -27,15 +36,7 @@ interface AiConversationR2dbcRepository : CoroutineCrudRepository<AiConversation
     // - deleteByConversationId -> используйте deleteById(conversationId)
 }
 
-/**
- * R2DBC репозиторий для хранения маппинга AI разговоров к пользователям
- *
- * Хранит связи conversationId → (userId, goodsId?) - привязка внешних разговоров из AI Agent
- * к пользователям и опционально к товарам.
- *
- * Используется для изоляции разговоров между пользователями и создания отдельных
- * conversations для каждого товара (когда goodsId != null).
- */
+
 @Repository
 class AiConversationRepository(
     private val aiConversationR2dbcRepository: AiConversationR2dbcRepository,
@@ -75,11 +76,11 @@ class AiConversationRepository(
             goodsId = goodsId  // Nullable - может быть null
         )
 
-        return try {
+        return (try {
                 entityTemplate.insert(entity)
             } catch (e: DataIntegrityViolationException) {
                 entityTemplate.update(entity)
-            }.awaitSingle()
+            }).awaitSingle()
     }
 
     /**
@@ -98,11 +99,8 @@ class AiConversationRepository(
      * @param conversationId UUID разговора для удаления
      * @return true если маппинг был удален, false если не существовал
      */
-    suspend fun deleteByConversationId(conversationId: String): Boolean {
-        if (!aiConversationR2dbcRepository.existsById(conversationId)) return false
-
-        return aiConversationR2dbcRepository.deleteById(conversationId).let { true }
-    }
+    suspend fun deleteByConversationId(conversationId: String): Boolean =
+        aiConversationR2dbcRepository.deleteById(conversationId).let { true }
 
     /**
      * Проверить существование маппинга

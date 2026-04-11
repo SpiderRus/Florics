@@ -5,9 +5,16 @@ import com.example.webflux.domain.model.CartItem
 import com.example.webflux.domain.model.CartItemWithGoods
 import com.example.webflux.domain.model.CartSummary
 import com.example.webflux.domain.model.GoodsType
+import com.example.webflux.entity.CartItemEntity
+import com.example.webflux.mapper.CartItemMapper
+import com.example.webflux.repository.CartItemR2dbcRepository
 import com.example.webflux.repository.CartRepository
 import com.example.webflux.repository.CategoryRepository
 import com.example.webflux.repository.GoodsRepository
+import com.example.webflux.util.associateBy
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collect
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.OffsetDateTime
@@ -19,7 +26,8 @@ import java.time.OffsetDateTime
 class CartService(
     private val cartRepository: CartRepository,
     private val goodsRepository: GoodsRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val cartItemR2dbcRepository: CartItemR2dbcRepository
 ) {
     /**
      * Получить сводку корзины с полной информацией о товарах и расчётом итогов
@@ -109,6 +117,54 @@ class CartService(
     }
 
     /**
+     * Объединить локальные товары (из localStorage) с серверной корзиной
+     * При конфликтах суммируются количества (кроме мастер-классов)
+     */
+    suspend fun mergeItems(userId: String, localItems: List<LocalCartItem>): List<CartItem> = coroutineScope {
+        if (localItems.isNotEmpty()) {
+            val existingMap = async { cartItemR2dbcRepository.findByUserId(userId).associateBy { it.goodsId } }
+            val goodsMap = async { goodsRepository.findByIdsIn(localItems.map { it.goodsId }).associateBy { it.id } }
+            val updatedItems = ArrayList<CartItemEntity>()
+
+            localItems.forEach { localItem ->
+                // Получить информацию о товаре и категории
+                val goods = goodsMap.await()[localItem.goodsId]
+                val category = goods?.let { categoryRepository.findById(it.categoryId) }
+                val isCourse = category?.type == GoodsType.COURSE
+
+                val existing = existingMap.await()[localItem.goodsId]
+
+                if (existing != null) {
+                    // Конфликт: товар есть и в серверной, и в локальной корзине
+                    // Для мастер-классов НЕ суммируем, оставляем quantity = 1
+                    if (!isCourse) {
+                        // Для обычных товаров суммируем количества
+                        updatedItems.add(existing.copy(quantity = existing.quantity + localItem.quantity))
+                    }
+                } else {
+                    // Добавляем новый товар из localStorage
+                    val finalQuantity = if (isCourse) 1 else localItem.quantity
+                    val newItem = CartItemMapper.toEntity(
+                        CartItem(
+                            userId = userId,
+                            goodsId = localItem.goodsId,
+                            quantity = finalQuantity,
+                            addedAt = OffsetDateTime.now()
+                        )
+                    )
+                    updatedItems.add(newItem)
+                }
+            }
+
+            if (updatedItems.isNotEmpty())
+                cartItemR2dbcRepository.saveAll(updatedItems).collect()
+
+            cartRepository.findByUserId(userId)
+        } else emptyList()
+    }
+
+
+    /**
      * Удалить товар из корзины
      */
     suspend fun removeFromCart(userId: String, goodsId: String): Boolean = cartRepository.removeItem(userId, goodsId)
@@ -124,7 +180,7 @@ class CartService(
      */
     suspend fun mergeLocalCart(userId: String, localItems: List<LocalCartItem>): CartSummary {
         // Merge локальной корзины с серверной
-        cartRepository.mergeItems(userId, localItems)
+        mergeItems(userId, localItems)
 
         // Вернуть обновленную корзину
         return getCartSummary(userId)

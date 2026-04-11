@@ -2,8 +2,8 @@ package com.example.webflux.repository
 
 import com.example.webflux.domain.model.Category
 import com.example.webflux.domain.model.GoodsType
+import com.example.webflux.entity.CategoryEntity
 import com.example.webflux.mapper.CategoryMapper
-import com.example.webflux.repository.r2dbc.CategoryR2dbcRepository
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.CoroutineScope
@@ -12,9 +12,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.data.r2dbc.repository.Query
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
+
+
+interface CategoryR2dbcRepository : CoroutineCrudRepository<CategoryEntity, String> {
+    @Query("SELECT * FROM categories WHERE id = :id AND deleted_at IS NULL")
+    suspend fun findByIdActive(id: String): CategoryEntity?
+
+    @Query("UPDATE categories SET deleted_at = CURRENT_TIMESTAMP WHERE id = :id AND deleted_at IS NULL")
+    suspend fun softDelete(id: String)
+}
 
 
 @Repository

@@ -1,23 +1,43 @@
 package com.example.webflux.repository
 
-import com.example.webflux.controller.model.LocalCartItem
 import com.example.webflux.domain.model.CartItem
-import com.example.webflux.domain.model.GoodsType
 import com.example.webflux.entity.CartItemEntity
 import com.example.webflux.mapper.CartItemMapper
-import com.example.webflux.repository.r2dbc.CartItemR2dbcRepository
-import com.example.webflux.util.associateBy
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.springframework.data.r2dbc.repository.Query
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
-import java.time.OffsetDateTime
 
 /**
  * R2DBC репозиторий для корзин покупок
  */
+
+interface CartItemR2dbcRepository : CoroutineCrudRepository<CartItemEntity, String> {
+
+    @Query("SELECT * FROM cart_items WHERE user_id = :userId")
+    fun findByUserId(userId: String): Flow<CartItemEntity>
+
+    @Query("SELECT * FROM cart_items WHERE user_id = :userId AND goods_id = :goodsId")
+    suspend fun findByUserIdAndGoodsId(userId: String, goodsId: String): CartItemEntity?
+
+    @Query("DELETE FROM cart_items WHERE user_id = :userId AND goods_id = :goodsId")
+    suspend fun deleteByUserIdAndGoodsId(userId: String, goodsId: String)
+
+    @Query("DELETE FROM cart_items WHERE user_id = :userId")
+    suspend fun deleteByUserId(userId: String): Int?
+
+    @Query("""
+        INSERT INTO cart_items (user_id, goods_id, quantity, added_at)
+        VALUES (:userId, :goodsId, :quantity, CURRENT_TIMESTAMP)
+        ON CONFLICT (user_id, goods_id)
+        DO UPDATE SET quantity = cart_items.quantity + :quantity
+    """)
+    suspend fun upsert(userId: String, goodsId: String, quantity: Int)
+}
+
+
 @Repository
 class CartRepository(
     private val cartItemR2dbcRepository: CartItemR2dbcRepository,
@@ -73,51 +93,4 @@ class CartRepository(
      */
     suspend fun findByUserIdAndGoodsId(userId: String, goodsId: String): CartItem? =
         cartItemR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId)?.let { CartItemMapper.toModel(it) }
-
-    /**
-     * Объединить локальные товары (из localStorage) с серверной корзиной
-     * При конфликтах суммируются количества (кроме мастер-классов)
-     */
-    suspend fun mergeItems(userId: String, localItems: List<LocalCartItem>): List<CartItem> = coroutineScope {
-        if (localItems.isNotEmpty()) {
-            val existingMap = async { cartItemR2dbcRepository.findByUserId(userId).associateBy { it.goodsId } }
-            val goodsMap = async { goodsRepository.findByIdsIn(localItems.map { it.goodsId }).associateBy { it.id } }
-            val updatedItems = ArrayList<CartItemEntity>()
-
-            localItems.forEach { localItem ->
-                // Получить информацию о товаре и категории
-                val goods = goodsMap.await()[localItem.goodsId]
-                val category = goods?.let { categoryRepository.findById(it.categoryId) }
-                val isCourse = category?.type == GoodsType.COURSE
-
-                val existing = existingMap.await()[localItem.goodsId]
-
-                if (existing != null) {
-                    // Конфликт: товар есть и в серверной, и в локальной корзине
-                    // Для мастер-классов НЕ суммируем, оставляем quantity = 1
-                    if (!isCourse) {
-                        // Для обычных товаров суммируем количества
-                        updatedItems.add(existing.copy(quantity = existing.quantity + localItem.quantity))
-                    }
-                } else {
-                    // Добавляем новый товар из localStorage
-                    val finalQuantity = if (isCourse) 1 else localItem.quantity
-                    val newItem = CartItemMapper.toEntity(
-                        CartItem(
-                            userId = userId,
-                            goodsId = localItem.goodsId,
-                            quantity = finalQuantity,
-                            addedAt = OffsetDateTime.now()
-                        )
-                    )
-                    updatedItems.add(newItem)
-                }
-            }
-
-            if (updatedItems.isNotEmpty())
-                cartItemR2dbcRepository.saveAll(updatedItems).collect()
-
-            findByUserId(userId)
-        } else emptyList()
-    }
 }

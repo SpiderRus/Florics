@@ -1,21 +1,37 @@
 package com.example.webflux.repository
 
 import com.example.webflux.domain.model.Token
+import com.example.webflux.entity.TokenEntity
 import com.example.webflux.mapper.TokenMapper
-import com.example.webflux.repository.r2dbc.TokenR2dbcRepository
 import org.slf4j.LoggerFactory
+import org.springframework.data.r2dbc.repository.Modifying
+import org.springframework.data.r2dbc.repository.Query
+import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.stereotype.Repository
-import java.time.Instant
 import java.time.OffsetDateTime
+
+interface TokenR2dbcRepository : CoroutineCrudRepository<TokenEntity, String> {
+
+    @Query("SELECT * FROM tokens WHERE token = :token AND expires_at > :now")
+    suspend fun findValidToken(token: String, now: OffsetDateTime): TokenEntity?
+
+    @Query("SELECT * FROM tokens WHERE user_id = :userId AND expires_at > :now")
+    suspend fun findValidTokensByUserId(userId: String, now: OffsetDateTime): List<TokenEntity>
+
+    @Modifying
+    @Query("DELETE FROM tokens WHERE expires_at <= :now")
+    suspend fun deleteExpiredTokens(now: OffsetDateTime): Int
+
+    @Modifying
+    @Query("DELETE FROM tokens WHERE user_id = :userId")
+    suspend fun deleteByUserId(userId: String): Int?
+}
+
 
 @Repository
 class TokenRepository(
     private val tokenR2dbcRepository: TokenR2dbcRepository
 ) {
-    companion object {
-        private val log = LoggerFactory.getLogger(TokenRepository::class.java)
-    }
-
     /**
      * Сохранить токен в БД
      */
@@ -60,8 +76,7 @@ class TokenRepository(
      * Удалить все токены пользователя (при logout из всех устройств)
      */
     suspend fun deleteByUserId(userId: String): Int {
-        val count = tokenR2dbcRepository.deleteByUserId(userId)
-        log.debug("Deleted $count tokens for userId: $userId")
+        val count = tokenR2dbcRepository.deleteByUserId(userId) ?: 0
         return count
     }
 
@@ -79,4 +94,8 @@ class TokenRepository(
      * Проверить существование валидного токена
      */
     suspend fun existsValidToken(token: String): Boolean = findValidToken(token) != null
+
+    private companion object {
+        private val log = LoggerFactory.getLogger(TokenRepository::class.java)
+    }
 }
