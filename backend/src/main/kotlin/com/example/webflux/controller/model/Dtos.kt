@@ -408,15 +408,15 @@ fun User.toUserDto() = UserDto(
     id = id ?: throw IllegalStateException("User must have an ID"),
     name = name,
     email = email,
-    canPurchase = roles.contains("BUYER"),
-    isAdmin = if (roles.contains("ADMIN")) true else null
+    canPurchase = roles.contains(UserRole.BUYER),
+    isAdmin = if (roles.contains(UserRole.ADMIN)) true else null
 )
 
 fun User.toUserResponseDto() = UserResponseDto(
     id = id ?: throw IllegalStateException("User must have an ID"),
     name = name,
     email = email,
-    roles = roles
+    roles = roles.map { it.name }.toSet()
 )
 
 fun CreateUserRequest.toDomain(id: String? = null) = User(
@@ -424,14 +424,14 @@ fun CreateUserRequest.toDomain(id: String? = null) = User(
     name = name,
     email = email,
     password = password,
-    roles = roles
+    roles = roles.map { UserRole.valueOf(it) }.toSet()
 )
 
 fun UpdateUserRequest.applyTo(user: User) = user.copy(
     name = name ?: user.name,
     email = email ?: user.email,
     password = password ?: user.password,
-    roles = roles ?: user.roles
+    roles = roles?.map { UserRole.valueOf(it) }?.toSet() ?: user.roles
 )
 
 // Category mapper

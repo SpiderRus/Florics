@@ -49,8 +49,7 @@ class LocalAuthenticationService(
             id = null,
             name = name,
             email = email,
-            password = hashedPassword,
-            roles = setOf("USER", "BUYER")
+            password = hashedPassword
         )
 
         val savedUser = userRepository.save(newUser)

@@ -43,7 +43,7 @@ data class UserEntity(
     val password: String,
 
     @Column("roles")
-    val roles: List<String>,
+    val roles: Set<String>,
 
     @Column("created_at")
     val createdAt: OffsetDateTime = OffsetDateTime.now(),

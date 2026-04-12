@@ -44,7 +44,7 @@ object UserMapper {
             name = user.name,
             email = user.email,
             password = user.password,
-            roles = user.roles.toList()
+            roles = user.roles.map { it.name }.toSet()
         )
     }
 
@@ -54,7 +54,7 @@ object UserMapper {
             name = entity.name,
             email = entity.email,
             password = entity.password,
-            roles = entity.roles.toSet()
+            roles = entity.roles.map { UserRole.valueOf(it) }.toSet()
         )
     }
 }

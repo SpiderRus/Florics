@@ -8,6 +8,10 @@ import java.time.OffsetDateTime
 // =====================================================
 // ENUMS
 // =====================================================
+enum class UserRole {
+    USER, BUYER, ADMIN
+}
+
 enum class GoodsType {
     PLANT,      // Растения
     TERRARIUM,  // Флорариумы
@@ -32,8 +36,12 @@ data class User(
     val name: String,
     val email: String,
     val password: String,
-    val roles: Set<String> = setOf("USER")
-)
+    val roles: Set<UserRole> = DEFAULT_ROLES
+) {
+    private companion object {
+        private val DEFAULT_ROLES: Set<UserRole> = setOf(UserRole.USER, UserRole.BUYER)
+    }
+}
 
 // =====================================================
 // CATEGORY MODEL
