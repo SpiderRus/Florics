@@ -22,6 +22,4 @@ object SecurityUtils {
     suspend fun getCurrentUserId(): String? = getCurrentTokenInfo()?.userId
 
     suspend fun requireCurrentUserId(): String = getCurrentUserId() ?: throw IllegalStateException("User not authenticated")
-
-    suspend fun hasRole(role: UserRole): Boolean = getCurrentTokenInfo()?.roles?.contains(role) ?: false
 }

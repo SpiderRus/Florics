@@ -1,6 +1,7 @@
 package com.example.webflux.controller
 
 import com.example.webflux.controller.model.*
+import com.example.webflux.domain.model.UserRole
 import com.example.webflux.service.GoodsService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
