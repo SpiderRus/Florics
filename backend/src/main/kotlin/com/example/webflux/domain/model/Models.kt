@@ -80,7 +80,7 @@ data class Video(
 // GOODS MODEL
 // =====================================================
 data class Goods(
-    val id: String,
+    val id: String?,
     val name: String,
     val description: String,
     val price: BigDecimal,

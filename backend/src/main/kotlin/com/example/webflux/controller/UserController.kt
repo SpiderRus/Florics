@@ -1,6 +1,8 @@
 package com.example.webflux.controller
 
 import com.example.webflux.controller.model.*
+import com.example.webflux.domain.model.User
+import com.example.webflux.domain.model.UserRole
 import com.example.webflux.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -15,6 +17,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import kotlin.collections.map
+import kotlin.collections.toSet
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,7 +26,7 @@ import org.springframework.web.bind.annotation.*
 class UserController(private val userService: UserService) {
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Получить всех пользователей", description = "Возвращает поток всех пользователей через Flow")
     @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "Успешная операция", content = [Content(schema = Schema(implementation = UserResponseDto::class))])
@@ -32,7 +36,7 @@ class UserController(private val userService: UserService) {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Получить пользователя по ID", description = "Возвращает пользователя по его идентификатору")
     @ApiResponses(value = [
         ApiResponse(responseCode = "200", description = "Пользователь найден", content = [Content(schema = Schema(implementation = UserResponseDto::class))]),
@@ -101,3 +105,71 @@ class UserController(private val userService: UserService) {
     }
 
 }
+
+@Schema(description = "Данные пользователя (без пароля)")
+data class UserResponseDto(
+    @Schema(description = "ID пользователя", example = "550e8400-e29b-41d4-a716-446655440000")
+    val id: String,
+
+    @Schema(description = "Имя пользователя", example = "Иван Иванов")
+    val name: String,
+
+    @Schema(description = "Email пользователя", example = "ivan@example.com")
+    val email: String,
+
+    @Schema(description = "Роли пользователя", example = "[\"USER\", \"BUYER\"]")
+    val roles: Set<String>
+)
+
+@Schema(description = "Запрос на создание пользователя")
+data class CreateUserRequest(
+    @Schema(description = "Имя пользователя", example = "Иван Иванов", required = true)
+    val name: String,
+
+    @Schema(description = "Email пользователя", example = "ivan@example.com", required = true)
+    val email: String,
+
+    @Schema(description = "Пароль пользователя", example = "password123", required = true)
+    val password: String,
+
+    @Schema(description = "Роли пользователя", example = "[\"USER\"]")
+    val roles: Set<String> = setOf("USER")
+)
+
+@Schema(description = "Запрос на обновление пользователя")
+data class UpdateUserRequest(
+    @Schema(description = "Новое имя пользователя", example = "Иван Иванов")
+    val name: String? = null,
+
+    @Schema(description = "Новый email пользователя", example = "newemail@example.com")
+    val email: String? = null,
+
+    @Schema(description = "Новый пароль пользователя", example = "newpassword123")
+    val password: String? = null,
+
+    @Schema(description = "Новые роли пользователя", example = "[\"USER\", \"ADMIN\"]")
+    val roles: Set<String>? = null
+)
+
+fun User.toUserResponseDto() = UserResponseDto(
+    id = id ?: throw IllegalStateException("User must have an ID"),
+    name = name,
+    email = email,
+    roles = roles.map { it.name }.toSet()
+)
+
+fun CreateUserRequest.toDomain(id: String? = null) = User(
+    id = id,
+    name = name,
+    email = email,
+    password = password,
+    roles = roles.map { UserRole.valueOf(it) }.toSet()
+)
+
+fun UpdateUserRequest.applyTo(user: User) = user.copy(
+    name = name ?: user.name,
+    email = email ?: user.email,
+    password = password ?: user.password,
+    roles = roles?.map { UserRole.valueOf(it) }?.toSet() ?: user.roles
+)
+

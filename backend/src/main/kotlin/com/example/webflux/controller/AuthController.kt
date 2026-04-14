@@ -5,8 +5,14 @@ import com.example.webflux.repository.UserRepository
 import com.example.webflux.security.AuthenticationService
 import com.example.webflux.security.SecurityUtils
 import com.example.webflux.security.TokenInfo
+import com.example.webflux.security.ValidPassword
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Email
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -92,3 +98,54 @@ class AuthController(
         val log = LoggerFactory.getLogger(AuthController::class.java)
     }
 }
+
+@Schema(description = "Запрос на аутентификацию")
+data class AuthRequest(
+    @field:Email(message = "Некорректный формат email")
+    @field:NotBlank(message = "Email обязателен")
+    @field:JsonProperty("email")
+    @field:Schema(description = "Email пользователя", example = "user@example.com")
+    val email: String,
+
+    @field:Size(min = 8, max = 128, message = "Пароль должен содержать от 8 до 128 символов")
+    @field:NotBlank(message = "Пароль обязателен")
+    @field:JsonProperty("password")
+    @field:Schema(description = "Пароль", example = "Password123!")
+    val password: String
+)
+
+@Schema(description = "Запрос на регистрацию")
+data class RegisterRequest(
+    @field:Email(message = "Некорректный формат email")
+    @field:NotBlank(message = "Email обязателен")
+    @field:Schema(description = "Email пользователя", example = "user@example.com")
+    val email: String,
+
+    @field:Size(min = 2, max = 100, message = "Имя должно содержать от 2 до 100 символов")
+    @field:NotBlank(message = "Имя обязательно")
+    @field:Schema(description = "Имя пользователя", example = "Иван Иванов")
+    val name: String,
+
+    @field:ValidPassword
+    @field:NotBlank(message = "Пароль обязателен")
+    @field:Schema(
+        description = "Пароль (минимум 8 символов, заглавная буква, строчная буква, цифра, спецсимвол)",
+        example = "Password123!"
+    )
+    val password: String
+)
+
+@Schema(description = "Ответ при успешной аутентификации")
+data class AuthResponse(
+    @field:Schema(description = "Opaque токен доступа")
+    val accessToken: String,
+
+    @field:Schema(description = "Тип токена", example = "Bearer")
+    val tokenType: String = "Bearer",
+
+    @field:Schema(description = "Время жизни токена в секундах", example = "86400")
+    val expiresIn: Long,
+
+    @field:Schema(description = "Данные пользователя")
+    val user: UserDto
+)

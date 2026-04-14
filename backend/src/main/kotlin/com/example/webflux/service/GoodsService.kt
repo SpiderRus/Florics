@@ -41,7 +41,7 @@ class GoodsService(
             ?: throw IllegalArgumentException("Категория с ID ${request.categoryId} не найдена")
 
         val newGoods = Goods(
-            id = UUID.randomUUID().toString(),
+            id = null,
             name = request.name,
             description = request.description,
             price = request.price,

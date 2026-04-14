@@ -137,7 +137,7 @@ object GoodsMapper {
 
     fun toModel(entity: GoodsEntity, media: List<Media>): Goods {
         return Goods(
-            id = entity.id ?: throw IllegalStateException("Goods entity must have an ID"),
+            id = entity.id,
             name = entity.name,
             description = entity.description,
             price = entity.price,

@@ -10,6 +10,7 @@ import com.example.webflux.service.aibot.dto.ChatResponse
 import com.example.webflux.security.SecurityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 /**
@@ -40,6 +41,7 @@ class AiBotController(
      * @return HTTP 200 OK с данными conversation
      */
     @PostMapping("/conversations")
+    @PreAuthorize("hasRole('BUYER')")
     suspend fun createOrGetConversation(
         @RequestBody request: CreateConversationRequest
     ): ResponseEntity<ConversationResponse> {
@@ -85,6 +87,7 @@ class AiBotController(
      * @return HTTP 200 OK с данными conversation или 404 если не найдено
      */
     @GetMapping("/conversations/by-goods/{goodsId}")
+    @PreAuthorize("hasRole('BUYER')")
     suspend fun getConversationByGoods(
         @PathVariable goodsId: String
     ): ResponseEntity<ConversationResponse> {
@@ -104,6 +107,7 @@ class AiBotController(
      * @param limit Максимальное количество сообщений (по умолчанию 50)
      * @return HTTP 200 OK со списком сообщений
      */
+    @PreAuthorize("hasRole('BUYER')")
     @GetMapping("/conversations/{conversationId}/messages")
     suspend fun getMessages(
         @PathVariable conversationId: String,
@@ -125,6 +129,7 @@ class AiBotController(
      * @return HTTP 200 OK с ответом AI
      */
     @PostMapping("/chat/{conversationId}")
+    @PreAuthorize("hasRole('BUYER')")
     suspend fun sendMessage(
         @PathVariable conversationId: String,
         @RequestBody request: ChatMessageRequest
@@ -149,6 +154,7 @@ class AiBotController(
      * @return HTTP 204 No Content при успешном удалении
      */
     @DeleteMapping("/conversations/{conversationId}")
+    @PreAuthorize("hasRole('BUYER')")
     suspend fun deleteConversation(
         @PathVariable conversationId: String
     ): ResponseEntity<Void> {

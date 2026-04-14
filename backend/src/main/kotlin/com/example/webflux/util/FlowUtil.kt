@@ -26,4 +26,4 @@ suspend fun <T> FlowCollector<T>.emitAll(elements: Iterable<T>) =
     elements.forEach { emit(it) }
 
 suspend fun <K, V> Flow<V>.associateBy(keySelector: suspend (V) -> K): Map<K, V> =
-    fold(HashMap(), { acc, value -> acc.also { acc[keySelector(value)] = value } })
+    fold(HashMap()) { acc, value -> acc.also { acc[keySelector(value)] = value } }

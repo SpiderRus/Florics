@@ -1,7 +1,6 @@
 package com.example.webflux.controller.model
 
 import com.example.webflux.domain.model.*
-import com.example.webflux.security.ValidPassword
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -9,60 +8,11 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.Valid
 import jakarta.validation.constraints.*
 import java.math.BigDecimal
-import java.time.Instant
 import java.time.OffsetDateTime
 
 // ============================================================================
 // Authentication & User DTOs
 // ============================================================================
-
-@Schema(description = "Запрос на аутентификацию")
-data class AuthRequest(
-    @field:Email(message = "Некорректный формат email")
-    @field:NotBlank(message = "Email обязателен")
-    @JsonProperty("email")
-    @Schema(description = "Email пользователя", example = "user@example.com")
-    val email: String,
-
-    @field:Size(min = 8, max = 128, message = "Пароль должен содержать от 8 до 128 символов")
-    @field:NotBlank(message = "Пароль обязателен")
-    @JsonProperty("password")
-    @Schema(description = "Пароль", example = "Password123!")
-    val password: String
-)
-
-@Schema(description = "Запрос на регистрацию")
-data class RegisterRequest(
-    @field:Email(message = "Некорректный формат email")
-    @field:NotBlank(message = "Email обязателен")
-    @Schema(description = "Email пользователя", example = "user@example.com")
-    val email: String,
-
-    @field:Size(min = 2, max = 100, message = "Имя должно содержать от 2 до 100 символов")
-    @field:NotBlank(message = "Имя обязательно")
-    @Schema(description = "Имя пользователя", example = "Иван Иванов")
-    val name: String,
-
-    @field:ValidPassword
-    @field:NotBlank(message = "Пароль обязателен")
-    @Schema(description = "Пароль (минимум 8 символов, заглавная буква, строчная буква, цифра, спецсимвол)", example = "Password123!")
-    val password: String
-)
-
-@Schema(description = "Ответ при успешной аутентификации")
-data class AuthResponse(
-    @Schema(description = "Opaque токен доступа")
-    val accessToken: String,
-
-    @Schema(description = "Тип токена", example = "Bearer")
-    val tokenType: String = "Bearer",
-
-    @Schema(description = "Время жизни токена в секундах", example = "86400")
-    val expiresIn: Long,
-
-    @Schema(description = "Данные пользователя")
-    val user: UserDto
-)
 
 @Schema(description = "Данные пользователя (без пароля)")
 data class UserDto(
@@ -80,51 +30,6 @@ data class UserDto(
 
     @Schema(description = "Является ли пользователь администратором (только для UI подсказок)")
     val isAdmin: Boolean? = null
-)
-
-@Schema(description = "Данные пользователя (без пароля)")
-data class UserResponseDto(
-    @Schema(description = "ID пользователя", example = "550e8400-e29b-41d4-a716-446655440000")
-    val id: String,
-
-    @Schema(description = "Имя пользователя", example = "Иван Иванов")
-    val name: String,
-
-    @Schema(description = "Email пользователя", example = "ivan@example.com")
-    val email: String,
-
-    @Schema(description = "Роли пользователя", example = "[\"USER\", \"BUYER\"]")
-    val roles: Set<String>
-)
-
-@Schema(description = "Запрос на создание пользователя")
-data class CreateUserRequest(
-    @Schema(description = "Имя пользователя", example = "Иван Иванов", required = true)
-    val name: String,
-
-    @Schema(description = "Email пользователя", example = "ivan@example.com", required = true)
-    val email: String,
-
-    @Schema(description = "Пароль пользователя", example = "password123", required = true)
-    val password: String,
-
-    @Schema(description = "Роли пользователя", example = "[\"USER\"]")
-    val roles: Set<String> = setOf("USER")
-)
-
-@Schema(description = "Запрос на обновление пользователя")
-data class UpdateUserRequest(
-    @Schema(description = "Новое имя пользователя", example = "Иван Иванов")
-    val name: String? = null,
-
-    @Schema(description = "Новый email пользователя", example = "newemail@example.com")
-    val email: String? = null,
-
-    @Schema(description = "Новый пароль пользователя", example = "newpassword123")
-    val password: String? = null,
-
-    @Schema(description = "Новые роли пользователя", example = "[\"USER\", \"ADMIN\"]")
-    val roles: Set<String>? = null
 )
 
 // ============================================================================
@@ -412,28 +317,6 @@ fun User.toUserDto() = UserDto(
     isAdmin = if (roles.contains(UserRole.ADMIN)) true else null
 )
 
-fun User.toUserResponseDto() = UserResponseDto(
-    id = id ?: throw IllegalStateException("User must have an ID"),
-    name = name,
-    email = email,
-    roles = roles.map { it.name }.toSet()
-)
-
-fun CreateUserRequest.toDomain(id: String? = null) = User(
-    id = id,
-    name = name,
-    email = email,
-    password = password,
-    roles = roles.map { UserRole.valueOf(it) }.toSet()
-)
-
-fun UpdateUserRequest.applyTo(user: User) = user.copy(
-    name = name ?: user.name,
-    email = email ?: user.email,
-    password = password ?: user.password,
-    roles = roles?.map { UserRole.valueOf(it) }?.toSet() ?: user.roles
-)
-
 // Category mapper
 fun Category.toCategoryDto() = CategoryDto(
     id = id,
@@ -449,7 +332,7 @@ fun Media.toMediaDto(): MediaDto = when (this) {
 
 // Goods mapper
 fun Goods.toGoodsDto(category: Category?) = GoodsDto(
-    id = id,
+    id = id ?: throw IllegalStateException("Goods must have an ID"),
     name = name,
     description = description,
     price = price.toDouble(),
