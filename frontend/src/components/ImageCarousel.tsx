@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
-import {Carousel} from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Carousel } from 'react-bootstrap';
+import LazyImage from './LazyImage';
 
 interface ImageCarouselProps {
     images: string[];
@@ -26,7 +27,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({images, goodsName, goodsId
     // Если все изображения битые, показываем placeholder
     if (validImages.length === 0) {
         return (
-            <img
+            <LazyImage
                 src={placeholderImage}
                 alt={`${goodsName} - изображение недоступно`}
                 style={{
@@ -34,6 +35,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({images, goodsName, goodsId
                     height: '250px',
                     objectFit: 'cover'
                 }}
+                showLoader={false}
             />
         );
     }
@@ -41,7 +43,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({images, goodsName, goodsId
     // Если только одно изображение, показываем его без карусели
     if (validImages.length === 1) {
         return (
-            <img
+            <LazyImage
                 src={validImages[0]}
                 alt={goodsName}
                 onError={() => handleImageError(validImages[0])}
@@ -78,7 +80,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({images, goodsName, goodsId
             >
                 {validImages.map((image, index) => (
                     <Carousel.Item key={index}>
-                        <img
+                        <LazyImage
                             className="d-block w-100"
                             src={image}
                             alt={`${goodsName} - фото ${index + 1}`}

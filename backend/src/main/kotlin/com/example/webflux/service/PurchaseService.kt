@@ -13,13 +13,21 @@ import java.util.*
 class PurchaseService(
     private val purchaseRepository: PurchaseRepository
 ) {
-    suspend fun recordPurchase(userId: String, goodsId: String, price: BigDecimal): Purchase {
+    suspend fun recordPurchase(
+        userId: String,
+        goodsId: String,
+        price: BigDecimal,
+        quantity: Int = 1
+    ): Purchase {
+        require(quantity > 0) { "Quantity must be positive" }
+
         val purchase = Purchase(
             id = null, // БД сгенерирует ID автоматически
             userId = userId,
             goodsId = goodsId,
             price = price,
-            purchaseDate = OffsetDateTime.now()
+            purchaseDate = OffsetDateTime.now(),
+            quantity = quantity
         )
         return purchaseRepository.save(purchase)
     }

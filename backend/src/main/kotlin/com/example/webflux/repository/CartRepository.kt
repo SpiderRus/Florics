@@ -35,14 +35,19 @@ interface CartItemR2dbcRepository : CoroutineCrudRepository<CartItemEntity, Stri
         DO UPDATE SET quantity = cart_items.quantity + :quantity
     """)
     suspend fun upsert(userId: String, goodsId: String, quantity: Int)
+
+    @Query("""
+        UPDATE cart_items
+        SET quantity = :quantity
+        WHERE user_id = :userId AND goods_id = :goodsId
+    """)
+    suspend fun updateQuantityByUserAndGoods(userId: String, goodsId: String, quantity: Int): Int
 }
 
 
 @Repository
 class CartRepository(
-    private val cartItemR2dbcRepository: CartItemR2dbcRepository,
-    private val goodsRepository: GoodsRepository,
-    private val categoryRepository: CategoryRepository
+    private val cartItemR2dbcRepository: CartItemR2dbcRepository
 ) {
 
     /**
@@ -55,10 +60,13 @@ class CartRepository(
      * Добавить товар в корзину или увеличить количество если уже существует
      */
     suspend fun addOrUpdateItem(item: CartItem): CartItem {
-        val existing = cartItemR2dbcRepository.findByUserIdAndGoodsId(item.userId, item.goodsId)
-        val entity = existing?.copy(quantity = existing.quantity + item.quantity) ?: CartItemMapper.toEntity(item)
+        // Используем upsert для корректной работы с составным ключом
+        cartItemR2dbcRepository.upsert(item.userId, item.goodsId, item.quantity)
 
-        return CartItemMapper.toModel(cartItemR2dbcRepository.save(entity))
+        // Загружаем обновлённую запись
+        return cartItemR2dbcRepository.findByUserIdAndGoodsId(item.userId, item.goodsId)
+            ?.let { CartItemMapper.toModel(it) }
+            ?: throw IllegalStateException("Failed to add or update cart item")
     }
 
     /**
@@ -71,7 +79,13 @@ class CartRepository(
         if (quantity <= 0)
             return cartItemR2dbcRepository.deleteByUserIdAndGoodsId(userId, goodsId).let { null }  // Дожидаемся выполнения
 
-        return CartItemMapper.toModel(cartItemR2dbcRepository.save(item.copy(quantity = quantity)))
+        // Используем кастомный UPDATE вместо save() для entity с составным ключом
+        val updatedRows = cartItemR2dbcRepository.updateQuantityByUserAndGoods(userId, goodsId, quantity)
+
+        if (updatedRows == 0) return null
+
+        // Загружаем обновлённую запись
+        return cartItemR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId)?.let { CartItemMapper.toModel(it) }
     }
 
     /**

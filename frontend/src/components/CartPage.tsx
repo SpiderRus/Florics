@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { toast } from 'react-toastify';
 import { cartService } from '../services/cartService';
+import LazyImage from './LazyImage';
 
 const CartPage: React.FC = () => {
     const navigate = useNavigate();
@@ -145,7 +146,7 @@ const CartPage: React.FC = () => {
                         <tr key={item.id}>
                             <td>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <img
+                                    <LazyImage
                                         src={item.goods.media.find(m => m.type === 'image')?.url || item.goods.media[0]?.url || ''}
                                         alt={item.goods.name}
                                         style={{
@@ -155,6 +156,7 @@ const CartPage: React.FC = () => {
                                             borderRadius: '8px',
                                             boxShadow: '0 2px 8px var(--shadow)'
                                         }}
+                                        showLoader={false}
                                     />
                                     <div>
                                         <strong>{item.goods.name}</strong>

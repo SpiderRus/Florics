@@ -15,6 +15,22 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    emptyOutDir: true
+    emptyOutDir: true,
+    // Оптимизация chunk splitting
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks - библиотеки меняются редко, кэшируются браузером
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['react-bootstrap', 'bootstrap'],
+          'markdown-vendor': ['react-markdown', 'remark-gfm'],
+          'utils-vendor': ['axios', 'react-toastify']
+        }
+      }
+    },
+    // Увеличиваем лимит размера chunk (для AdminPanel)
+    chunkSizeWarningLimit: 1000,
+    // Отключаем sourcemaps для production (уменьшает размер)
+    sourcemap: false
   }
 })

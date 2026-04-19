@@ -97,6 +97,9 @@ class CartService(
     suspend fun updateQuantity(userId: String, goodsId: String, quantity: Int): CartItemWithGoods? {
         require(quantity > 0) { "Use removeFromCart for deleting items" }
 
+        // Проверяем что товар уже есть в корзине
+        val existingCartItem = cartRepository.findByUserIdAndGoodsId(userId, goodsId) ?: return null
+
         val goods = goodsRepository.findById(goodsId) ?: throw IllegalStateException("Goods not found")
 
         val category = categoryRepository.findById(goods.categoryId) ?: throw IllegalStateException("Category not found")
@@ -105,7 +108,18 @@ class CartService(
         if (category.type == GoodsType.COURSE && quantity != 1)
             throw IllegalArgumentException("Course quantity cannot be changed (must be 1)")
 
-        val updated = cartRepository.updateQuantity(userId, goodsId, quantity) ?: return null
+        // Вычисляем дельту для добавления
+        val quantityDelta = quantity - existingCartItem.quantity
+
+        // Используем addOrUpdateItem с дельтой (upsert увеличит на delta)
+        val updated = cartRepository.addOrUpdateItem(
+            CartItem(
+                userId = userId,
+                goodsId = goodsId,
+                quantity = quantityDelta,  // Передаём дельту, не абсолютное значение
+                addedAt = existingCartItem.addedAt
+            )
+        )
 
         return CartItemWithGoods(
             id = generateId(updated),

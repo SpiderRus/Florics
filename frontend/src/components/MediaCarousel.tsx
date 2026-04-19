@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Carousel } from 'react-bootstrap';
 import VideoPlayer, { VideoPlayerHandle } from './VideoPlayer';
+import LazyImage from './LazyImage';
 import { Media } from '../services/goodsService';
 import { convertMediaToItems } from '../utils/mediaUtils';
 
@@ -81,7 +82,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
     // Если все элементы битые, показываем placeholder
     if (validMediaItems.length === 0)
         return (
-            <img
+            <LazyImage
                 src={placeholderImage}
                 alt={`${goodsName} - медиа недоступно`}
                 style={{
@@ -89,6 +90,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
                     height: '250px',
                     objectFit: 'cover'
                 }}
+                showLoader={false}
             />
         );
 
@@ -97,7 +99,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
         const item = validMediaItems[0];
         if (item.type === 'image')
             return (
-                <img
+                <LazyImage
                     src={item.url}
                     alt={item.alt}
                     onError={() => handleMediaError(item.url)}
@@ -151,7 +153,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
                 {validMediaItems.map((item, index) => (
                     <Carousel.Item key={`${item.type}-${index}`}>
                         {item.type === 'image' ? (
-                            <img
+                            <LazyImage
                                 className="d-block w-100"
                                 src={item.url}
                                 alt={item.alt}

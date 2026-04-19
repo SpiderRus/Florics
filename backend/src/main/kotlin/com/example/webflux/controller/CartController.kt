@@ -111,17 +111,20 @@ class CartController(
         if (cart.items.isEmpty())
             throw IllegalStateException("Корзина пуста")
 
-        // Создаём Purchase для каждого товара
+        // Создаём Purchase для каждого товара с корректным quantity
         cart.items.forEach { item ->
-            repeat(item.quantity) {
-                purchaseService.recordPurchase(userId, item.goods.id, item.goods.price)
-            }
+            purchaseService.recordPurchase(
+                userId = userId,
+                goodsId = item.goods.id!!,
+                price = item.goods.price,
+                quantity = item.quantity
+            )
         }
 
         // Подготавливаем список купленных товаров
         val purchasedItems = cart.items.map { item ->
             PurchasedItem(
-                goodsId = item.goods.id,
+                goodsId = item.goods.id!!,
                 goodsName = item.goods.name,
                 quantity = item.quantity,
                 price = item.goods.price

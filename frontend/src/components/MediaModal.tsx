@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useEffect } from 'react';
 import { Modal } from 'react-bootstrap';
 import VideoPlayer, { VideoPlayerHandle } from './VideoPlayer';
 import VideoControls from './VideoControls';
+import LazyImage from './LazyImage';
 
 type MediaType = 'image' | 'video';
 
@@ -69,7 +70,7 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, mediaItems, currentIndex,
                     )}
                     {currentItem ? (
                         currentItem.type === 'image' ? (
-                            <img src={currentItem.url} alt={currentItem.alt} className="modal-image" />
+                            <LazyImage src={currentItem.url} alt={currentItem.alt} className="modal-image" />
                         ) : (
                             <>
                                 <VideoPlayer

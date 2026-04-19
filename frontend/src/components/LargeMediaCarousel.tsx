@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Carousel } from 'react-bootstrap';
 import VideoPlayer, { VideoPlayerHandle } from './VideoPlayer';
+import LazyImage from './LazyImage';
 import { Media } from '../services/goodsService';
 import { convertMediaToItems, MediaItem } from '../utils/mediaUtils';
 
@@ -60,7 +61,7 @@ const LargeMediaCarousel: React.FC<LargeMediaCarouselProps> = ({
             {mediaItems.map((item, index) => (
                 <Carousel.Item key={`${item.type}-${index}`}>
                     {item.type === 'image' ? (
-                        <img
+                        <LazyImage
                             className="d-block w-100 carousel-image"
                             src={item.url}
                             alt={item.alt}

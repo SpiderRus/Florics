@@ -90,8 +90,7 @@ class GoodsTypeDocumentRepository(
      * @return Flow документов для этого типа
      */
     fun findByGoodsType(goodsType: GoodsType): Flow<GoodsTypeDocument> =
-        r2dbcRepository.findByGoodsType(goodsType.name)
-            .map { GoodsTypeDocumentMapper.toModel(it) }
+        r2dbcRepository.findByGoodsType(goodsType.name).map { GoodsTypeDocumentMapper.toModel(it) }
 
     /**
      * Найти все документы для нескольких типов товаров
@@ -100,8 +99,7 @@ class GoodsTypeDocumentRepository(
      * @return Flow документов
      */
     fun findByGoodsTypes(goodsTypes: List<GoodsType>): Flow<GoodsTypeDocument> =
-        r2dbcRepository.findByGoodsTypeIn(goodsTypes.map { it.name }.toTypedArray())
-            .map { GoodsTypeDocumentMapper.toModel(it) }
+        r2dbcRepository.findByGoodsTypeIn(goodsTypes.map { it.name }.toTypedArray()).map { GoodsTypeDocumentMapper.toModel(it) }
 
     /**
      * Найти конкретный документ по его ID
@@ -110,8 +108,7 @@ class GoodsTypeDocumentRepository(
      * @return Документ если найден, null в противном случае
      */
     suspend fun findByDocumentId(documentId: String): GoodsTypeDocument? =
-        r2dbcRepository.findById(documentId)
-            ?.let { GoodsTypeDocumentMapper.toModel(it) }
+        r2dbcRepository.findById(documentId)?.let { GoodsTypeDocumentMapper.toModel(it) }
 
     /**
      * Проверить существование документа

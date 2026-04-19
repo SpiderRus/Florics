@@ -1,75 +1,30 @@
-import {BrowserRouter, Routes, Route, useNavigate, useLocation} from 'react-router-dom'
-import {Container, Navbar, Nav} from 'react-bootstrap'
-import GoodsCatalog from './components/GoodsCatalog'
-import GoodsDetailPage from './components/GoodsDetailPage'
-import TerrariumCatalog from './components/TerrariumCatalog'
-import CustomTerrariumPage from './components/CustomTerrariumPage'
-import MasterClassCatalog from './components/MasterClassCatalog'
-import MasterClassPlayer from './components/MasterClassPlayer'
-import Login from './components/Login'
-import Register from './components/Register'
-import CartPage from './components/CartPage'
-import ProfilePage from './components/ProfilePage'
-import CartIcon from './components/CartIcon'
-import {AdminPanel} from './components/admin/AdminPanel'
-import {AuthProvider, useAuth} from './contexts/AuthContext'
-import {CartProvider} from './contexts/CartContext'
-import {ToastContainer} from 'react-toastify'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { Container, Navbar, Nav } from 'react-bootstrap'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { CartProvider } from './contexts/CartContext'
+import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-function HomePage() {
-    const navigate = useNavigate()
+// ✅ НЕМЕДЛЕННАЯ ЗАГРУЗКА - критичные компоненты для первого рендера
+import HomePage from './components/HomePage'
+import CartIcon from './components/CartIcon'
+import LoadingSpinner from './components/LoadingSpinner'
+import ErrorBoundary from './components/ErrorBoundary'
 
-    return (
-        <>
-            <div className="hero-section">
-                <Container>
-                    <h1 className="hero-title">Добро пожаловать в GreenDecor</h1>
-                    <p className="hero-subtitle">
-                        Ваш магазин красивых растений и флорариумов
-                    </p>
-                    <div className="hero-description">
-                        <p>Откройте для себя нашу коллекцию живых растений, флорариумов ручной работы и ботанических
-                            аксессуаров.</p>
-                        <p>Приносим красоту природы в ваш дом, по одному растению за раз.</p>
-                    </div>
-                </Container>
-            </div>
-
-            <Container className="content-section">
-                <div className="feature-grid">
-                    <div
-                        className="feature-card clickable-card"
-                        onClick={() => navigate('/catalog')}
-                        style={{cursor: 'pointer'}}
-                    >
-                        <div className="feature-icon">🪴</div>
-                        <h3>Комнатные растения</h3>
-                        <p>Широкий выбор комнатных растений для любого пространства</p>
-                    </div>
-                    <div
-                        className="feature-card clickable-card"
-                        onClick={() => navigate('/terrariums')}
-                        style={{cursor: 'pointer'}}
-                    >
-                        <div className="feature-icon">🌱</div>
-                        <h3>Флорариумы</h3>
-                        <p>Стеклянные флорариумы ручной работы с живыми экосистемами</p>
-                    </div>
-                    <div
-                        className="feature-card clickable-card"
-                        onClick={() => navigate('/masterclasses')}
-                        style={{cursor: 'pointer'}}
-                    >
-                        <div className="feature-icon">🎓</div>
-                        <h3>Мастер-классы</h3>
-                        <p>Обучающие видеокурсы по созданию флорариумов и уходу за растениями</p>
-                    </div>
-                </div>
-            </Container>
-        </>
-    )
-}
+// ⚡ ЛЕНИВАЯ ЗАГРУЗКА - загружаются только при переходе на маршрут
+const GoodsCatalog = lazy(() => import('./components/GoodsCatalog'))
+const GoodsDetailPage = lazy(() => import('./components/GoodsDetailPage'))
+const TerrariumCatalog = lazy(() => import('./components/TerrariumCatalog'))
+const CustomTerrariumPage = lazy(() => import('./components/CustomTerrariumPage'))
+const MasterClassCatalog = lazy(() => import('./components/MasterClassCatalog'))
+const MasterClassPlayer = lazy(() => import('./components/MasterClassPlayer'))
+const Login = lazy(() => import('./components/Login'))
+const Register = lazy(() => import('./components/Register'))
+const CartPage = lazy(() => import('./components/CartPage'))
+const ProfilePage = lazy(() => import('./components/ProfilePage'))
+// AdminPanel использует named export, поэтому деструктурируем
+const AdminPanel = lazy(() => import('./components/admin/AdminPanel').then(module => ({ default: module.AdminPanel })))
 
 function AppContent() {
     const navigate = useNavigate()
@@ -124,20 +79,26 @@ function AppContent() {
                 </Container>
             </Navbar>
 
-            <Routes>
-                <Route path="/" element={<HomePage/>}/>
-                <Route path="/catalog" element={<GoodsCatalog/>}/>
-                <Route path="/catalog/:id" element={<GoodsDetailPage/>}/>
-                <Route path="/terrariums" element={<TerrariumCatalog/>}/>
-                <Route path="/custom-terrarium" element={<CustomTerrariumPage/>}/>
-                <Route path="/masterclasses" element={<MasterClassCatalog/>}/>
-                <Route path="/masterclass/:id" element={<MasterClassPlayer/>}/>
-                <Route path="/cart" element={<CartPage/>}/>
-                <Route path="/profile" element={<ProfilePage/>}/>
-                <Route path="/login" element={<Login/>}/>
-                <Route path="/register" element={<Register/>}/>
-                <Route path="/admin" element={<AdminPanel/>}/>
-            </Routes>
+            {/* ErrorBoundary ловит ошибки загрузки chunks */}
+            <ErrorBoundary>
+                {/* Suspense показывает LoadingSpinner пока загружаются lazy компоненты */}
+                <Suspense fallback={<LoadingSpinner text="Загрузка страницы..." />}>
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/catalog" element={<GoodsCatalog />} />
+                        <Route path="/catalog/:id" element={<GoodsDetailPage />} />
+                        <Route path="/terrariums" element={<TerrariumCatalog />} />
+                        <Route path="/custom-terrarium" element={<CustomTerrariumPage />} />
+                        <Route path="/masterclasses" element={<MasterClassCatalog />} />
+                        <Route path="/masterclass/:id" element={<MasterClassPlayer />} />
+                        <Route path="/cart" element={<CartPage />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/admin" element={<AdminPanel />} />
+                    </Routes>
+                </Suspense>
+            </ErrorBoundary>
 
             <footer className="footer">
                 <Container>

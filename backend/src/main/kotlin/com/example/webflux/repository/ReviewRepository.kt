@@ -62,9 +62,4 @@ class ReviewRepository(
 
     fun findByGoodsId(goodsId: String): Flow<Review> =
         reviewR2dbcRepository.findByGoodsId(goodsId).map { ReviewMapper.toModel(it) }
-
-    suspend fun findByGoodsIdAndUserId(goodsId: String, userId: String): Review? {
-        val entity = reviewR2dbcRepository.findByGoodsIdAndUserId(goodsId, userId) ?: return null
-        return ReviewMapper.toModel(entity)
-    }
 }

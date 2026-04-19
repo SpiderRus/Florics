@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal } from 'react-bootstrap';
+import LazyImage from './LazyImage';
 
 interface ImageModalProps {
     show: boolean;
@@ -32,7 +33,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ show, image, images, currentInd
                             <button className="modal-next" onClick={handleNext}>›</button>
                         </>
                     )}
-                    <img src={image} alt="Full size" className="modal-image" />
+                    <LazyImage src={image} alt="Full size" className="modal-image" />
                 </div>
             </Modal.Body>
         </Modal>

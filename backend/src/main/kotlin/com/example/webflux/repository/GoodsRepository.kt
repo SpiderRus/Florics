@@ -14,8 +14,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
+import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
 
 interface GoodsR2dbcRepository : CoroutineCrudRepository<GoodsEntity, String> {
@@ -35,24 +39,7 @@ interface GoodsR2dbcRepository : CoroutineCrudRepository<GoodsEntity, String> {
     @Query("SELECT * FROM goods WHERE category_id = ANY(:categoryIds) AND deleted_at IS NULL ORDER BY created_at DESC")
     fun findAllByCategoryIdInActive(categoryIds: Array<String>): Flow<GoodsEntity>
 
-    @Query("""
-        SELECT * FROM goods
-        WHERE deleted_at IS NULL
-        ORDER BY
-            CASE WHEN :sortBy = 'name' AND :sortOrder = 'ASC' THEN name END ASC,
-            CASE WHEN :sortBy = 'name' AND :sortOrder = 'DESC' THEN name END DESC,
-            CASE WHEN :sortBy = 'price' AND :sortOrder = 'ASC' THEN price END ASC,
-            CASE WHEN :sortBy = 'price' AND :sortOrder = 'DESC' THEN price END DESC,
-            CASE WHEN :sortBy = 'created_at' AND :sortOrder = 'ASC' THEN created_at END ASC,
-            CASE WHEN :sortBy = 'created_at' AND :sortOrder = 'DESC' THEN created_at END DESC
-        LIMIT :limit OFFSET :offset
-    """)
-    fun findAllActivePaged(
-        sortBy: String,
-        sortOrder: String,
-        limit: Int,
-        offset: Int
-    ): Flow<GoodsEntity>
+    // Удалено: заменено на динамический SQL в GoodsRepository.findAllPagedOptimized()
 
     @Query("SELECT COUNT(*) FROM goods WHERE deleted_at IS NULL")
     suspend fun countActive(): Long
@@ -66,7 +53,8 @@ interface GoodsR2dbcRepository : CoroutineCrudRepository<GoodsEntity, String> {
 class GoodsRepository(
     private val goodsR2dbcRepository: GoodsR2dbcRepository,
     private val mediaR2dbcRepository: MediaR2dbcRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val databaseClient: DatabaseClient
 ) {
 
     fun findAll(): Flow<Goods> {
@@ -132,13 +120,45 @@ class GoodsRepository(
         val offset = page * size
         val sortField = if (sortBy == "category") "created_at" else sortBy
 
-        // Загрузить entities с пагинацией
-        val entities = goodsR2dbcRepository.findAllActivePaged(
-            sortBy = sortField,
-            sortOrder = sortOrder.uppercase(),
-            limit = size,
-            offset = offset
-        ).toList()
+        // Валидация параметров для защиты от SQL injection
+        val validSortFields = setOf("name", "price", "created_at")
+        val validSortOrders = setOf("ASC", "DESC")
+
+        val safeSortField = if (sortField in validSortFields) sortField else "created_at"
+        val safeSortOrder = if (sortOrder.uppercase() in validSortOrders) sortOrder.uppercase() else "DESC"
+
+        // Оптимизированный динамический SQL запрос (вместо множественных CASE)
+        val sql = """
+            SELECT * FROM goods
+            WHERE deleted_at IS NULL
+            ORDER BY $safeSortField $safeSortOrder
+            LIMIT :limit OFFSET :offset
+        """.trimIndent()
+
+        // Загрузить entities с пагинацией через DatabaseClient
+        val entities = databaseClient.sql(sql)
+            .bind("limit", size)
+            .bind("offset", offset)
+            .map { row, _ ->
+                GoodsEntity(
+                    id = row.get("id", String::class.java),
+                    name = row.get("name", String::class.java)!!,
+                    description = row.get("description", String::class.java)!!,
+                    price = row.get("price", java.math.BigDecimal::class.java)!!,
+                    categoryId = row.get("category_id", String::class.java)!!,
+                    difficulty = row.get("difficulty", String::class.java)!!,
+                    duration = row.get("duration", Integer::class.java)?.toInt(),
+                    videoUrl = row.get("video_url", String::class.java),
+                    detailedDescription = row.get("detailed_description", String::class.java),
+                    careInstructions = row.get("care_instructions", String::class.java),
+                    createdAt = row.get("created_at", java.time.OffsetDateTime::class.java)!!,
+                    updatedAt = row.get("updated_at", java.time.OffsetDateTime::class.java)!!,
+                    deletedAt = row.get("deleted_at", java.time.OffsetDateTime::class.java)
+                )
+            }
+            .all()
+            .asFlow()
+            .toList()
 
         val totalElements = goodsR2dbcRepository.countActive()
 

@@ -204,15 +204,17 @@ const GoodsDetailPage: React.FC = () => {
                                 )}
                             </div>
                         </Tab>
-                        <Tab eventKey="care" title="Уход">
-                            <div className="tab-content-box">
-                                {goods.careInstructions ? (
-                                    <MarkdownContent content={goods.careInstructions} />
-                                ) : (
-                                    <p>Информация по уходу скоро появится.</p>
-                                )}
-                            </div>
-                        </Tab>
+                        {!isMasterClass && (
+                            <Tab eventKey="care" title="Уход">
+                                <div className="tab-content-box">
+                                    {goods.careInstructions ? (
+                                        <MarkdownContent content={goods.careInstructions} />
+                                    ) : (
+                                        <p>Информация по уходу скоро появится.</p>
+                                    )}
+                                </div>
+                            </Tab>
+                        )}
                         <Tab eventKey="reviews" title={`Отзывы (${reviews.length})`}>
                             <div className="tab-content-box">
                                 <ReviewList reviews={reviews} />
