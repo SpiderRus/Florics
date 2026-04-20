@@ -10,13 +10,10 @@ import com.example.webflux.mapper.MediaMapper
 import com.example.webflux.repository.r2dbc.MediaR2dbcRepository
 import com.example.webflux.util.emitAll
 import com.example.webflux.util.groupBy
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitSingle
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate
 import org.springframework.data.r2dbc.repository.Query
 import org.springframework.data.repository.kotlin.CoroutineCrudRepository
 import org.springframework.r2dbc.core.DatabaseClient
@@ -67,13 +64,15 @@ class GoodsRepository(
             }
     }
 
-    suspend fun findById(id: String): Goods? {
-        val entity = goodsR2dbcRepository.findByIdActive(id) ?: return null
-        val media = mediaR2dbcRepository.findByGoodsId(id)
-            .map { MediaMapper.toModel(it) }
-            .toList()
+    suspend fun findById(id: String): Goods? = coroutineScope {
+        val media = async { mediaR2dbcRepository.findByGoodsId(id)
+                                .map { MediaMapper.toModel(it) }
+                                .toList()
+                    }
 
-        return GoodsMapper.toModel(entity, media)
+        goodsR2dbcRepository.findByIdActive(id)
+            ?.let { GoodsMapper.toModel(it, media.await()) }
+            ?: run { media.cancel(); null }
     }
 
     fun findByType(type: GoodsType): Flow<Goods> = flow {
@@ -90,15 +89,11 @@ class GoodsRepository(
     }
 
     suspend fun save(goods: Goods): Goods {
-        val entity = GoodsMapper.toEntity(goods)
-        val saved = goodsR2dbcRepository.save(entity)
+        val saved = goodsR2dbcRepository.save(GoodsMapper.toEntity(goods))
 
-        // Save media - дожидаемся сохранения каждого элемента
-        goods.media.forEach { media ->
-            mediaR2dbcRepository.save(MediaMapper.toEntity(media, saved.id!!)).let { }
-        }
-
-        val media = mediaR2dbcRepository.findByGoodsId(saved.id!!)
+        val media = mediaR2dbcRepository.saveAll(goods.media
+                .map { MediaMapper.toEntity(it, saved.id!!) }
+            )
             .map { MediaMapper.toModel(it) }
             .toList()
 

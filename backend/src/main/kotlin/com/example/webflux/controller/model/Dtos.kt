@@ -16,19 +16,19 @@ import java.time.OffsetDateTime
 
 @Schema(description = "Данные пользователя (без пароля)")
 data class UserDto(
-    @Schema(description = "ID пользователя")
+    @field:Schema(description = "ID пользователя")
     val id: String,
 
-    @Schema(description = "Имя пользователя")
+    @field:Schema(description = "Имя пользователя")
     val name: String,
 
-    @Schema(description = "Email пользователя")
+    @field:Schema(description = "Email пользователя")
     val email: String,
 
-    @Schema(description = "Может ли пользователь совершать покупки (имеет роль BUYER)")
+    @field:Schema(description = "Может ли пользователь совершать покупки (имеет роль BUYER)")
     val canPurchase: Boolean,
 
-    @Schema(description = "Является ли пользователь администратором (только для UI подсказок)")
+    @field:Schema(description = "Является ли пользователь администратором (только для UI подсказок)")
     val isAdmin: Boolean? = null
 )
 
@@ -38,13 +38,13 @@ data class UserDto(
 
 @Schema(description = "Модель категории товаров для API")
 data class CategoryDto(
-    @Schema(description = "Уникальный идентификатор категории", example = "1")
+    @field:Schema(description = "Уникальный идентификатор категории", example = "1")
     val id: String,
 
-    @Schema(description = "Название категории", example = "Лианы")
+    @field:Schema(description = "Название категории", example = "Лианы")
     val name: String,
 
-    @Schema(description = "Тип товаров в категории", example = "PHYSICAL")
+    @field:Schema(description = "Тип товаров в категории", example = "PHYSICAL")
     val type: GoodsType
 )
 
@@ -63,54 +63,57 @@ sealed interface MediaDto {
 @Schema(description = "Изображение")
 data class ImageDto(
     override val type: String = "image",
-    @Schema(description = "URL изображения")
+    @field:Schema(description = "URL изображения")
     override val url: String,
-    @Schema(description = "Порядок отображения")
+    @field:Schema(description = "Порядок отображения")
     override val order: Int = 0
 ) : MediaDto
 
 @Schema(description = "Видео")
 data class VideoDto(
     override val type: String = "video",
-    @Schema(description = "URL видео")
+    @field:Schema(description = "URL видео")
     override val url: String,
-    @Schema(description = "Порядок отображения")
+    @field:Schema(description = "Порядок отображения")
     override val order: Int = 0
 ) : MediaDto
 
 @Schema(description = "Модель товара для API")
 data class GoodsDto(
-    @Schema(description = "Уникальный идентификатор", example = "1")
+    @field:Schema(description = "Уникальный идентификатор", example = "1")
     val id: String,
 
-    @Schema(description = "Название", example = "Монстера деликатесная")
+    @field:Schema(description = "Название", example = "Монстера деликатесная")
     val name: String,
 
-    @Schema(description = "Краткое описание", example = "Популярная тропическая лиана с крупными резными листьями")
+    @field:Schema(
+        description = "Краткое описание",
+        example = "Популярная тропическая лиана с крупными резными листьями"
+    )
     val description: String,
 
-    @Schema(description = "Цена в рублях", example = "1500.0")
+    @field:Schema(description = "Цена в рублях", example = "1500.0")
     val price: Double,
 
-    @Schema(description = "Список медиа-элементов (изображения и видео)")
+    @field:Schema(description = "Список медиа-элементов (изображения и видео)")
     val media: List<MediaDto>,
 
-    @Schema(description = "Информация о категории")
+    @field:Schema(description = "Информация о категории")
     val category: CategoryDto?,
 
-    @Schema(description = "Уровень сложности", example = "Легко")
+    @field:Schema(description = "Уровень сложности", example = "Легко")
     val difficulty: String,
 
-    @Schema(description = "Длительность курса в минутах", example = "90")
+    @field:Schema(description = "Длительность курса в минутах", example = "90")
     val duration: Int? = null,
 
-    @Schema(description = "ID видео в Kinescope для курсов", example = "kinescope_stub_12345")
+    @field:Schema(description = "ID видео в Kinescope для курсов", example = "kinescope_stub_12345")
     val videoUrl: String? = null,
 
-    @Schema(description = "Расширенное описание товара")
+    @field:Schema(description = "Расширенное описание товара")
     val detailedDescription: String? = null,
 
-    @Schema(description = "Рекомендации по уходу")
+    @field:Schema(description = "Рекомендации по уходу")
     val careInstructions: String? = null
 )
 
@@ -121,14 +124,14 @@ data class GoodsDto(
 @Schema(description = "Запрос на добавление товара в корзину")
 data class AddToCartRequest(
     @field:NotBlank(message = "ID товара обязателен")
-    @JsonProperty("goodsId")
-    @Schema(description = "ID товара для добавления", example = "1", required = true)
+    @field:JsonProperty("goodsId")
+    @field:Schema(description = "ID товара для добавления", example = "1", required = true)
     val goodsId: String,
 
     @field:Min(value = 1, message = "Количество должно быть минимум 1")
     @field:Max(value = 99, message = "Количество не может превышать 99")
-    @JsonProperty("quantity")
-    @Schema(description = "Количество единиц товара (1-99)", example = "2", required = true)
+    @field:JsonProperty("quantity")
+    @field:Schema(description = "Количество единиц товара (1-99)", example = "2", required = true)
     val quantity: Int
 )
 
@@ -136,42 +139,42 @@ data class AddToCartRequest(
 data class UpdateQuantityRequest(
     @field:Min(value = 1, message = "Количество должно быть минимум 1")
     @field:Max(value = 99, message = "Количество не может превышать 99")
-    @JsonProperty("quantity")
-    @Schema(description = "Новое количество единиц товара (1-99)", example = "3", required = true)
+    @field:JsonProperty("quantity")
+    @field:Schema(description = "Новое количество единиц товара (1-99)", example = "3", required = true)
     val quantity: Int
 )
 
 @Schema(description = "Элемент корзины с информацией о товаре")
 data class CartItemDto(
-    @JsonProperty("id")
-    @Schema(description = "ID элемента корзины", example = "550e8400-e29b-41d4-a716-446655440000")
+    @field:JsonProperty("id")
+    @field:Schema(description = "ID элемента корзины", example = "550e8400-e29b-41d4-a716-446655440000")
     val id: String,
 
-    @JsonProperty("goods")
-    @Schema(description = "Полная информация о товаре")
+    @field:JsonProperty("goods")
+    @field:Schema(description = "Полная информация о товаре")
     val goods: GoodsDto,
 
-    @JsonProperty("quantity")
-    @Schema(description = "Количество единиц товара", example = "2")
+    @field:JsonProperty("quantity")
+    @field:Schema(description = "Количество единиц товара", example = "2")
     val quantity: Int,
 
-    @JsonProperty("addedAt")
-    @Schema(description = "Время добавления в корзину")
+    @field:JsonProperty("addedAt")
+    @field:Schema(description = "Время добавления в корзину")
     val addedAt: OffsetDateTime
 )
 
 @Schema(description = "Сводка корзины покупок")
 data class CartSummaryDto(
-    @JsonProperty("items")
-    @Schema(description = "Список товаров в корзине")
+    @field:JsonProperty("items")
+    @field:Schema(description = "Список товаров в корзине")
     val items: List<CartItemDto>,
 
-    @JsonProperty("totalItems")
-    @Schema(description = "Общее количество товаров (сумма всех quantity)", example = "5")
+    @field:JsonProperty("totalItems")
+    @field:Schema(description = "Общее количество товаров (сумма всех quantity)", example = "5")
     val totalItems: Int,
 
-    @JsonProperty("totalPrice")
-    @Schema(description = "Итоговая стоимость корзины", example = "4500.00")
+    @field:JsonProperty("totalPrice")
+    @field:Schema(description = "Итоговая стоимость корзины", example = "4500.00")
     val totalPrice: BigDecimal
 )
 
@@ -179,22 +182,22 @@ data class CartSummaryDto(
 data class MergeCartRequest(
     @field:Valid
     @field:NotNull(message = "Список товаров не может быть null")
-    @JsonProperty("items")
-    @Schema(description = "Товары из локальной корзины для синхронизации")
+    @field:JsonProperty("items")
+    @field:Schema(description = "Товары из локальной корзины для синхронизации")
     val items: List<LocalCartItem>
 )
 
 @Schema(description = "Элемент локальной корзины из localStorage")
 data class LocalCartItem(
     @field:NotBlank(message = "ID товара обязателен")
-    @JsonProperty("goodsId")
-    @Schema(description = "ID товара", example = "1")
+    @field:JsonProperty("goodsId")
+    @field:Schema(description = "ID товара", example = "1")
     val goodsId: String,
 
     @field:Min(value = 1, message = "Количество должно быть минимум 1")
     @field:Max(value = 99, message = "Количество не может превышать 99")
-    @JsonProperty("quantity")
-    @Schema(description = "Количество единиц (1-99)", example = "2")
+    @field:JsonProperty("quantity")
+    @field:Schema(description = "Количество единиц (1-99)", example = "2")
     val quantity: Int
 )
 
@@ -204,49 +207,49 @@ data class LocalCartItem(
 
 @Schema(description = "Информация о покупке")
 data class PurchaseDto(
-    @Schema(description = "ID покупки")
+    @field:Schema(description = "ID покупки")
     val id: String,
 
-    @Schema(description = "ID товара")
+    @field:Schema(description = "ID товара")
     val goodsId: String,
 
-    @Schema(description = "Цена покупки")
+    @field:Schema(description = "Цена покупки")
     val price: BigDecimal,
 
-    @Schema(description = "Дата покупки")
+    @field:Schema(description = "Дата покупки")
     val purchaseDate: OffsetDateTime,
 
-    @Schema(description = "Количество")
+    @field:Schema(description = "Количество")
     val quantity: Int
 )
 
 @Schema(description = "Ответ на оформление заказа")
 data class CheckoutResponse(
-    @Schema(description = "ID заказа", example = "550e8400-e29b-41d4-a716-446655440000")
+    @field:Schema(description = "ID заказа", example = "550e8400-e29b-41d4-a716-446655440000")
     val orderId: String,
 
-    @Schema(description = "Общая стоимость заказа", example = "5400.0")
+    @field:Schema(description = "Общая стоимость заказа", example = "5400.0")
     val totalPrice: BigDecimal,
 
-    @Schema(description = "Список купленных товаров")
+    @field:Schema(description = "Список купленных товаров")
     val items: List<PurchasedItem>,
 
-    @Schema(description = "Дата и время покупки")
+    @field:Schema(description = "Дата и время покупки")
     val purchaseDate: OffsetDateTime
 )
 
 @Schema(description = "Купленный товар")
 data class PurchasedItem(
-    @Schema(description = "ID товара", example = "1")
+    @field:Schema(description = "ID товара", example = "1")
     val goodsId: String,
 
-    @Schema(description = "Название товара", example = "Монстера деликатесная")
+    @field:Schema(description = "Название товара", example = "Монстера деликатесная")
     val goodsName: String,
 
-    @Schema(description = "Количество", example = "2")
+    @field:Schema(description = "Количество", example = "2")
     val quantity: Int,
 
-    @Schema(description = "Цена за единицу", example = "1500.0")
+    @field:Schema(description = "Цена за единицу", example = "1500.0")
     val price: BigDecimal
 )
 
@@ -257,50 +260,53 @@ data class PurchasedItem(
 @Schema(description = "Запрос на создание отзыва")
 data class CreateReviewRequest(
     @field:NotBlank(message = "ID товара обязателен")
-    @Schema(description = "ID товара", example = "1")
+    @field:Schema(description = "ID товара", example = "1")
     val goodsId: String,
 
     @field:Min(value = 1, message = "Рейтинг должен быть минимум 1")
     @field:Max(value = 5, message = "Рейтинг не может превышать 5")
-    @Schema(description = "Рейтинг от 1 до 5", example = "5")
+    @field:Schema(description = "Рейтинг от 1 до 5", example = "5")
     val rating: Int,
 
     @field:NotBlank(message = "Комментарий обязателен")
     @field:Size(min = 10, max = 1000, message = "Комментарий должен содержать от 10 до 1000 символов")
-    @Schema(description = "Текст отзыва (10-1000 символов)", example = "Отличное растение! Быстро прижилось и радует меня каждый день.")
+    @field:Schema(
+        description = "Текст отзыва (10-1000 символов)",
+        example = "Отличное растение! Быстро прижилось и радует меня каждый день."
+    )
     val comment: String
 )
 
 @Schema(description = "Отзыв о товаре")
 data class ReviewDto(
-    @Schema(description = "ID товара")
+    @field:Schema(description = "ID товара")
     val goodsId: String,
 
-    @Schema(description = "ID пользователя")
+    @field:Schema(description = "ID пользователя")
     val userId: String,
 
-    @Schema(description = "Имя автора")
+    @field:Schema(description = "Имя автора")
     val userName: String,
 
-    @Schema(description = "Рейтинг от 1 до 5")
+    @field:Schema(description = "Рейтинг от 1 до 5")
     val rating: Int,
 
-    @Schema(description = "Текст отзыва")
+    @field:Schema(description = "Текст отзыва")
     val comment: String,
 
-    @Schema(description = "Дата создания")
+    @field:Schema(description = "Дата создания")
     val createdAt: OffsetDateTime,
 
-    @Schema(description = "Дата обновления")
+    @field:Schema(description = "Дата обновления")
     val updatedAt: OffsetDateTime
 )
 
 @Schema(description = "Средний рейтинг товара")
 data class GoodsRatingDto(
-    @Schema(description = "Средний рейтинг (0.0 если нет отзывов)", example = "4.5")
+    @field:Schema(description = "Средний рейтинг (0.0 если нет отзывов)", example = "4.5")
     val averageRating: Double,
 
-    @Schema(description = "Количество отзывов", example = "12")
+    @field:Schema(description = "Количество отзывов", example = "12")
     val totalReviews: Int
 )
 
@@ -387,40 +393,43 @@ fun CartSummary.toCartSummaryDto() = CartSummaryDto(
 data class CreateGoodsRequest(
     @field:NotBlank(message = "Название обязательно")
     @field:Size(min = 3, max = 500, message = "Название должно содержать от 3 до 500 символов")
-    @Schema(description = "Название товара", example = "Монстера деликатесная")
+    @field:Schema(description = "Название товара", example = "Монстера деликатесная")
     val name: String,
 
     @field:NotBlank(message = "Описание обязательно")
     @field:Size(min = 10, max = 2000, message = "Описание должно содержать от 10 до 2000 символов")
-    @Schema(description = "Краткое описание товара", example = "Популярная тропическая лиана с крупными резными листьями")
+    @field:Schema(
+        description = "Краткое описание товара",
+        example = "Популярная тропическая лиана с крупными резными листьями"
+    )
     val description: String,
 
     @field:DecimalMin(value = "0.0", message = "Цена не может быть отрицательной")
-    @Schema(description = "Цена товара в рублях", example = "1500.0")
+    @field:Schema(description = "Цена товара в рублях", example = "1500.0")
     val price: BigDecimal,
 
     @field:NotBlank(message = "Категория обязательна")
-    @Schema(description = "ID категории товара")
+    @field:Schema(description = "ID категории товара")
     val categoryId: String,
 
     @field:Size(max = 100, message = "Поле difficulty не может превышать 100 символов")
-    @Schema(description = "Уровень сложности", example = "Легко")
+    @field:Schema(description = "Уровень сложности", example = "Легко")
     val difficulty: String? = null,
 
     @field:Min(value = 1, message = "Длительность должна быть минимум 1 минута")
-    @Schema(description = "Длительность курса в минутах (только для курсов)", example = "90")
+    @field:Schema(description = "Длительность курса в минутах (только для курсов)", example = "90")
     val duration: Int? = null,
 
     @field:Size(max = 500, message = "URL видео не может превышать 500 символов")
-    @Schema(description = "URL видео в Kinescope (только для курсов)")
+    @field:Schema(description = "URL видео в Kinescope (только для курсов)")
     val videoUrl: String? = null,
 
     @field:Size(max = 10000, message = "Детальное описание не может превышать 10000 символов")
-    @Schema(description = "Расширенное описание товара (поддерживает Markdown)")
+    @field:Schema(description = "Расширенное описание товара (поддерживает Markdown)")
     val detailedDescription: String? = null,
 
     @field:Size(max = 5000, message = "Инструкции по уходу не могут превышать 5000 символов")
-    @Schema(description = "Рекомендации по уходу (поддерживает Markdown)")
+    @field:Schema(description = "Рекомендации по уходу (поддерживает Markdown)")
     val careInstructions: String? = null
 )
 
@@ -430,25 +439,25 @@ data class CreateGoodsRequest(
 
 @Schema(description = "Постраничный ответ со списком товаров")
 data class PagedGoodsResponse(
-    @Schema(description = "Список товаров на текущей странице")
+    @field:Schema(description = "Список товаров на текущей странице")
     val content: List<GoodsDto>,
 
-    @Schema(description = "Номер текущей страницы (с 0)")
+    @field:Schema(description = "Номер текущей страницы (с 0)")
     val page: Int,
 
-    @Schema(description = "Размер страницы")
+    @field:Schema(description = "Размер страницы")
     val size: Int,
 
-    @Schema(description = "Общее количество товаров")
+    @field:Schema(description = "Общее количество товаров")
     val totalElements: Long,
 
-    @Schema(description = "Общее количество страниц")
+    @field:Schema(description = "Общее количество страниц")
     val totalPages: Int,
 
-    @Schema(description = "Есть ли следующая страница")
+    @field:Schema(description = "Есть ли следующая страница")
     val hasNext: Boolean,
 
-    @Schema(description = "Есть ли предыдущая страница")
+    @field:Schema(description = "Есть ли предыдущая страница")
     val hasPrevious: Boolean
 )
 
@@ -456,39 +465,42 @@ data class PagedGoodsResponse(
 data class UpdateGoodsRequest(
     @field:NotBlank(message = "Название обязательно")
     @field:Size(min = 3, max = 500, message = "Название должно содержать от 3 до 500 символов")
-    @Schema(description = "Название товара", example = "Монстера деликатесная")
+    @field:Schema(description = "Название товара", example = "Монстера деликатесная")
     val name: String,
 
     @field:NotBlank(message = "Описание обязательно")
     @field:Size(min = 10, max = 2000, message = "Описание должно содержать от 10 до 2000 символов")
-    @Schema(description = "Краткое описание товара", example = "Популярная тропическая лиана с крупными резными листьями")
+    @field:Schema(
+        description = "Краткое описание товара",
+        example = "Популярная тропическая лиана с крупными резными листьями"
+    )
     val description: String,
 
     @field:DecimalMin(value = "0.0", message = "Цена не может быть отрицательной")
-    @Schema(description = "Цена товара в рублях", example = "1500.0")
+    @field:Schema(description = "Цена товара в рублях", example = "1500.0")
     val price: BigDecimal,
 
     @field:NotBlank(message = "Категория обязательна")
-    @Schema(description = "ID категории товара")
+    @field:Schema(description = "ID категории товара")
     val categoryId: String,
 
     @field:Size(max = 100, message = "Поле difficulty не может превышать 100 символов")
-    @Schema(description = "Уровень сложности", example = "Легко")
+    @field:Schema(description = "Уровень сложности", example = "Легко")
     val difficulty: String? = null,
 
     @field:Min(value = 1, message = "Длительность должна быть минимум 1 минута")
-    @Schema(description = "Длительность курса в минутах (только для курсов)", example = "90")
+    @field:Schema(description = "Длительность курса в минутах (только для курсов)", example = "90")
     val duration: Int? = null,
 
     @field:Size(max = 500, message = "URL видео не может превышать 500 символов")
-    @Schema(description = "URL видео в Kinescope (только для курсов)")
+    @field:Schema(description = "URL видео в Kinescope (только для курсов)")
     val videoUrl: String? = null,
 
     @field:Size(max = 10000, message = "Детальное описание не может превышать 10000 символов")
-    @Schema(description = "Расширенное описание товара (поддерживает Markdown)")
+    @field:Schema(description = "Расширенное описание товара (поддерживает Markdown)")
     val detailedDescription: String? = null,
 
     @field:Size(max = 5000, message = "Инструкции по уходу не могут превышать 5000 символов")
-    @Schema(description = "Рекомендации по уходу (поддерживает Markdown)")
+    @field:Schema(description = "Рекомендации по уходу (поддерживает Markdown)")
     val careInstructions: String? = null
 )
