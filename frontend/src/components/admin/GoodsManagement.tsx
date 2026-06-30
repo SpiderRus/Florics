@@ -11,6 +11,7 @@ export const GoodsManagement: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingGoods, setEditingGoods] = useState<Goods | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<Goods | null>(null);
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(0);
@@ -80,12 +81,14 @@ export const GoodsManagement: React.FC = () => {
         setShowModal(true);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('Вы уверены, что хотите удалить этот товар?')) return;
+    const handleDelete = (item: Goods) => setDeleteTarget(item);
 
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
         try {
-            await adminService.deleteGoods(id);
-            toast.success('Товар удален');
+            await adminService.deleteGoods(deleteTarget.id);
+            toast.success('Товар удалён');
+            setDeleteTarget(null);
             loadGoods();
         } catch (error) {
             toast.error('Ошибка удаления товара');
@@ -103,9 +106,9 @@ export const GoodsManagement: React.FC = () => {
 
     return (
         <>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4>Управление товарами ({totalElements} товаров)</h4>
-                <div className="d-flex gap-2">
+            <div className="admin-toolbar d-flex justify-content-between align-items-center gap-3 mb-4">
+                <h4 className="mb-0">Управление товарами ({totalElements} товаров)</h4>
+                <div className="admin-toolbar-controls d-flex gap-2">
                     <Form.Select
                         value={pageSize}
                         onChange={handlePageSizeChange}
@@ -121,7 +124,7 @@ export const GoodsManagement: React.FC = () => {
                 </div>
             </div>
 
-            <Table striped bordered hover responsive>
+            <Table striped bordered hover className="rtable">
                 <thead>
                     <tr>
                         <th
@@ -155,25 +158,26 @@ export const GoodsManagement: React.FC = () => {
                     ) : (
                         goods.map(item => (
                             <tr key={item.id}>
-                                <td>{item.name}</td>
-                                <td>{item.category?.name || '-'}</td>
-                                <td>{item.price} ₽</td>
-                                <td>
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        className="me-2"
-                                        onClick={() => handleEdit(item)}
-                                    >
-                                        Редактировать
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        onClick={() => handleDelete(item.id)}
-                                    >
-                                        Удалить
-                                    </Button>
+                                <td data-label="Название">{item.name}</td>
+                                <td data-label="Категория">{item.category?.name || '-'}</td>
+                                <td data-label="Цена">{item.price} ₽</td>
+                                <td className="rtable-actions">
+                                    <div className="d-flex gap-2">
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            onClick={() => handleEdit(item)}
+                                        >
+                                            Редактировать
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            onClick={() => handleDelete(item)}
+                                        >
+                                            Удалить
+                                        </Button>
+                                    </div>
                                 </td>
                             </tr>
                         ))
@@ -243,6 +247,23 @@ export const GoodsManagement: React.FC = () => {
                         onCancel={() => setShowModal(false)}
                     />
                 </Modal.Body>
+            </Modal>
+
+            <Modal show={!!deleteTarget} onHide={() => setDeleteTarget(null)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Удалить товар?</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Товар «{deleteTarget?.name}» будет удалён. Это действие нельзя отменить.
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+                        Отмена
+                    </Button>
+                    <Button variant="danger" onClick={confirmDelete}>
+                        Удалить
+                    </Button>
+                </Modal.Footer>
             </Modal>
         </>
     );

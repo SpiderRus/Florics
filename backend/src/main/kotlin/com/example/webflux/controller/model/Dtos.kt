@@ -150,9 +150,13 @@ data class CartItemDto(
     @field:Schema(description = "ID элемента корзины", example = "550e8400-e29b-41d4-a716-446655440000")
     val id: String,
 
+    @field:JsonProperty("kind")
+    @field:Schema(description = "Тип элемента: GOODS (товар каталога) или CUSTOM_FLORARIUM (кастомный заказ)", example = "GOODS")
+    val kind: String,
+
     @field:JsonProperty("goods")
-    @field:Schema(description = "Полная информация о товаре")
-    val goods: GoodsDto,
+    @field:Schema(description = "Полная информация о товаре (null для кастомного флорариума)")
+    val goods: GoodsDto?,
 
     @field:JsonProperty("quantity")
     @field:Schema(description = "Количество единиц товара", example = "2")
@@ -160,7 +164,44 @@ data class CartItemDto(
 
     @field:JsonProperty("addedAt")
     @field:Schema(description = "Время добавления в корзину")
-    val addedAt: OffsetDateTime
+    val addedAt: OffsetDateTime,
+
+    @field:JsonProperty("conversationId")
+    @field:Schema(description = "ID разговора с дизайнером (кастомный флорариум)")
+    val conversationId: String? = null,
+
+    @field:JsonProperty("imageUrl")
+    @field:Schema(description = "URL выбранной картинки флорариума (кастомный заказ)")
+    val imageUrl: String? = null,
+
+    @field:JsonProperty("customerComment")
+    @field:Schema(description = "Комментарий покупателя к заказу")
+    val customerComment: String? = null,
+
+    @field:JsonProperty("contact")
+    @field:Schema(description = "Контакты для связи (опционально)")
+    val contact: String? = null
+)
+
+@Schema(description = "Запрос на добавление кастомного флорариума в корзину")
+data class AddCustomFlorariumRequest(
+    @field:NotBlank(message = "ID разговора обязателен")
+    @field:JsonProperty("conversationId")
+    @field:Schema(description = "ID разговора с дизайнером флорариумов", required = true)
+    val conversationId: String,
+
+    @field:NotBlank(message = "URL картинки обязателен")
+    @field:JsonProperty("imageUrl")
+    @field:Schema(description = "URL выбранной клиентом картинки (прокси-путь /api/aibot/florarium/images/...)", required = true)
+    val imageUrl: String,
+
+    @field:JsonProperty("comment")
+    @field:Schema(description = "Комментарий покупателя (пожелания к заказу)")
+    val comment: String? = null,
+
+    @field:JsonProperty("contact")
+    @field:Schema(description = "Контакты для связи (опционально)")
+    val contact: String? = null
 )
 
 @Schema(description = "Сводка корзины покупок")
@@ -210,17 +251,35 @@ data class PurchaseDto(
     @field:Schema(description = "ID покупки")
     val id: String,
 
-    @field:Schema(description = "ID товара")
-    val goodsId: String,
+    @field:Schema(description = "Тип: GOODS (товар каталога) или CUSTOM_FLORARIUM (кастомный заказ)", example = "GOODS")
+    val kind: String,
 
-    @field:Schema(description = "Цена покупки")
-    val price: BigDecimal,
+    @field:Schema(description = "ID товара (null для кастомного заказа флорариума)")
+    val goodsId: String?,
+
+    @field:Schema(description = "Цена покупки (null у кастомного заказа до проставления админом)")
+    val price: BigDecimal?,
 
     @field:Schema(description = "Дата покупки")
     val purchaseDate: OffsetDateTime,
 
     @field:Schema(description = "Количество")
-    val quantity: Int
+    val quantity: Int,
+
+    @field:Schema(description = "ID разговора с дизайнером (кастомный заказ)")
+    val conversationId: String? = null,
+
+    @field:Schema(description = "URL выбранной картинки флорариума (кастомный заказ)")
+    val imageUrl: String? = null,
+
+    @field:Schema(description = "Комментарий покупателя")
+    val customerComment: String? = null,
+
+    @field:Schema(description = "Контакты для связи")
+    val contact: String? = null,
+
+    @field:Schema(description = "Статус кастомного заказа: NEW/IN_PROGRESS/DONE/CANCELLED")
+    val status: String? = null
 )
 
 @Schema(description = "Ответ на оформление заказа")
@@ -240,8 +299,8 @@ data class CheckoutResponse(
 
 @Schema(description = "Купленный товар")
 data class PurchasedItem(
-    @field:Schema(description = "ID товара", example = "1")
-    val goodsId: String,
+    @field:Schema(description = "ID товара (null для кастомного флорариума)", example = "1")
+    val goodsId: String?,
 
     @field:Schema(description = "Название товара", example = "Монстера деликатесная")
     val goodsName: String,
@@ -249,8 +308,57 @@ data class PurchasedItem(
     @field:Schema(description = "Количество", example = "2")
     val quantity: Int,
 
-    @field:Schema(description = "Цена за единицу", example = "1500.0")
-    val price: BigDecimal
+    @field:Schema(description = "Цена за единицу (null у кастомного заказа — уточняется)", example = "1500.0")
+    val price: BigDecimal?
+)
+
+// ============================================================================
+// Custom florarium order (admin) DTOs
+// ============================================================================
+
+@Schema(description = "Кастомный заказ флорариума (для админки)")
+data class CustomOrderDto(
+    @field:Schema(description = "ID заказа")
+    val id: String,
+
+    @field:Schema(description = "ID пользователя")
+    val userId: String,
+
+    @field:Schema(description = "Имя пользователя")
+    val userName: String?,
+
+    @field:Schema(description = "Email пользователя")
+    val userEmail: String?,
+
+    @field:Schema(description = "ID разговора с дизайнером")
+    val conversationId: String?,
+
+    @field:Schema(description = "URL выбранной картинки флорариума")
+    val imageUrl: String?,
+
+    @field:Schema(description = "Комментарий покупателя")
+    val customerComment: String?,
+
+    @field:Schema(description = "Контакты для связи")
+    val contact: String?,
+
+    @field:Schema(description = "Цена (проставляет админ)")
+    val price: BigDecimal?,
+
+    @field:Schema(description = "Статус: NEW/IN_PROGRESS/DONE/CANCELLED")
+    val status: String?,
+
+    @field:Schema(description = "Дата создания заказа")
+    val purchaseDate: OffsetDateTime
+)
+
+@Schema(description = "Запрос на обновление кастомного заказа администратором")
+data class UpdateCustomOrderRequest(
+    @field:Schema(description = "Цена заказа (>= 0)", example = "3500.00")
+    val price: BigDecimal? = null,
+
+    @field:Schema(description = "Новый статус: NEW/IN_PROGRESS/DONE/CANCELLED", example = "IN_PROGRESS")
+    val status: String? = null
 )
 
 // ============================================================================
@@ -310,6 +418,18 @@ data class GoodsRatingDto(
     val totalReviews: Int
 )
 
+@Schema(description = "Рейтинг товара в батч-ответе")
+data class GoodsRatingItemDto(
+    @field:Schema(description = "ID товара")
+    val goodsId: String,
+
+    @field:Schema(description = "Средний рейтинг", example = "4.5")
+    val averageRating: Double,
+
+    @field:Schema(description = "Количество отзывов", example = "12")
+    val totalReviews: Int
+)
+
 // ============================================================================
 // DTO Mappers (Domain Model → DTO)
 // ============================================================================
@@ -354,10 +474,16 @@ fun Goods.toGoodsDto(category: Category?) = GoodsDto(
 // Purchase mapper
 fun Purchase.toPurchaseDto() = PurchaseDto(
     id = id ?: throw IllegalStateException("Purchase must have an ID"),
+    kind = if (conversationId != null) "CUSTOM_FLORARIUM" else "GOODS",
     goodsId = goodsId,
     price = price,
     purchaseDate = purchaseDate,
-    quantity = quantity
+    quantity = quantity,
+    conversationId = conversationId,
+    imageUrl = imageUrl,
+    customerComment = customerComment,
+    contact = contact,
+    status = status
 )
 
 // Review mapper
@@ -374,9 +500,14 @@ fun Review.toReviewDto() = ReviewDto(
 // Cart mappers
 fun CartItemWithGoods.toCartItemDto() = CartItemDto(
     id = id,
-    goods = goods.toGoodsDto(category),
+    kind = if (goods == null) "CUSTOM_FLORARIUM" else "GOODS",
+    goods = goods?.toGoodsDto(category),
     quantity = quantity,
-    addedAt = addedAt
+    addedAt = addedAt,
+    conversationId = conversationId,
+    imageUrl = imageUrl,
+    customerComment = customerComment,
+    contact = contact
 )
 
 fun CartSummary.toCartSummaryDto() = CartSummaryDto(
@@ -503,4 +634,31 @@ data class UpdateGoodsRequest(
     @field:Size(max = 5000, message = "Инструкции по уходу не могут превышать 5000 символов")
     @field:Schema(description = "Рекомендации по уходу (поддерживает Markdown)")
     val careInstructions: String? = null
+)
+
+// =====================================================
+// ADMIN MEDIA DTO (вкладка «Фотографии» товара)
+// =====================================================
+data class AdminMediaDto(
+    val id: String,
+    val type: String,   // IMAGE | VIDEO
+    val url: String,
+    val order: Int
+)
+
+data class MediaReconcileItemDto(
+    val id: String? = null,   // есть => существующее медиа (оставить, обновить порядок)
+    val url: String? = null,  // есть без id => новое внешнее
+    val order: Int
+)
+
+data class MediaReconcileRequest(
+    val items: List<MediaReconcileItemDto> = emptyList()
+)
+
+// =====================================================
+// ANALYZE BY NAME (кнопка «Заполнить по названию»)
+// =====================================================
+data class AnalyzeByNameRequest(
+    val name: String = ""
 )

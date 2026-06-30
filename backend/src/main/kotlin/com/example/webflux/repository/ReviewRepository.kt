@@ -14,6 +14,9 @@ interface ReviewR2dbcRepository : CoroutineCrudRepository<ReviewEntity, String> 
     @Query("SELECT * FROM reviews WHERE goods_id = :goodsId AND deleted_at IS NULL ORDER BY created_at DESC")
     fun findByGoodsId(goodsId: String): Flow<ReviewEntity>
 
+    @Query("SELECT * FROM reviews WHERE goods_id IN (:ids) AND deleted_at IS NULL")
+    fun findByGoodsIds(ids: List<String>): Flow<ReviewEntity>
+
     @Query("SELECT * FROM reviews WHERE user_id = :userId AND deleted_at IS NULL ORDER BY created_at DESC")
     fun findByUserId(userId: String): Flow<ReviewEntity>
 
@@ -62,4 +65,7 @@ class ReviewRepository(
 
     fun findByGoodsId(goodsId: String): Flow<Review> =
         reviewR2dbcRepository.findByGoodsId(goodsId).map { ReviewMapper.toModel(it) }
+
+    fun findByGoodsIds(ids: List<String>): Flow<Review> =
+        reviewR2dbcRepository.findByGoodsIds(ids).map { ReviewMapper.toModel(it) }
 }

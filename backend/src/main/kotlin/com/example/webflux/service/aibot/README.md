@@ -1,115 +1,56 @@
 # AI Bot Service Integration
 
-Reactive WebClient интеграция с AI Agent чат-ботом.
+Reactive WebClient клиент чат-бота **OllamaTestController** (проект AIAgentNew).
+
+Бот сам хранит историю (по `chatId`), делает RAG автоматически и умеет стриминг (SSE).
+GreenDecor добавляет аутентификацию (роль BUYER), изоляцию разговоров по пользователям и
+привязку к товарам. Контракт `/api/aibot/**` для фронтенда стабилен; за ним стоит [AiBotService].
 
 ## Компоненты
 
-- **AiBotService** - основной сервис для взаимодействия с AI Agent
-- **AiConversationRepository** - in-memory хранилище маппинга conversationId → userId
-- **DTOs** - модели данных, совпадающие с AI Agent API
-- **Exceptions** - кастомные исключения для обработки ошибок
+- **AiBotService** — клиент бота (ensure/stream/send/get/delete)
+- **AiConversationRepository** — маппинг `conversationId (== chatId) → userId, goodsId` в PostgreSQL (`ai_conversations`)
+- **DTOs** — `CreateChatRequest` (к боту), `OllamaHistoryMessage` (история бота), `TokenChunk` (SSE к фронту);
+  `ConversationResponse`/`MessageResponse`/`ChatResponse` — синтезируем сами (контракт к фронту)
+- **Exceptions** — кастомные исключения для обработки ошибок
 
-## Использование
+## Контракт бота (base = `.../api/v1/ollama`)
 
-### Injection
+| Действие | Бот |
+|---|---|
+| Создать сессию (идемпотентно по `chatId`+`agentType`) | `POST /chat` `{agentType, chatId, topic}` → 201 |
+| Стриминг ответа | `POST /{chatId}/chat/stream`, тело — сырой текст, SSE токенов |
+| Ответ целиком (fallback) | `POST /{chatId}/chat`, тело — сырой текст → `String` |
+| История | `GET /{chatId}/chat` → `[{id, role, content, createdAt}]` |
+| Удаление | **отсутствует** (чистим только локальный маппинг) |
 
-```kotlin
-@Service
-class MyService(private val aiBotService: AiBotService) {
-    // ...
-}
-```
-
-### Создание разговора
-
-```kotlin
-suspend fun createChat() {
-    val userId = SecurityUtils.getAuthenticatedUserId()
-    val conversation = aiBotService.createConversation(userId, "Консультация по товарам")
-    println("Created conversation: ${conversation.id}")
-}
-```
-
-### Отправка сообщения
-
-```kotlin
-suspend fun askAi(conversationId: UUID) {
-    val userId = SecurityUtils.getAuthenticatedUserId()
-    
-    val response = aiBotService.sendMessage(
-        userId = userId,
-        conversationId = conversationId,
-        message = "Какие флорариумы лучше для начинающих?",
-        useRag = true  // true для использования документов из векторной БД, false для базовых знаний LLM
-    )
-    
-    println("AI ответ: ${response.response}")
-    println("Время ответа: ${response.timestamp}")
-}
-```
-
-### Получение истории
-
-```kotlin
-suspend fun getHistory(conversationId: UUID) {
-    val userId = SecurityUtils.getAuthenticatedUserId()
-    val messages = aiBotService.getMessages(userId, conversationId, limit = 50)
-    
-    messages.forEach { msg ->
-        println("[${msg.role}] ${msg.content}")
-    }
-}
-```
-
-### Список разговоров пользователя
-
-```kotlin
-suspend fun listMyChats() {
-    val userId = SecurityUtils.getAuthenticatedUserId()
-    val conversations = aiBotService.listUserConversations(userId)
-    
-    conversations.forEach { conv ->
-        println("${conv.title} (${conv.messageCount} messages)")
-    }
-}
-```
-
-### Удаление разговора
-
-```kotlin
-suspend fun deleteChat(conversationId: UUID) {
-    val userId = SecurityUtils.getAuthenticatedUserId()
-    aiBotService.deleteConversation(userId, conversationId)
-}
-```
+Контекст товара передаётся боту через `topic` (уходит в системный промпт, а не в видимую историю).
 
 ## Изоляция пользователей
 
-Сервис автоматически проверяет ownership разговоров:
-- При создании conversation маппинг сохраняется в AiConversationRepository
-- При доступе к conversation проверяется что текущий userId совпадает с владельцем
-- Если пользователь пытается получить доступ к чужому conversation → `ConversationAccessDeniedException`
+- При создании conversation маппинг сохраняется в `AiConversationRepository`.
+- При доступе к conversation проверяется, что текущий `userId` совпадает с владельцем.
+- Чужой conversation → `ConversationAccessDeniedException`.
 
 ## Обработка ошибок
 
-Все методы могут выбросить:
-- `ConversationNotFoundException` - разговор не найден
-- `ConversationAccessDeniedException` - доступ запрещен (не владелец)
-- `AiBotServiceException` - ошибка связи с AI Agent или серверная ошибка
-- `AiBotTimeoutException` - таймаут запроса к AI Agent
+- `ConversationNotFoundException` — разговор не найден в локальном маппинге
+- `ConversationAccessDeniedException` — доступ запрещён (не владелец)
+- `AiBotServiceException` — ошибка связи с ботом или серверная ошибка
+- `AiBotTimeoutException` — таймаут запроса
 
-## Конфигурация
+## Конфигурация (`application.yml`)
 
-В `application.yml`:
 ```yaml
 ai-agent:
-  base-url: http://localhost:8081
-  base-path: /api/v1
+  base-url: http://localhost:8081   # AIAgentNew по умолчанию слушает 8080 — запускать на 8081
+  base-path: /api/v1/ollama
+  agent-type: plants
   connect-timeout: 5000
-  read-timeout: 30000
+  read-timeout: 120000              # первый токен может приходить дольше (RAG + tool-calls)
 ```
 
 ## Требования
 
-- AI Agent должен быть запущен на http://localhost:8081
-- Пользователь должен быть авторизован (для получения userId через SecurityUtils)
+- AIAgentNew запущен на `http://localhost:8081` (порт отличается от GreenDecor 8080).
+- Пользователь авторизован с ролью BUYER (userId через `SecurityUtils`).

@@ -89,13 +89,24 @@ const VideoControls: React.FC<VideoControlsProps> = ({ videoRef }) => {
                     step="0.1"
                     value={currentTime}
                     onChange={handleSeek}
+                    aria-label="Перемотка видео"
                 />
             </div>
             <div className="video-controls-buttons">
-                <button className="video-control-btn" onClick={handlePlayPause}>
+                <button
+                    type="button"
+                    className="video-control-btn"
+                    onClick={handlePlayPause}
+                    aria-label={isPlaying ? 'Пауза' : 'Воспроизвести'}
+                >
                     {isPlaying ? '⏸' : '▶'}
                 </button>
-                <button className="video-control-btn" onClick={handleMuteToggle}>
+                <button
+                    type="button"
+                    className="video-control-btn"
+                    onClick={handleMuteToggle}
+                    aria-label={isMuted ? 'Включить звук' : 'Выключить звук'}
+                >
                     {isMuted ? '🔇' : '🔊'}
                 </button>
                 <span className="video-time">

@@ -55,4 +55,15 @@ class ReviewService(
         return if (reviews.isEmpty()) Pair(0.0, 0) else Pair(reviews.average(), reviews.size)
     }
 
+    // Рейтинги для списка товаров одним запросом (устранение N+1).
+    // Возвращает только товары, у которых есть отзывы.
+    suspend fun getGoodsRatings(goodsIds: List<String>): Map<String, Pair<Double, Int>> {
+        if (goodsIds.isEmpty()) return emptyMap()
+
+        return reviewRepository.findByGoodsIds(goodsIds)
+            .toList()
+            .groupBy { it.goodsId }
+            .mapValues { (_, reviews) -> Pair(reviews.map { it.rating }.average(), reviews.size) }
+    }
+
 }

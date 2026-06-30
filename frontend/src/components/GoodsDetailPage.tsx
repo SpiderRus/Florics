@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Tabs, Tab, Spinner, Alert, Button } from 'react-bootstrap';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Container, Row, Col, Tabs, Tab, Alert, Button } from 'react-bootstrap';
+import LoadingSpinner from './LoadingSpinner';
+import Breadcrumbs from './Breadcrumbs';
 import { goodsService, Goods } from '../services/goodsService';
 import { reviewService } from '../services/reviewService';
 import { purchaseService } from '../services/purchaseService';
@@ -102,12 +104,7 @@ const GoodsDetailPage: React.FC = () => {
     };
 
     if (loading) {
-        return (
-            <Container className="text-center my-5">
-                <Spinner animation="border" variant="success" />
-                <p>Загрузка...</p>
-            </Container>
-        );
+        return <LoadingSpinner />;
     }
 
     if (error || !goods) {
@@ -133,8 +130,16 @@ const GoodsDetailPage: React.FC = () => {
     // Если мастер-класс уже куплен, не показывать кнопку "В корзину"
     const showAddToCartButton = canAddToCart && !showWatchButton;
 
+    // Хлебные крошки ведут в каталог соответствующего типа
+    const catalogCrumb = goods.category?.type === 'TERRARIUM'
+        ? { label: 'Флорариумы', to: '/terrariums' }
+        : goods.category?.type === 'COURSE'
+            ? { label: 'Мастер-классы', to: '/masterclasses' }
+            : { label: 'Растения', to: '/catalog' };
+
     return (
         <Container className="goods-detail-page my-4">
+            <Breadcrumbs items={[{ label: 'Главная', to: '/' }, catalogCrumb, { label: goods.name }]} />
             <Row className="mb-4">
                 <Col md={6}>
                     <LargeMediaCarousel
@@ -232,7 +237,7 @@ const GoodsDetailPage: React.FC = () => {
                                     </Alert>
                                 ) : (
                                     <Alert variant="info" className="mt-3">
-                                        <a href="/login">Войдите</a> и купите товар, чтобы оставить отзыв
+                                        <Link to="/login" state={{ from: location.pathname, tab: 'reviews' }}>Войдите</Link> и купите товар, чтобы оставить отзыв
                                     </Alert>
                                 )}
                             </div>

@@ -1,11 +1,15 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Container, Row, Col, Card, Table, Alert, Spinner, Pagination, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Alert, Pagination, Form, Button } from 'react-bootstrap';
+import LoadingSpinner from './LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { purchaseService } from '../services/purchaseService';
 import { goodsService, Goods } from '../services/goodsService';
 import { Purchase } from '../types/purchase';
-import { useNavigate } from 'react-router-dom';
+import { customOrderStatusLabel } from '../types/customOrder';
+import { useNavigate, Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { useMediaQuery } from '../hooks/useMediaQuery';
+import { purchasesWord } from '../utils/plural';
 
 interface PurchaseWithGoods extends Purchase {
     goods?: Goods;
@@ -17,6 +21,7 @@ type SortOrder = 'asc' | 'desc';
 function ProfilePage() {
     const { user, isAuthenticated, loading: authLoading } = useAuth();
     const navigate = useNavigate();
+    const isMobile = useMediaQuery('(max-width: 767.98px)');
     const [purchases, setPurchases] = useState<PurchaseWithGoods[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -60,7 +65,7 @@ function ProfilePage() {
             // Обогащаем покупки информацией о товарах
             const enrichedPurchases = purchasesData.map(purchase => ({
                 ...purchase,
-                goods: goodsMapTemp.get(purchase.goodsId)
+                goods: purchase.goodsId ? goodsMapTemp.get(purchase.goodsId) : undefined
             }));
 
             setPurchases(enrichedPurchases);
@@ -82,7 +87,7 @@ function ProfilePage() {
         });
     };
 
-    const totalAmount = purchases.reduce((sum, purchase) => sum + purchase.price * purchase.quantity, 0);
+    const totalAmount = purchases.reduce((sum, purchase) => sum + (purchase.price ?? 0) * purchase.quantity, 0);
 
     // Статистика по категориям
     const categoryStats = useMemo(() => {
@@ -93,7 +98,7 @@ function ProfilePage() {
                 const categoryName = purchase.goods.category.name;
                 const existing = stats.get(categoryName) || { count: 0, total: 0, name: categoryName };
                 existing.count += purchase.quantity;
-                existing.total += purchase.price * purchase.quantity;
+                existing.total += (purchase.price ?? 0) * purchase.quantity;
                 stats.set(categoryName, existing);
             }
         });
@@ -110,7 +115,7 @@ function ProfilePage() {
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
             const existing = stats.get(monthKey) || 0;
-            stats.set(monthKey, existing + purchase.price * purchase.quantity);
+            stats.set(monthKey, existing + (purchase.price ?? 0) * purchase.quantity);
         });
 
         return Array.from(stats.entries())
@@ -153,7 +158,7 @@ function ProfilePage() {
                     comparison = new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime();
                     break;
                 case 'price':
-                    comparison = (a.price * a.quantity) - (b.price * b.quantity);
+                    comparison = ((a.price ?? 0) * a.quantity) - ((b.price ?? 0) * b.quantity);
                     break;
                 case 'name':
                     const nameA = a.goods?.name || '';
@@ -183,14 +188,20 @@ function ProfilePage() {
     // Экспорт в CSV
     const exportToCSV = () => {
         const headers = ['Дата', 'Товар', 'Категория', 'Количество', 'Цена', 'Сумма'];
-        const rows = filteredAndSortedPurchases.map(purchase => [
-            formatDate(purchase.purchaseDate),
-            purchase.goods?.name || `ID: ${purchase.goodsId}`,
-            purchase.goods?.category?.name || '-',
-            purchase.quantity,
-            purchase.price.toFixed(2),
-            (purchase.price * purchase.quantity).toFixed(2)
-        ]);
+        const rows = filteredAndSortedPurchases.map(purchase => {
+            const isCustom = purchase.kind === 'CUSTOM_FLORARIUM';
+            const name = purchase.goods?.name || (isCustom ? 'Кастомный флорариум' : `ID: ${purchase.goodsId}`);
+            const priceStr = purchase.price != null ? purchase.price.toFixed(2) : 'уточняется';
+            const sumStr = purchase.price != null ? (purchase.price * purchase.quantity).toFixed(2) : 'уточняется';
+            return [
+                formatDate(purchase.purchaseDate),
+                name,
+                purchase.goods?.category?.name || (isCustom ? 'Кастомный флорариум' : '-'),
+                purchase.quantity,
+                priceStr,
+                sumStr
+            ];
+        });
 
         const csvContent = [
             headers.join(','),
@@ -209,13 +220,7 @@ function ProfilePage() {
     };
 
     if (authLoading || loading) {
-        return (
-            <Container className="content-section text-center">
-                <Spinner animation="border" role="status">
-                    <span className="visually-hidden">Загрузка...</span>
-                </Spinner>
-            </Container>
-        );
+        return <LoadingSpinner />;
     }
 
     return (
@@ -257,7 +262,7 @@ function ProfilePage() {
                 <Col md={8}>
                     <Card>
                         <Card.Body>
-                            <div className="d-flex justify-content-between align-items-center mb-3">
+                            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-2 mb-3">
                                 <Card.Title className="mb-0">История покупок</Card.Title>
                                 {purchases.length > 0 && (
                                     <Button variant="success" size="sm" onClick={exportToCSV}>
@@ -272,7 +277,7 @@ function ProfilePage() {
 
                             {purchases.length === 0 ? (
                                 <Alert variant="info">
-                                    У вас пока нет покупок. Посетите наш <a href="/catalog">каталог</a>!
+                                    У вас пока нет покупок. Посетите наш <Link to="/catalog">каталог</Link>!
                                 </Alert>
                             ) : (
                                 <>
@@ -323,7 +328,7 @@ function ProfilePage() {
                                         Показано {paginatedPurchases.length} из {filteredAndSortedPurchases.length} покупок
                                     </p>
 
-                                    <Table striped bordered hover responsive>
+                                    <Table striped bordered hover className="rtable">
                                         <thead>
                                             <tr>
                                                 <th>Дата</th>
@@ -334,33 +339,53 @@ function ProfilePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {paginatedPurchases.map((purchase) => (
-                                                <tr key={purchase.id}>
-                                                    <td>{formatDate(purchase.purchaseDate)}</td>
-                                                    <td>
-                                                        {purchase.goods ? (
-                                                            <a
-                                                                href={`/catalog/${purchase.goodsId}`}
-                                                                className="text-decoration-none"
-                                                            >
-                                                                {purchase.goods.name}
-                                                            </a>
-                                                        ) : (
-                                                            <span className="text-muted">ID: {purchase.goodsId}</span>
-                                                        )}
-                                                    </td>
-                                                    <td>{purchase.quantity}</td>
-                                                    <td>{purchase.price.toFixed(2)} ₽</td>
-                                                    <td>{(purchase.price * purchase.quantity).toFixed(2)} ₽</td>
-                                                </tr>
-                                            ))}
+                                            {paginatedPurchases.map((purchase) => {
+                                                const isCustom = purchase.kind === 'CUSTOM_FLORARIUM';
+                                                return (
+                                                    <tr key={purchase.id}>
+                                                        <td data-label="Дата">{formatDate(purchase.purchaseDate)}</td>
+                                                        <td data-label="Товар">
+                                                            {purchase.goods ? (
+                                                                <Link
+                                                                    to={`/catalog/${purchase.goodsId}`}
+                                                                    className="text-decoration-none"
+                                                                >
+                                                                    {purchase.goods.name}
+                                                                </Link>
+                                                            ) : isCustom ? (
+                                                                <span>
+                                                                    🪴 Кастомный флорариум
+                                                                    {purchase.status && (
+                                                                        <span className="badge bg-secondary ms-2">
+                                                                            {customOrderStatusLabel(purchase.status)}
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-muted">ID: {purchase.goodsId}</span>
+                                                            )}
+                                                        </td>
+                                                        <td data-label="Количество">{purchase.quantity}</td>
+                                                        <td data-label="Цена">
+                                                            {purchase.price != null
+                                                                ? `${purchase.price.toFixed(2)} ₽`
+                                                                : <span className="text-muted">Уточняется</span>}
+                                                        </td>
+                                                        <td data-label="Сумма">
+                                                            {purchase.price != null
+                                                                ? `${(purchase.price * purchase.quantity).toFixed(2)} ₽`
+                                                                : <span className="text-muted">—</span>}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </Table>
 
                                     {/* Пагинация */}
                                     {totalPages > 1 && (
                                         <div className="d-flex justify-content-center">
-                                            <Pagination>
+                                            <Pagination size="sm" className="flex-wrap justify-content-center">
                                                 <Pagination.First
                                                     onClick={() => setCurrentPage(1)}
                                                     disabled={currentPage === 1}
@@ -406,8 +431,8 @@ function ProfilePage() {
                                     )}
 
                                     <div className="mt-3 text-end">
-                                        <strong>Итого ({filteredAndSortedPurchases.length} покупок): {
-                                            filteredAndSortedPurchases.reduce((sum, p) => sum + p.price * p.quantity, 0).toFixed(2)
+                                        <strong>Итого ({filteredAndSortedPurchases.length} {purchasesWord(filteredAndSortedPurchases.length)}): {
+                                            filteredAndSortedPurchases.reduce((sum, p) => sum + (p.price ?? 0) * p.quantity, 0).toFixed(2)
                                         } ₽</strong>
                                     </div>
                                 </>
@@ -454,14 +479,15 @@ function ProfilePage() {
                                                 nameKey="name"
                                                 cx="50%"
                                                 cy="50%"
-                                                outerRadius={80}
-                                                label={(props: any) => `${props.name}: ${props.value.toFixed(0)} ₽`}
+                                                outerRadius={isMobile ? 70 : 80}
+                                                label={isMobile ? false : (props: any) => `${props.name}: ${props.value.toFixed(0)} ₽`}
                                             >
                                                 {categoryStats.map((_, index) => (
                                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                                 ))}
                                             </Pie>
                                             <Tooltip formatter={(value) => `${Number(value).toFixed(2)} ₽`} />
+                                            {isMobile && <Legend />}
                                         </PieChart>
                                     </ResponsiveContainer>
                                 ) : (

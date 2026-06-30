@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
+import { Cart, Check } from 'react-bootstrap-icons';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -116,6 +117,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({ goodsId, goodsName, i
                         value={quantity}
                         onChange={(e) => handleQuantityChange(e.target.value)}
                         isInvalid={!!quantityError}
+                        aria-label="Количество"
                         style={{ width: '80px' }}
                     />
                 )}
@@ -133,10 +135,10 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({ goodsId, goodsName, i
                     }
                 >
                     {isDisabled
-                        ? '✓ В корзине'
+                        ? <><Check className="me-1" aria-hidden="true" /> В корзине</>
                         : adding
                             ? 'Добавление...'
-                            : '🛒 В корзину'
+                            : <><Cart className="me-1" aria-hidden="true" /> В корзину</>
                     }
                 </Button>
             </div>

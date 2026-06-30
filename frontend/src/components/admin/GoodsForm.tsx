@@ -5,6 +5,8 @@ import { categoryService, Category } from '../../services/categoryService';
 import { CreateGoodsRequest, UpdateGoodsRequest } from '../../types/admin';
 import { toast } from 'react-toastify';
 import type { Goods } from '../../types/goods';
+import { MediaManager, PhotoDraft } from './MediaManager';
+import type { MediaReconcileItem } from '../../types/admin';
 
 interface GoodsFormProps {
     goods: Goods | null;
@@ -12,12 +14,16 @@ interface GoodsFormProps {
     onCancel: () => void;
 }
 
-type FormTab = 'main' | 'details' | 'care';
+type FormTab = 'main' | 'details' | 'care' | 'photos';
 
 export const GoodsForm: React.FC<GoodsFormProps> = ({ goods, onSuccess, onCancel }) => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<FormTab>('main');
+    const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+    const [mediaLoading, setMediaLoading] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [analyzingName, setAnalyzingName] = useState(false);
 
     const [formData, setFormData] = useState({
         name: goods?.name || '',
@@ -34,6 +40,25 @@ export const GoodsForm: React.FC<GoodsFormProps> = ({ goods, onSuccess, onCancel
     useEffect(() => {
         loadCategories();
     }, []);
+
+    // Загрузка существующих фото при редактировании
+    useEffect(() => {
+        if (!goods?.id) return;
+        let cancelled = false;
+        setMediaLoading(true);
+        adminService.getGoodsMedia(goods.id)
+            .then(list => {
+                if (cancelled) return;
+                const drafts: PhotoDraft[] = list
+                    .slice()
+                    .sort((a, b) => a.order - b.order)
+                    .map(m => ({ key: m.id, mediaId: m.id, url: m.url, previewUrl: m.url }));
+                setPhotos(drafts);
+            })
+            .catch(() => { if (!cancelled) toast.error('Не удалось загрузить фотографии товара'); })
+            .finally(() => { if (!cancelled) setMediaLoading(false); });
+        return () => { cancelled = true; };
+    }, [goods?.id]);
 
     const loadCategories = async () => {
         try {
@@ -58,15 +83,34 @@ export const GoodsForm: React.FC<GoodsFormProps> = ({ goods, onSuccess, onCancel
         setLoading(true);
 
         try {
+            // 1) Сохранить скалярные поля товара, получить id
+            let saved: Goods;
             if (goods) {
                 const updateData: UpdateGoodsRequest = { ...formData, id: goods.id };
-                await adminService.updateGoods(goods.id, updateData);
-                toast.success('Товар обновлен');
+                saved = await adminService.updateGoods(goods.id, updateData);
             } else {
                 const createData: CreateGoodsRequest = formData;
-                await adminService.createGoods(createData);
-                toast.success('Товар создан');
+                saved = await adminService.createGoods(createData);
             }
+            const goodsId = saved.id!;
+
+            // 2) Догрузить новые файлы, собрать финальный упорядоченный список
+            const items: MediaReconcileItem[] = [];
+            for (const p of photos) {
+                if (p.file) {
+                    const created = await adminService.uploadGoodsPhoto(goodsId, p.file);
+                    items.push({ id: created.id, order: items.length });
+                } else if (p.mediaId) {
+                    items.push({ id: p.mediaId, order: items.length });
+                } else if (p.url) {
+                    items.push({ url: p.url, order: items.length });
+                }
+            }
+
+            // 3) Привести набор медиа к финальному списку (удаления/вставки/порядок)
+            await adminService.reconcileGoodsMedia(goodsId, items);
+
+            toast.success(goods ? 'Товар обновлён' : 'Товар создан');
             onSuccess();
         } catch (error: any) {
             const errorMessage = error.response?.data?.message || 'Ошибка сохранения товара';
@@ -76,10 +120,61 @@ export const GoodsForm: React.FC<GoodsFormProps> = ({ goods, onSuccess, onCancel
         }
     };
 
+    // Анализ фотографий ботом → перезапись полей карточки
+    const handleAnalyze = async () => {
+        setAnalyzing(true);
+        try {
+            const card = await adminService.analyzePhotos(photos);
+            if (card.error) {
+                toast.error(card.error);
+                return;
+            }
+            setFormData(prev => ({
+                ...prev,
+                name: card.name ?? prev.name,
+                description: card.shortDescription ?? prev.description,
+                detailedDescription: card.fullDescription ?? prev.detailedDescription,
+                careInstructions: card.care ?? prev.careInstructions,
+                categoryId: categories.find(c => c.type === 'PLANT')?.id ?? prev.categoryId
+            }));
+            toast.success('Поля заполнены по фото');
+        } catch {
+            toast.error('Не удалось проанализировать фото');
+        } finally {
+            setAnalyzing(false);
+        }
+    };
+
+    // Заполнение полей карточки по введённому названию (без передачи фото). Название не перезаписываем.
+    const handleAnalyzeByName = async () => {
+        const name = formData.name.trim();
+        if (!name) return;
+        setAnalyzingName(true);
+        try {
+            const card = await adminService.analyzeByName(name);
+            if (card.error) {
+                toast.error(card.error);
+                return;
+            }
+            setFormData(prev => ({
+                ...prev,
+                description: card.shortDescription ?? prev.description,
+                detailedDescription: card.fullDescription ?? prev.detailedDescription,
+                careInstructions: card.care ?? prev.careInstructions,
+                categoryId: categories.find(c => c.type === 'PLANT')?.id ?? prev.categoryId
+            }));
+            toast.success('Поля заполнены по названию');
+        } catch {
+            toast.error('Не удалось проанализировать название');
+        } finally {
+            setAnalyzingName(false);
+        }
+    };
+
     return (
         <Form onSubmit={handleSubmit}>
             <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k as FormTab)}>
-                <Nav variant="tabs" className="mb-3">
+                <Nav variant="tabs" className="admin-tabs mb-3">
                     <Nav.Item>
                         <Nav.Link eventKey="main">Основное</Nav.Link>
                     </Nav.Item>
@@ -89,6 +184,9 @@ export const GoodsForm: React.FC<GoodsFormProps> = ({ goods, onSuccess, onCancel
                     <Nav.Item>
                         <Nav.Link eventKey="care">Уход</Nav.Link>
                     </Nav.Item>
+                    <Nav.Item>
+                        <Nav.Link eventKey="photos">Фотографии</Nav.Link>
+                    </Nav.Item>
                 </Nav>
 
                 <Tab.Content>
@@ -96,7 +194,20 @@ export const GoodsForm: React.FC<GoodsFormProps> = ({ goods, onSuccess, onCancel
                         <Row>
                             <Col md={6}>
                                 <Form.Group className="mb-3">
-                                    <Form.Label>Название *</Form.Label>
+                                    <div className="d-flex align-items-center justify-content-between gap-2">
+                                        <Form.Label className="mb-0">Название *</Form.Label>
+                                        <Button
+                                            variant="outline-success"
+                                            size="sm"
+                                            disabled={!formData.name.trim() || analyzingName || loading}
+                                            onClick={handleAnalyzeByName}
+                                            title="Заполнить описание, детали, уход и категорию по названию"
+                                        >
+                                            {analyzingName
+                                                ? <><Spinner animation="border" size="sm" className="me-1" />Анализ…</>
+                                                : '✨ Заполнить по названию'}
+                                        </Button>
+                                    </div>
                                     <Form.Control
                                         type="text"
                                         name="name"
@@ -105,6 +216,7 @@ export const GoodsForm: React.FC<GoodsFormProps> = ({ goods, onSuccess, onCancel
                                         required
                                         minLength={3}
                                         maxLength={500}
+                                        className="mt-1"
                                     />
                                 </Form.Group>
                             </Col>
@@ -234,6 +346,12 @@ export const GoodsForm: React.FC<GoodsFormProps> = ({ goods, onSuccess, onCancel
                                 Поддерживается Markdown синтаксис: **жирный**, *курсив*, заголовки (#), списки, ссылки и т.д.
                             </Form.Text>
                         </Form.Group>
+                    </Tab.Pane>
+
+                    <Tab.Pane eventKey="photos">
+                        {mediaLoading
+                            ? <div className="text-muted py-4 text-center">Загрузка фотографий…</div>
+                            : <MediaManager photos={photos} onChange={setPhotos} onAnalyze={handleAnalyze} analyzing={analyzing} />}
                     </Tab.Pane>
                 </Tab.Content>
             </Tab.Container>

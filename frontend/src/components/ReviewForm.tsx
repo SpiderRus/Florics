@@ -10,10 +10,11 @@ interface ReviewFormProps {
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ goodsId, onReviewSubmitted }) => {
-    const [rating, setRating] = useState(5);
+    const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [commentError, setCommentError] = useState<string>('');
+    const [ratingError, setRatingError] = useState<string>('');
 
     const validateComment = (value: string): string => {
         const trimmed = value.trim();
@@ -32,15 +33,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ goodsId, onReviewSubmitted }) =
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const error = validateComment(comment);
-        if (error) {
-            setCommentError(error);
-            toast.error(error);
+        if (rating < 1) {
+            setRatingError('Пожалуйста, выберите оценку');
             return;
         }
 
-        if (rating < 1 || rating > 5) {
-            toast.error('Рейтинг должен быть от 1 до 5');
+        const error = validateComment(comment);
+        if (error) {
+            setCommentError(error);
             return;
         }
 
@@ -48,9 +48,10 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ goodsId, onReviewSubmitted }) =
         try {
             await reviewService.createReview({ goodsId, rating, comment: comment.trim() });
             toast.success('Отзыв успешно добавлен!');
-            setRating(5);
+            setRating(0);
             setComment('');
             setCommentError('');
+            setRatingError('');
             onReviewSubmitted();
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Ошибка при добавлении отзыва');
@@ -66,12 +67,16 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ goodsId, onReviewSubmitted }) =
                 <Form.Group className="mb-3">
                     <Form.Label>Ваша оценка</Form.Label>
                     <div>
-                        <StarRating 
-                            rating={rating} 
-                            readonly={false} 
-                            onRatingChange={setRating} 
+                        <StarRating
+                            rating={rating}
+                            readonly={false}
+                            onRatingChange={(value) => { setRating(value); setRatingError(''); }}
                         />
                     </div>
+                    {ratingError
+                        ? <div className="text-danger small mt-1">{ratingError}</div>
+                        : <Form.Text className="text-muted">Нажмите на звёзды, чтобы поставить оценку</Form.Text>
+                    }
                 </Form.Group>
 
                 <Form.Group className="mb-3">

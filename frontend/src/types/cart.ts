@@ -1,10 +1,25 @@
 import { Goods } from '../services/goodsService';
 
+export type CartItemKind = 'GOODS' | 'CUSTOM_FLORARIUM';
+
 export interface CartItem {
     id: string;
-    goods: Goods;
+    kind: CartItemKind;
+    goods: Goods | null;            // null для кастомного флорариума
     quantity: number;
     addedAt: string;
+    // Поля кастомного заказа (заполнены для kind === 'CUSTOM_FLORARIUM')
+    conversationId?: string | null;
+    imageUrl?: string | null;
+    customerComment?: string | null;
+    contact?: string | null;
+}
+
+export interface AddCustomFlorariumRequest {
+    conversationId: string;
+    imageUrl: string;
+    comment?: string;
+    contact?: string;
 }
 
 export interface CartSummary {
@@ -39,8 +54,8 @@ export interface CheckoutResponse {
 }
 
 export interface PurchasedItem {
-    goodsId: string;
+    goodsId: string | null;
     goodsName: string;
     quantity: number;
-    price: number;
+    price: number | null;
 }

@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Badge, Nav } from 'react-bootstrap';
+import { Cart } from 'react-bootstrap-icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 
@@ -31,33 +32,47 @@ const CartIcon: React.FC = () => {
         });
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCartClick();
+        }
+    };
+
     return (
         <Nav.Link
             onClick={handleCartClick}
-            style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
+            onKeyDown={handleKeyDown}
+            role="button"
+            tabIndex={0}
+            aria-label={`Корзина, товаров: ${totalItems}`}
+            style={{ display: 'inline-flex', alignItems: 'center' }}
             className="cart-icon-container"
         >
-            <span style={{ fontSize: '1.2rem' }}>🛒</span>
-            {totalItems > 0 && (
-                <Badge
-                    ref={badgeRef}
-                    bg="danger"
-                    pill
-                    style={{
-                        position: 'absolute',
-                        top: '0',
-                        right: '-5px',
-                        fontSize: '0.65rem',
-                        minWidth: '18px',
-                        height: '18px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    {totalItems}
-                </Badge>
-            )}
+            <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                <Cart size={20} aria-hidden="true" />
+                {totalItems > 0 && (
+                    <Badge
+                        ref={badgeRef}
+                        bg="danger"
+                        pill
+                        style={{
+                            position: 'absolute',
+                            top: '0',
+                            right: '-5px',
+                            fontSize: '0.65rem',
+                            minWidth: '18px',
+                            height: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        {totalItems}
+                    </Badge>
+                )}
+            </span>
+            <span className="d-lg-none ms-2">Корзина</span>
         </Nav.Link>
     );
 };

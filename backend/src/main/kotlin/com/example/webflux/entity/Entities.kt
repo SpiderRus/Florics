@@ -153,17 +153,34 @@ data class MediaEntity(
 // =====================================================
 @Table("cart_items")
 data class CartItemEntity(
+    @Id
+    val id: String? = null,
+
     @Column("user_id")
     val userId: String,
 
+    // NULL для кастомного флорариума (нет товара каталога)
     @Column("goods_id")
-    val goodsId: String,
+    val goodsId: String?,
 
     @Column("quantity")
     val quantity: Int,
 
     @Column("added_at")
-    val addedAt: OffsetDateTime = OffsetDateTime.now()
+    val addedAt: OffsetDateTime = OffsetDateTime.now(),
+
+    // Поля кастомного заказа (заполнены, когда goods_id IS NULL)
+    @Column("conversation_id")
+    val conversationId: String? = null,
+
+    @Column("image_url")
+    val imageUrl: String? = null,
+
+    @Column("customer_comment")
+    val customerComment: String? = null,
+
+    @Column("contact")
+    val contact: String? = null
 )
 
 // =====================================================
@@ -177,11 +194,13 @@ data class PurchaseEntity(
     @Column("user_id")
     val userId: String,
 
+    // NULL для кастомного заказа флорариума (нет товара каталога)
     @Column("goods_id")
-    val goodsId: String,
+    val goodsId: String?,
 
+    // NULL у кастомного заказа до того, как админ проставит цену
     @Column("price")
-    val price: BigDecimal,
+    val price: BigDecimal?,
 
     @Column("quantity")
     val quantity: Int,
@@ -190,7 +209,24 @@ data class PurchaseEntity(
     val purchaseDate: OffsetDateTime = OffsetDateTime.now(),
 
     @Column("deleted_at")
-    val deletedAt: OffsetDateTime? = null
+    val deletedAt: OffsetDateTime? = null,
+
+    // Поля кастомного заказа флорариума (заполнены, когда conversation_id IS NOT NULL)
+    @Column("conversation_id")
+    val conversationId: String? = null,
+
+    @Column("image_url")
+    val imageUrl: String? = null,
+
+    @Column("customer_comment")
+    val customerComment: String? = null,
+
+    @Column("contact")
+    val contact: String? = null,
+
+    // Статус кастомного заказа: NEW/IN_PROGRESS/DONE/CANCELLED; NULL для обычных покупок
+    @Column("status")
+    val status: String? = null
 )
 
 // =====================================================
@@ -238,25 +274,12 @@ data class AiConversationEntity(
     @Column("goods_id")
     val goodsId: String?,  // NULLABLE - разговоры могут быть не только о товарах
 
+    @Column("type")
+    val type: String = ConversationType.GOODS.name,  // GOODS | FLORARIUM (см. ConversationType)
+
     @Column("created_at")
     val createdAt: OffsetDateTime = OffsetDateTime.now(),
 
     @Column("updated_at")
     val updatedAt: OffsetDateTime = OffsetDateTime.now()
-)
-
-// =====================================================
-// GOODS TYPE DOCUMENT ENTITY
-// =====================================================
-@Table("goods_type_documents")
-data class GoodsTypeDocumentEntity(
-    @Id
-    @Column("document_id")
-    val documentId: String,
-
-    @Column("goods_type")
-    val goodsType: String, // PLANT, TERRARIUM, COURSE
-
-    @Column("created_at")
-    val createdAt: OffsetDateTime = OffsetDateTime.now()
 )

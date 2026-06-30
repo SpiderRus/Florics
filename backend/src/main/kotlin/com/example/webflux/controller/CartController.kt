@@ -99,6 +99,44 @@ class CartController(
         ResponseEntity.ok(cartService.mergeLocalCart(SecurityUtils.requireCurrentUserId(), request.items).toCartSummaryDto())
 
     /**
+     * Добавить кастомный флорариум в корзину (по результатам чата с дизайнером).
+     */
+    @PostMapping("/custom-florarium")
+    @PreAuthorize("hasRole('BUYER')")
+    @Operation(summary = "Добавить кастомный флорариум в корзину", description = "Создаёт в корзине заказ кастомного флорариума с id разговора и выбранной картинкой")
+    suspend fun addCustomFlorarium(
+        @org.springframework.validation.annotation.Validated @RequestBody request: AddCustomFlorariumRequest
+    ): ResponseEntity<CartItemDto> {
+        return try {
+            val item = cartService.addCustomFlorarium(
+                userId = SecurityUtils.requireCurrentUserId(),
+                conversationId = request.conversationId,
+                imageUrl = request.imageUrl,
+                comment = request.comment,
+                contact = request.contact
+            )
+            ResponseEntity.ok(item.toCartItemDto())
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    /**
+     * Удалить кастомный элемент корзины по id.
+     */
+    @DeleteMapping("/custom-items/{id}")
+    @PreAuthorize("hasRole('BUYER')")
+    @Operation(summary = "Удалить кастомный элемент корзины", description = "Удаляет кастомный флорариум из корзины по id строки")
+    suspend fun removeCustomItem(@PathVariable id: String): ResponseEntity<Void> {
+        return try {
+            cartService.removeCustomItem(SecurityUtils.requireCurrentUserId(), id)
+            ResponseEntity.noContent().build()
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
+        }
+    }
+
+    /**
      * Оформить заказ
      */
     @PostMapping("/checkout")
@@ -111,24 +149,46 @@ class CartController(
         if (cart.items.isEmpty())
             throw IllegalStateException("Корзина пуста")
 
-        // Создаём Purchase для каждого товара с корректным quantity
+        // Создаём Purchase для каждого элемента корзины
         cart.items.forEach { item ->
-            purchaseService.recordPurchase(
-                userId = userId,
-                goodsId = item.goods.id!!,
-                price = item.goods.price,
-                quantity = item.quantity
-            )
+            val goods = item.goods
+            if (goods != null) {
+                purchaseService.recordPurchase(
+                    userId = userId,
+                    goodsId = goods.id!!,
+                    price = goods.price,
+                    quantity = item.quantity
+                )
+            } else {
+                // Кастомный флорариум: заказ без цены (проставит админ), статус NEW
+                purchaseService.recordCustomOrder(
+                    userId = userId,
+                    conversationId = item.conversationId!!,
+                    imageUrl = item.imageUrl!!,
+                    comment = item.customerComment,
+                    contact = item.contact
+                )
+            }
         }
 
-        // Подготавливаем список купленных товаров
+        // Подготавливаем список купленных позиций
         val purchasedItems = cart.items.map { item ->
-            PurchasedItem(
-                goodsId = item.goods.id!!,
-                goodsName = item.goods.name,
-                quantity = item.quantity,
-                price = item.goods.price
-            )
+            val goods = item.goods
+            if (goods != null) {
+                PurchasedItem(
+                    goodsId = goods.id!!,
+                    goodsName = goods.name,
+                    quantity = item.quantity,
+                    price = goods.price
+                )
+            } else {
+                PurchasedItem(
+                    goodsId = null,
+                    goodsName = "Кастомный флорариум",
+                    quantity = item.quantity,
+                    price = null
+                )
+            }
         }
 
         return cartService.clearCart(userId).let {

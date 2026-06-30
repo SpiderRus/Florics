@@ -1,6 +1,7 @@
 package com.example.webflux.repository
 
 import com.example.webflux.entity.AiConversationEntity
+import com.example.webflux.entity.ConversationType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -27,6 +28,9 @@ interface AiConversationR2dbcRepository : CoroutineCrudRepository<AiConversation
 
     @Query("SELECT * FROM ai_conversations WHERE user_id = :userId AND goods_id = :goodsId")
     suspend fun findByUserIdAndGoodsId(userId: String, goodsId: String): AiConversationEntity?
+
+    @Query("SELECT * FROM ai_conversations WHERE user_id = :userId AND type = 'FLORARIUM' ORDER BY created_at DESC LIMIT 1")
+    suspend fun findLatestFlorariumByUserId(userId: String): AiConversationEntity?
 
     @Query("DELETE FROM ai_conversations WHERE user_id = :userId AND goods_id = :goodsId")
     suspend fun deleteByUserIdAndGoodsId(userId: String, goodsId: String)
@@ -94,6 +98,17 @@ class AiConversationRepository(
         aiConversationR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId)?.conversationId
 
     /**
+     * Найти последний (самый свежий) florarium-разговор пользователя.
+     *
+     * Используется при загрузке страницы дизайнера: восстанавливаем последний диалог пользователя.
+     *
+     * @param userId ID пользователя (UUID string)
+     * @return UUID разговора или null, если у пользователя ещё нет florarium-разговоров
+     */
+    suspend fun findLatestFlorariumConversationByUser(userId: String): String? =
+        aiConversationR2dbcRepository.findLatestFlorariumByUserId(userId)?.conversationId
+
+    /**
      * Удалить маппинг при удалении разговора
      *
      * @param conversationId UUID разговора для удаления
@@ -111,19 +126,27 @@ class AiConversationRepository(
     suspend fun exists(conversationId: String): Boolean = aiConversationR2dbcRepository.existsById(conversationId)
 
     /**
-     * Сохранить общий разговор без привязки к товару
+     * Сохранить florarium-разговор (тип FLORARIUM, без привязки к товару)
      *
      * @param userId ID пользователя (UUID string)
      * @param conversationId UUID разговора (PRIMARY KEY)
      * @return Сохраненная entity
      */
-    suspend fun saveGeneralConversation(userId: String, conversationId: String): AiConversationEntity {
+    suspend fun saveFlorariumConversation(userId: String, conversationId: String): AiConversationEntity {
         val entity = AiConversationEntity(
             conversationId = conversationId,
             userId = userId,
-            goodsId = null  // Общий разговор без привязки к товару
+            goodsId = null,
+            type = ConversationType.FLORARIUM.name
         )
 
-        return aiConversationR2dbcRepository.save(entity)
+        // conversationId — натуральный PK (задаётся нами). repository.save() для сущности с уже
+        // заполненным @Id делает UPDATE (0 строк) вместо INSERT, поэтому вставляем явно через
+        // entityTemplate с откатом в update (как в saveOrCreateGoodsConversation).
+        return (try {
+            entityTemplate.insert(entity)
+        } catch (e: DataIntegrityViolationException) {
+            entityTemplate.update(entity)
+        }).awaitSingle()
     }
 }

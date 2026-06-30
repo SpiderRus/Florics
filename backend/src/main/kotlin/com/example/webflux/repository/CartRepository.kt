@@ -28,10 +28,12 @@ interface CartItemR2dbcRepository : CoroutineCrudRepository<CartItemEntity, Stri
     @Query("DELETE FROM cart_items WHERE user_id = :userId")
     suspend fun deleteByUserId(userId: String): Int?
 
+    // ON CONFLICT с предикатом WHERE — арбитр совпадает с частичным уникальным индексом
+    // uq_cart_user_goods (user_id, goods_id) WHERE goods_id IS NOT NULL.
     @Query("""
         INSERT INTO cart_items (user_id, goods_id, quantity, added_at)
         VALUES (:userId, :goodsId, :quantity, CURRENT_TIMESTAMP)
-        ON CONFLICT (user_id, goods_id)
+        ON CONFLICT (user_id, goods_id) WHERE goods_id IS NOT NULL
         DO UPDATE SET quantity = cart_items.quantity + :quantity
     """)
     suspend fun upsert(userId: String, goodsId: String, quantity: Int)
@@ -60,11 +62,14 @@ class CartRepository(
      * Добавить товар в корзину или увеличить количество если уже существует
      */
     suspend fun addOrUpdateItem(item: CartItem): CartItem {
-        // Используем upsert для корректной работы с составным ключом
-        cartItemR2dbcRepository.upsert(item.userId, item.goodsId, item.quantity)
+        // Путь обычного товара каталога — goodsId обязателен
+        val goodsId = requireNotNull(item.goodsId) { "goodsId is required for catalog cart item" }
+
+        // Используем upsert для корректной работы с уникальным индексом (user_id, goods_id)
+        cartItemR2dbcRepository.upsert(item.userId, goodsId, item.quantity)
 
         // Загружаем обновлённую запись
-        return cartItemR2dbcRepository.findByUserIdAndGoodsId(item.userId, item.goodsId)
+        return cartItemR2dbcRepository.findByUserIdAndGoodsId(item.userId, goodsId)
             ?.let { CartItemMapper.toModel(it) }
             ?: throw IllegalStateException("Failed to add or update cart item")
     }
@@ -107,4 +112,22 @@ class CartRepository(
      */
     suspend fun findByUserIdAndGoodsId(userId: String, goodsId: String): CartItem? =
         cartItemR2dbcRepository.findByUserIdAndGoodsId(userId, goodsId)?.let { CartItemMapper.toModel(it) }
+
+    /**
+     * Добавить кастомный элемент (флорариум) в корзину — всегда новая строка (без upsert/дедупа).
+     * id генерируется БД (DEFAULT gen_random_uuid).
+     */
+    suspend fun insertCustomItem(item: CartItem): CartItem =
+        CartItemMapper.toModel(cartItemR2dbcRepository.save(CartItemMapper.toEntity(item.copy(id = null))))
+
+    /**
+     * Найти элемент корзины по суррогатному id.
+     */
+    suspend fun findById(id: String): CartItem? =
+        cartItemR2dbcRepository.findById(id)?.let { CartItemMapper.toModel(it) }
+
+    /**
+     * Удалить элемент корзины по суррогатному id (используется для кастомных элементов).
+     */
+    suspend fun deleteById(id: String) = cartItemR2dbcRepository.deleteById(id)
 }

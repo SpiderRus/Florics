@@ -41,6 +41,33 @@ class GoodsController(
         }
 
 
+    @GetMapping("/search")
+    @Operation(
+        summary = "Поиск товаров с пагинацией",
+        description = "Серверные поиск (по названию/описанию), сортировка и пагинация по типу товара для каталога."
+    )
+    suspend fun searchGoods(
+        @Parameter(description = "Тип товара (PLANT, TERRARIUM, COURSE)", example = "PLANT")
+        @RequestParam type: GoodsType,
+        @Parameter(description = "Текст поиска по названию/описанию")
+        @RequestParam(required = false) query: String?,
+        @Parameter(description = "Поле сортировки (name, price, created_at)", example = "name")
+        @RequestParam(defaultValue = "created_at") sortBy: String,
+        @Parameter(description = "Направление (asc, desc)", example = "asc")
+        @RequestParam(defaultValue = "desc") sortOrder: String,
+        @Parameter(description = "Номер страницы (с 0)", example = "0")
+        @RequestParam(defaultValue = "0") page: Int,
+        @Parameter(description = "Размер страницы (1-50)", example = "12")
+        @RequestParam(defaultValue = "12") size: Int
+    ): ResponseEntity<PagedGoodsResponse> {
+        require(page >= 0) { "Page must be >= 0" }
+        require(size in 1..50) { "Size must be between 1 and 50" }
+        return ResponseEntity.ok(
+            goodsService.searchGoodsByType(type, query, sortBy, sortOrder.lowercase(), page, size)
+        )
+    }
+
+
     @GetMapping("/{id}")
     @Operation(
         summary = "Получить товар по ID",

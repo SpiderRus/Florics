@@ -18,3 +18,7 @@ export interface GoodsRating {
     averageRating: number;
     totalReviews: number;
 }
+
+export interface GoodsRatingItem extends GoodsRating {
+    goodsId: string;
+}

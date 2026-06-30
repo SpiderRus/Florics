@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Form, Button, Spinner, Alert, Modal } from 'react-bootstrap';
+import { SendFill } from 'react-bootstrap-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { aiBotService } from '../services/aiBotService';
 import { Conversation, Message } from '../types/aibot';
 import MarkdownContent from './MarkdownContent';
+import LoadingSpinner from './LoadingSpinner';
+import { useChatScroll } from '../hooks/useChatScroll';
 
 interface AiChatBotProps {
     goodsId: string;
@@ -23,51 +26,14 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
     const [sending, setSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showClearModal, setShowClearModal] = useState(false);
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Автоматическая прокрутка вниз при новых сообщениях
-    const scrollToBottom = (instant: boolean = false) => {
-        if (messagesContainerRef.current) {
-            const container = messagesContainerRef.current;
-            const scrollOptions: ScrollToOptions = {
-                top: container.scrollHeight,
-                behavior: instant ? 'auto' : 'smooth'
-            };
-            container.scrollTo(scrollOptions);
-        }
-    };
+    // Общий автоскролл (прилипание к низу)
+    const { containerRef: messagesContainerRef, scrollToBottom, handleScroll } = useChatScroll(messages);
 
-    useEffect(() => {
-        if (messages.length > 0) {
-            scrollToBottom(false);
-        }
-    }, [messages]);
-
-    // Дополнительный скролл при завершении начальной загрузки
-    useEffect(() => {
-        if (!isInitialLoad && messages.length > 0) {
-            // Даем время на рендеринг всех сообщений
-            setTimeout(() => {
-                scrollToBottom(true);
-            }, 150);
-        }
-    }, [isInitialLoad]);
-
-    // Скролл при первом рендере после загрузки
-    useEffect(() => {
-        if (!loading && messages.length > 0 && messagesContainerRef.current) {
-            setTimeout(() => {
-                scrollToBottom(true);
-            }, 100);
-        }
-    }, [loading]);
-
-    // Отслеживание видимости чата (когда вкладка активируется)
+    // Доскролл к низу, когда вкладка чата становится видимой
     useEffect(() => {
         const container = chatContainerRef.current;
         if (!container) return;
@@ -75,11 +41,8 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    // Когда чат становится видимым
                     if (entry.isIntersecting && messages.length > 0) {
-                        setTimeout(() => {
-                            scrollToBottom(true);
-                        }, 100);
+                        setTimeout(() => scrollToBottom(true), 100);
                     }
                 });
             },
@@ -87,10 +50,7 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
         );
 
         observer.observe(container);
-
-        return () => {
-            observer.disconnect();
-        };
+        return () => observer.disconnect();
     }, [messages]);
 
     // Загрузка или создание conversation при монтировании
@@ -113,14 +73,6 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
                 // Загрузить историю сообщений
                 const msgs = await aiBotService.getMessages(conv.id);
                 setMessages(msgs);
-
-                // Отметить что начальная загрузка завершена
-                setIsInitialLoad(false);
-
-                // Прокрутить вниз после загрузки
-                setTimeout(() => {
-                    scrollToBottom(true);
-                }, 200);
             } catch (err: any) {
                 console.error('Failed to initialize conversation:', err);
                 setError('Наш эксперт сейчас не на связи, но мы уже работаем над этим! Пожалуйста, загляните сюда чуть позже — мы будем рады ответить на все ваши вопросы.');
@@ -158,33 +110,48 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
             content: userMessage,
             createdAt: new Date().toISOString()
         };
+        const botMessageId = 'temp-bot-' + Date.now();
         setMessages(prev => [...prev, tempUserMessage]);
 
+        let botInserted = false;
         try {
-            // Отправить сообщение и получить ответ от AI
-            const response = await aiBotService.sendMessage(conversation.id, userMessage);
+            // Отправить сообщение и получать ответ потоком (SSE)
+            await aiBotService.sendMessageStream(conversation.id, userMessage, (token) => {
+                setMessages(prev => {
+                    if (!botInserted) {
+                        botInserted = true;
+                        // Первый токен — добавить наполняющееся сообщение бота
+                        return [...prev, {
+                            id: botMessageId,
+                            conversationId: conversation.id,
+                            role: 'assistant',
+                            content: token,
+                            createdAt: new Date().toISOString()
+                        }];
+                    }
+                    // Дописать токен к сообщению бота
+                    return prev.map(m =>
+                        m.id === botMessageId ? { ...m, content: m.content + token } : m
+                    );
+                });
+            });
 
-            // Добавить ответ бота в UI
-            const botMessage: Message = {
-                id: response.messageId,
-                conversationId: response.conversationId,
-                role: 'assistant',
-                content: response.response,
-                createdAt: response.timestamp
-            };
-
-            // Обновить сообщение пользователя с реальным ID (если нужно) и добавить ответ бота
-            setMessages(prev => [...prev, botMessage]);
+            // Стрим завершился, но ни одного токена не пришло (таймаут/пустой ответ AI)
+            if (!botInserted)
+                throw new Error('empty');
         } catch (err: any) {
             console.error('Failed to send message:', err);
-            // Удалить оптимистичное сообщение пользователя при ошибке
-            setMessages(prev => prev.filter(m => m.id !== tempUserMessage.id));
+            // Удаляем оптимистичные сообщения и возвращаем введённый текст для повторной отправки
+            setMessages(prev => prev.filter(m => m.id !== tempUserMessage.id && m.id !== botMessageId));
+            if (err.message !== 'Unauthorized')
+                setInputMessage(userMessage);
 
-            if (err.response?.status === 503) {
-                setError('AI консультант временно недоступен. Попробуйте позже.');
-            } else {
-                setError('Не удалось отправить сообщение. Попробуйте еще раз.');
-            }
+            if (err.status === 503)
+                setError('AI консультант временно недоступен. Попробуйте позже — ваш вопрос сохранён.');
+            else if (err.message === 'empty')
+                setError('Консультант не успел ответить. Ваш вопрос сохранён — нажмите «Отправить» ещё раз.');
+            else if (err.message !== 'Unauthorized')
+                setError('Не удалось отправить сообщение. Ваш вопрос сохранён — попробуйте ещё раз.');
         } finally {
             setSending(false);
             // Вернуть фокус на поле ввода после получения ответа
@@ -261,12 +228,7 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
 
     // Сценарий 3: Пользователь авторизован и является покупателем - загрузка чата
     if (loading && !conversation) {
-        return (
-            <div className="text-center py-5">
-                <Spinner animation="border" variant="success" />
-                <p className="mt-2">Загрузка чата...</p>
-            </div>
-        );
+        return <LoadingSpinner text="Загрузка чата..." />;
     }
 
     return (
@@ -292,7 +254,15 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
             )}
 
             {/* Список сообщений */}
-            <div className="chat-messages" ref={messagesContainerRef}>
+            <div
+                className="chat-messages"
+                ref={messagesContainerRef}
+                onScroll={handleScroll}
+                role="log"
+                aria-live="polite"
+                aria-relevant="additions text"
+                aria-label="История диалога с AI консультантом"
+            >
                 {messages.length === 0 ? (
                     <div className="chat-empty-state">
                         <h5>💬 AI Консультант</h5>
@@ -314,18 +284,16 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
                     ))
                 )}
 
-                {/* Индикатор загрузки при отправке */}
+                {/* Индикатор «печатает…» — держится, пока бот не вернёт ответ целиком */}
                 {sending && (
                     <div className="chat-message chat-message-bot">
-                        <div className="chat-typing-indicator">
-                            <span></span>
-                            <span></span>
-                            <span></span>
+                        <div className="chat-typing-indicator" role="status" aria-label="Консультант печатает">
+                            <span aria-hidden="true"></span>
+                            <span aria-hidden="true"></span>
+                            <span aria-hidden="true"></span>
                         </div>
                     </div>
                 )}
-
-                <div ref={messagesEndRef} />
             </div>
 
             {/* Поле ввода */}
@@ -345,8 +313,9 @@ const AiChatBot: React.FC<AiChatBotProps> = ({ goodsId, goodsName, isAuthenticat
                         variant="success"
                         disabled={!inputMessage.trim() || sending || !conversation}
                         className="ms-2 chat-send-button"
+                        aria-label="Отправить сообщение"
                     >
-                        {sending ? <Spinner animation="border" size="sm" /> : '➤'}
+                        {sending ? <Spinner animation="border" size="sm" /> : <SendFill aria-hidden="true" />}
                     </Button>
                 </Form>
             </div>

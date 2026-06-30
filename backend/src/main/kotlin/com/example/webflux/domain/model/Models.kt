@@ -100,21 +100,33 @@ data class Goods(
  * Внутренняя модель элемента корзины для хранения
  */
 data class CartItem(
+    val id: String? = null,      // UUID строки корзины (суррогатный PK; null для новой записи)
     val userId: String,          // UUID пользователя
-    val goodsId: String,         // UUID товара
+    val goodsId: String?,        // UUID товара; NULL для кастомного флорариума
     val quantity: Int,           // Количество
-    val addedAt: OffsetDateTime  // Время добавления
+    val addedAt: OffsetDateTime, // Время добавления
+    // Поля кастомного заказа (заполнены, когда goodsId == null)
+    val conversationId: String? = null,
+    val imageUrl: String? = null,
+    val customerComment: String? = null,
+    val contact: String? = null
 )
 
 /**
- * Элемент корзины с полной информацией о товаре
+ * Элемент корзины с полной информацией о товаре.
+ * goods == null для кастомного флорариума (товара каталога нет) — тогда заполнены custom-поля.
  */
 data class CartItemWithGoods(
     val id: String,
-    val goods: Goods,
+    val goods: Goods?,
     val category: Category?,
     val quantity: Int,
-    val addedAt: OffsetDateTime
+    val addedAt: OffsetDateTime,
+    // Поля кастомного заказа (заполнены, когда goods == null)
+    val conversationId: String? = null,
+    val imageUrl: String? = null,
+    val customerComment: String? = null,
+    val contact: String? = null
 )
 
 /**
@@ -132,10 +144,16 @@ data class CartSummary(
 data class Purchase(
     val id: String?, // UUID - null для новых записей, БД генерирует автоматически
     val userId: String,
-    val goodsId: String,
-    val price: BigDecimal,
+    val goodsId: String?,        // NULL для кастомного заказа флорариума
+    val price: BigDecimal?,      // NULL у кастомного заказа до проставления цены админом
     val purchaseDate: OffsetDateTime,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    // Поля кастомного заказа флорариума (заполнены, когда conversationId != null)
+    val conversationId: String? = null,
+    val imageUrl: String? = null,
+    val customerComment: String? = null,
+    val contact: String? = null,
+    val status: String? = null   // NEW/IN_PROGRESS/DONE/CANCELLED; null для обычных покупок
 )
 
 // =====================================================
@@ -149,20 +167,4 @@ data class Review(
     val comment: String,
     val createdAt: OffsetDateTime,
     val updatedAt: OffsetDateTime
-)
-
-// =====================================================
-// GOODS TYPE DOCUMENT MODEL
-// =====================================================
-/**
- * Связь между типом товара и документом AI Agent
- *
- * Представляет документ, загруженный в AI Agent и ассоциированный
- * с конкретным типом товаров (PLANT, TERRARIUM, COURSE). Документ
- * становится доступен для RAG запросов при чате о товарах этого типа.
- */
-data class GoodsTypeDocument(
-    val documentId: String,        // UUID из AI Agent DocumentResponse.id
-    val goodsType: GoodsType,      // PLANT, TERRARIUM или COURSE
-    val createdAt: OffsetDateTime  // Когда создана связь
 )

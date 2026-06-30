@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {useParams, useNavigate} from 'react-router-dom';
-import {Container, Row, Col, Card, Badge, Button, Spinner} from 'react-bootstrap';
+import {Container, Row, Col, Card, Badge, Button} from 'react-bootstrap';
+import LoadingSpinner from './LoadingSpinner';
 import {Goods, goodsService} from '../services/goodsService';
 import {purchaseService} from '../services/purchaseService';
 import {useAuth} from '../contexts/AuthContext';
@@ -37,11 +38,7 @@ const MasterClassPlayer: React.FC = () => {
     };
 
     if (authLoading || loading) {
-        return (
-            <Container className="d-flex justify-content-center align-items-center" style={{minHeight: '60vh'}}>
-                <Spinner animation="border" variant="success"/>
-            </Container>
-        );
+        return <LoadingSpinner text="Загрузка курса..." />;
     }
 
     if (!course) {
@@ -74,7 +71,7 @@ const MasterClassPlayer: React.FC = () => {
                         <Button
                             variant="success"
                             onClick={() => navigate('/masterclasses')}
-                            style={{marginTop: '2rem', borderRadius: '25px'}}
+                            style={{marginTop: '2rem', borderRadius: 'var(--radius-pill)'}}
                         >
                             Перейти к каталогу курсов
                         </Button>
@@ -84,32 +81,50 @@ const MasterClassPlayer: React.FC = () => {
         );
     }
 
+    // YouTube/Vimeo watch-ссылки → embed-URL; остальное (kinescope и т.п.) считаем уже embed
+    const toEmbedUrl = (url: string): string => {
+        const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
+        if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+        const vimeo = url.match(/vimeo\.com\/(\d+)/);
+        if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+        return url;
+    };
+
+    const renderVideo = (url: string | null | undefined, title: string) => {
+        if (!url)
+            return (
+                <div className="masterclass-video-empty">
+                    <div style={{textAlign: 'center'}}>
+                        <div style={{fontSize: '3rem'}} aria-hidden="true">🎬</div>
+                        <p className="text-muted mb-0">Видео скоро появится</p>
+                    </div>
+                </div>
+            );
+        // Прямой видеофайл — нативный плеер с полными контролами
+        if (/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url))
+            return (
+                <video key={url} className="masterclass-video" src={url} controls controlsList="nodownload" preload="metadata">
+                    Ваш браузер не поддерживает воспроизведение видео.
+                </video>
+            );
+        // Иначе — встраиваемый плеер (YouTube/Vimeo/Kinescope)
+        return (
+            <div className="masterclass-video-frame">
+                <iframe
+                    src={toEmbedUrl(url)}
+                    title={title}
+                    allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                    allowFullScreen
+                />
+            </div>
+        );
+    };
+
     return (
         <Container className="catalog-page" style={{paddingTop: '2rem'}}>
             <Row className="mt-4">
                 <Col md={8}>
-                    <div
-                        className="video-player-stub"
-                        style={{
-                            width: '100%',
-                            aspectRatio: '16/9',
-                            backgroundColor: 'var(--light-green)',
-                            borderRadius: '15px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            border: '2px dashed var(--sage-green)'
-                        }}
-                    >
-                        <div style={{textAlign: 'center'}}>
-                            <div style={{fontSize: '4rem'}}>🎬</div>
-                            <h3 style={{color: 'var(--forest-green)'}}>Видео плеер</h3>
-                            <p className="text-muted">Интеграция с Kinescope в разработке</p>
-                            <code style={{fontSize: '0.9rem', color: 'var(--sage-green)'}}>
-                                Video ID: {course.videoUrl}
-                            </code>
-                        </div>
-                    </div>
+                    {renderVideo(course.videoUrl, course.name)}
                 </Col>
                 <Col md={4}>
                     <Card>
@@ -134,7 +149,7 @@ const MasterClassPlayer: React.FC = () => {
                                 </>
                             )}
                             <hr/>
-                            <Button variant="outline-secondary" disabled style={{width: '100%', borderRadius: '25px'}}>
+                            <Button variant="outline-secondary" disabled style={{width: '100%', borderRadius: 'var(--radius-pill)'}}>
                                 📥 Скачать материалы (скоро)
                             </Button>
                         </Card.Body>

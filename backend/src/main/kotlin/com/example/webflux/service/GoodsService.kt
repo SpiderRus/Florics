@@ -114,4 +114,31 @@ class GoodsService(
             hasPrevious = page > 0
         )
     }
+
+    /**
+     * Серверные поиск/сортировка/пагинация по типу товара (для публичного каталога)
+     */
+    suspend fun searchGoodsByType(
+        type: GoodsType,
+        query: String?,
+        sortBy: String,
+        sortOrder: String,
+        page: Int,
+        size: Int
+    ): PagedGoodsResponse {
+        val (goods, totalElements) = goodsRepository.findByTypePaged(type, query, sortBy, sortOrder, page, size)
+        val totalPages = if (size > 0) ((totalElements + size - 1) / size).toInt() else 0
+
+        val goodsDtos = goods.map { goodsItem: Goods -> goodsItem.toGoodsDto(getCategoryForGoods(goodsItem)) }
+
+        return PagedGoodsResponse(
+            content = goodsDtos,
+            page = page,
+            size = size,
+            totalElements = totalElements,
+            totalPages = totalPages,
+            hasNext = page < totalPages - 1,
+            hasPrevious = page > 0
+        )
+    }
 }

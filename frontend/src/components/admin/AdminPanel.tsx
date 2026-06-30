@@ -3,9 +3,10 @@ import { Container, Nav, Tab } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { GoodsManagement } from './GoodsManagement';
+import { CustomOrdersManagement } from './CustomOrdersManagement';
 import { toast } from 'react-toastify';
 
-type AdminTab = 'goods' | 'analytics' | 'categories';
+type AdminTab = 'goods' | 'orders' | 'analytics' | 'categories';
 
 export const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<AdminTab>('goods');
@@ -58,9 +59,12 @@ export const AdminPanel: React.FC = () => {
             <h2 className="mb-4">Панель администратора</h2>
 
             <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k as AdminTab)}>
-                <Nav variant="tabs" className="mb-4">
+                <Nav variant="tabs" className="admin-tabs mb-4">
                     <Nav.Item>
                         <Nav.Link eventKey="goods">Товары</Nav.Link>
+                    </Nav.Item>
+                    <Nav.Item>
+                        <Nav.Link eventKey="orders">Заказы</Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
                         <Nav.Link eventKey="analytics" disabled>
@@ -77,6 +81,9 @@ export const AdminPanel: React.FC = () => {
                 <Tab.Content>
                     <Tab.Pane eventKey="goods">
                         <GoodsManagement />
+                    </Tab.Pane>
+                    <Tab.Pane eventKey="orders">
+                        <CustomOrdersManagement />
                     </Tab.Pane>
                     <Tab.Pane eventKey="analytics">
                         <div className="text-center text-muted p-5">

@@ -57,15 +57,26 @@ const MediaModal: React.FC<MediaModalProps> = ({ show, mediaItems, currentIndex,
         onNavigate(newIndex);
     }, [currentIndex, mediaItems.length, currentItem, onNavigate]);
 
+    // Навигация стрелками с клавиатуры, пока модалка открыта (Escape закрывает через Bootstrap Modal)
+    useEffect(() => {
+        if (!show || mediaItems.length <= 1) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') handlePrev();
+            else if (e.key === 'ArrowRight') handleNext();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [show, mediaItems.length, handlePrev, handleNext]);
+
     return (
         <Modal show={show} onHide={handleHide} fullscreen className="image-modal">
             <Modal.Body className="p-0">
                 <div className="image-modal-content">
-                    <button className="modal-close" onClick={handleHide}>×</button>
+                    <button type="button" className="modal-close" onClick={handleHide} aria-label="Закрыть">×</button>
                     {mediaItems.length > 1 && (
                         <>
-                            <button className="modal-prev" onClick={handlePrev}>‹</button>
-                            <button className="modal-next" onClick={handleNext}>›</button>
+                            <button type="button" className="modal-prev" onClick={handlePrev} aria-label="Предыдущее медиа">‹</button>
+                            <button type="button" className="modal-next" onClick={handleNext} aria-label="Следующее медиа">›</button>
                         </>
                     )}
                     {currentItem ? (

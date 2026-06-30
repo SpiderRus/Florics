@@ -2,11 +2,54 @@
   --forest-green: #2d5016;
   --sage-green: #4a7c2c;
   --leaf-green: #7fa650;
-  --warm-brown: #8b7355;
+  --warm-brown: #6f5b40;
   --cream: #f4f1ea;
   --light-green: #e8f5e0;
   --shadow: rgba(45, 80, 22, 0.1);
+
+  /* Шкала отступов */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --space-6: 3rem;
+
+  /* Адаптивная типографика (clamp: min, предпочт., max) */
+  --fs-hero: clamp(2rem, 5vw + 1rem, 3.5rem);
+  --fs-hero-sub: clamp(1.1rem, 2.5vw + 0.4rem, 1.5rem);
+  --fs-h1: clamp(1.75rem, 3vw + 0.5rem, 2.5rem);
+  --fs-brand: clamp(1.4rem, 4vw, 1.8rem);
+
+  /* Адаптивные высоты медиа */
+  --media-card-h: clamp(180px, 40vw, 250px);
+  --media-large-h: clamp(240px, 50vw, 400px);
+
+  /* Шрифты: характерный display для заголовков, чистый humanist sans для текста */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Радиусы */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Тени */
+  --shadow-sm: 0 2px 8px rgba(45, 80, 22, 0.08);
+  --shadow-md: 0 6px 20px rgba(45, 80, 22, 0.12);
+
+  /* Бренд-палитра поверх Bootstrap (для .text-success/.bg-success/бейджей) */
+  --bs-success: #4a7c2c;
+  --bs-success-rgb: 74, 124, 44;
+  --bs-font-sans-serif: var(--font-body);
 }
+
+/*
+ * Breakpoints (как в Bootstrap 5; CSS-переменные внутри @media не работают,
+ * поэтому числа задаются литералами):
+ *   sm 576px · md 767.98px · lg 991.98px · xl 1200px
+ */
 
 * {
   margin: 0;
@@ -15,15 +58,84 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-body);
   background-color: var(--cream);
   color: var(--forest-green);
+}
+
+/* Заголовки и вордмарк — характерным display-шрифтом */
+h1, h2, h3, h4, h5, h6,
+.hero-title, .brand-text {
+  font-family: var(--font-display);
+}
+
+/* Единый радиус и насыщенность для всех Bootstrap-кнопок */
+.btn {
+  border-radius: var(--radius-md);
+  font-weight: 500;
+}
+
+/* Брендируем зелёные кнопки Bootstrap (вместо #198754) */
+.btn-success {
+  --bs-btn-bg: var(--sage-green);
+  --bs-btn-border-color: var(--sage-green);
+  --bs-btn-hover-bg: var(--forest-green);
+  --bs-btn-hover-border-color: var(--forest-green);
+  --bs-btn-active-bg: var(--forest-green);
+  --bs-btn-active-border-color: var(--forest-green);
+  --bs-btn-disabled-bg: var(--sage-green);
+  --bs-btn-disabled-border-color: var(--sage-green);
+}
+
+.btn-outline-success {
+  --bs-btn-color: var(--sage-green);
+  --bs-btn-border-color: var(--sage-green);
+  --bs-btn-hover-bg: var(--sage-green);
+  --bs-btn-hover-border-color: var(--sage-green);
+  --bs-btn-active-bg: var(--forest-green);
+  --bs-btn-active-border-color: var(--forest-green);
+}
+
+/* Доступность: видимый фокус с клавиатуры для всех интерактивных элементов */
+:focus-visible {
+  outline: 3px solid var(--sage-green);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Уважать системную настройку «уменьшить движение» */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* Основной контент растягивается, прижимая футер к низу на коротких страницах */
+.app-main {
+  flex: 1;
+}
+
+.home-see-all {
+  color: var(--sage-green);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.home-see-all:hover {
+  color: var(--forest-green);
+  text-decoration: underline;
 }
 
 /* Navbar */
@@ -45,7 +157,7 @@ body {
 
 .navbar-custom .brand-text {
   color: white !important;
-  font-size: 1.8rem;
+  font-size: var(--fs-brand);
   font-weight: 600;
   letter-spacing: 1px;
 }
@@ -62,45 +174,275 @@ body {
   transform: translateY(-2px);
 }
 
+/* Активный пункт навбара (текущий маршрут) */
+.navbar-custom .nav-link.active {
+  color: #fff !important;
+  font-weight: 600;
+  position: relative;
+}
+
+.navbar-custom .nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.1rem;
+  height: 2px;
+  background: var(--light-green);
+  border-radius: 2px;
+}
+
+/* В свёрнутом (бургер) меню подчёркивание убираем — пункты идут столбцом */
+@media (max-width: 991.98px) {
+  .navbar-custom .nav-link.active::after {
+    display: none;
+  }
+}
+
+/* Хлебные крошки в бренд-стиле */
+.brand-breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.brand-breadcrumb .breadcrumb-item a {
+  color: var(--sage-green);
+  text-decoration: none;
+}
+
+.brand-breadcrumb .breadcrumb-item a:hover {
+  color: var(--forest-green);
+  text-decoration: underline;
+}
+
+.brand-breadcrumb .breadcrumb-item.active {
+  color: var(--warm-brown);
+}
+
+/* Вертикальный разделитель "|" не нужен в свёрнутом (бургер) меню */
+@media (max-width: 991.98px) {
+  .nav-separator {
+    display: none;
+  }
+}
+
+/* Универсальный тулбар "заголовок + кнопки": в колонку на узких экранах */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (max-width: 575.98px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar > * {
+    width: 100%;
+  }
+}
+
+/* "Таблица → карточки" на узких экранах.
+   Класс .rtable вешается на <Table>; ячейкам с подписью добавляется data-label.
+   Селекторы с дочерними комбинаторами специфичнее .table-bordered/.table-striped,
+   поэтому фон/границы Bootstrap-таблицы корректно перекрываются. */
+@media (max-width: 767.98px) {
+  .rtable > thead {
+    display: none;
+  }
+
+  .rtable,
+  .rtable > tbody,
+  .rtable > tbody > tr,
+  .rtable > tbody > tr > td {
+    display: block;
+    width: 100%;
+  }
+
+  .rtable > tbody > tr {
+    margin-bottom: var(--space-3);
+    border: 1px solid var(--leaf-green);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .rtable > tbody > tr > td {
+    border: 0;
+    border-bottom: 1px solid var(--light-green);
+    background: transparent;
+    box-shadow: none;
+    text-align: left;
+  }
+
+  .rtable > tbody > tr > td[data-label] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .rtable > tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--forest-green);
+  }
+
+  .rtable > tbody > tr > td:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* ===== Админ-панель: адаптив под мобильные ===== */
+
+/* Полоса табов (панель админки и форма товара): на узких экранах —
+   горизонтальная прокрутка вместо переноса на несколько строк. */
+.admin-tabs {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.admin-tabs .nav-link {
+  white-space: nowrap;
+}
+
+/* Тулбар «Управление товарами»: на телефоне — в столбец, контролы на всю ширину. */
+@media (max-width: 575.98px) {
+  .admin-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-toolbar .admin-toolbar-controls {
+    width: 100%;
+    flex-direction: column;
+  }
+  .admin-toolbar .admin-toolbar-controls > * {
+    width: 100% !important;
+  }
+}
+
+/* Карточный режим админ-таблиц (.rtable) на телефоне */
+@media (max-width: 767.98px) {
+  /* Редактируемые ячейки (статус/цена/комментарий): подпись над контролом,
+     контрол на всю ширину карточки. */
+  .rtable > tbody > tr > td[data-label].rtable-stack {
+    display: block;
+  }
+  .rtable > tbody > tr > td[data-label].rtable-stack::before {
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+  .rtable .rtable-stack .form-select,
+  .rtable .rtable-stack .form-control {
+    width: 100%;
+  }
+
+  /* Ячейка действий: кнопки в ряд с переносом, тянутся на доступную ширину. */
+  .rtable td.rtable-actions .d-flex {
+    flex-wrap: wrap;
+  }
+  .rtable td.rtable-actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+/* Сетка фотографий товара (вкладка «Фотографии») */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+.media-tile {
+  position: relative;
+  border: 1px solid var(--light-green);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.media-tile-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
+.media-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: var(--forest-green);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.media-tile-actions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--cream);
+}
+.media-tile-actions button {
+  border: 1px solid var(--leaf-green);
+  background: #fff;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+.media-tile-actions button:disabled { opacity: 0.4; cursor: default; }
+.media-tile-actions .media-del { border-color: #dc3545; color: #dc3545; }
+
 /* Hero Section */
 .hero-section {
   background: linear-gradient(180deg, var(--light-green) 0%, var(--cream) 100%);
-  padding: 5rem 0;
+  padding: clamp(1.5rem, 3vw, 2.5rem) 0;
   text-align: center;
   border-bottom: 3px solid var(--leaf-green);
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  font-size: var(--fs-hero);
   font-weight: 700;
   color: var(--forest-green);
-  margin-bottom: 1rem;
+  margin-bottom: 0.4rem;
   text-shadow: 2px 2px 4px var(--shadow);
 }
 
 .hero-subtitle {
-  font-size: 1.5rem;
+  font-size: var(--fs-hero-sub);
   color: var(--sage-green);
-  margin-bottom: 2rem;
-  font-weight: 300;
+  margin-bottom: 0.75rem;
+  font-weight: 400;
 }
 
 .hero-description {
   max-width: 700px;
   margin: 0 auto;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--warm-brown);
-  line-height: 1.8;
+  line-height: 1.5;
 }
 
 .hero-description p {
-  margin-bottom: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.hero-description p:last-child {
+  margin-bottom: 0;
 }
 
 /* Content Section */
 .content-section {
   flex: 1;
-  padding: 4rem 0;
+  padding: 2.25rem 0;
 }
 
 .feature-grid {
@@ -113,9 +455,9 @@ body {
 .feature-card {
   background: white;
   padding: 2.5rem;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   text-align: center;
-  box-shadow: 0 4px 15px var(--shadow);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   border: 2px solid transparent;
 }
@@ -132,7 +474,7 @@ body {
   filter: drop-shadow(2px 2px 4px var(--shadow));
 }
 
-.feature-card h3 {
+.feature-card h2 {
   color: var(--forest-green);
   font-size: 1.5rem;
   margin-bottom: 1rem;
@@ -165,37 +507,88 @@ body {
   font-size: 0.95rem;
 }
 
-/* Clickable Card */
-.clickable-card {
-  cursor: pointer;
-}
-
 /* Catalog Page */
 .catalog-page {
   min-height: calc(100vh - 200px);
-  padding: 3rem 0;
+  padding: 1.75rem 0;
+}
+
+/* На мобильном контейнер занимает всю ширину вьюпорта, а у .catalog-page обнулён
+   горизонтальный padding — без него отрицательные margin'ы у .row.g-4 (−12px)
+   вылезают за край и дают горизонтальный скролл. Возвращаем боковой отступ. */
+@media (max-width: 767.98px) {
+  .catalog-page {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
 }
 
 .catalog-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
 }
 
 .catalog-header h1 {
   color: var(--forest-green);
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+  font-size: var(--fs-h1);
+  margin-bottom: 0.35rem;
+}
+
+/* Тулбар каталога: поиск + сортировка + счётчик */
+.catalog-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.catalog-search {
+  flex: 1 1 320px;
+  max-width: 480px;
+}
+
+.catalog-search .input-group-text {
+  background: white;
+  border-right: none;
+}
+
+.catalog-search .form-control {
+  border-left: none;
+}
+
+.catalog-sort {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 220px;
+}
+
+.catalog-count {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+  .catalog-toolbar > * {
+    flex: 1 1 100%;
+  }
+
+  .catalog-count {
+    margin-left: 0;
+  }
 }
 
 .back-button {
   background: var(--sage-green);
   color: white;
   border: none;
-  padding: 0.8rem 2rem;
-  border-radius: 25px;
+  padding: 0.6rem 1.6rem;
+  border-radius: var(--radius-pill);
   font-weight: 500;
   transition: all 0.3s;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .back-button:hover {
@@ -206,9 +599,9 @@ body {
 /* Plant Card */
 .goods-card {
   background: white;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 4px 15px var(--shadow);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   height: 100%;
 }
@@ -230,7 +623,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1rem;
+  row-gap: 0.5rem;
   padding-top: 0.5rem;
 }
 
@@ -289,8 +684,8 @@ body {
 .auth-card {
   background: white;
   padding: 2.5rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px var(--shadow);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   width: 100%;
   max-width: 500px;
   border: 2px solid transparent;
@@ -351,21 +746,11 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .hero-title {
-    font-size: 2.5rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1.2rem;
-  }
-
+/* Типографика hero/заголовков/brand масштабируется через clamp()-токены в :root,
+   поэтому отдельные правила размеров шрифтов тут больше не нужны. */
+@media (max-width: 767.98px) {
   .feature-grid {
     grid-template-columns: 1fr;
-  }
-
-  .navbar-custom .brand-text {
-    font-size: 1.5rem;
   }
 
   .auth-card {
@@ -410,7 +795,7 @@ body {
 }
 
 .add-to-cart-btn {
-  border-radius: 25px;
+  border-radius: var(--radius-md);
   font-weight: 500;
   transition: all 0.3s ease;
   white-space: nowrap;
@@ -488,7 +873,7 @@ body {
 }
 
 .Toastify__toast--info {
-  background: var(--leaf-green);
+  background: var(--sage-green);
   color: white;
   font-weight: 500;
 }
@@ -526,12 +911,20 @@ body {
     gap: 2rem;
 }
 
+@media (max-width: 767.98px) {
+    .goods-detail-price-section {
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+}
+
 /* Стиль вкладок как в записной книжке */
 .goods-tabs {
     margin-bottom: 0 !important;
 }
 
-.goods-tabs .nav-tabs {
+.goods-tabs.nav-tabs {
     border-bottom: none;
     margin-bottom: 0;
 }
@@ -556,7 +949,9 @@ body {
 }
 
 .goods-tabs.nav-tabs .nav-item {
-    margin-bottom: -1px;
+    /* 0, а не -1px: нижней границы у nav больше нет (см. выше), а лишний -1px
+       рассинхронизировал низ вкладки с верхней границей контента на 1px. */
+    margin-bottom: 0;
 }
 
 .goods-tabs.nav-tabs .nav-item:has(.active) {
@@ -564,12 +959,18 @@ body {
     border: 2px solid var(--sage-green);
     border-bottom: none;
     border-radius: 15px 15px 0 0;
-    /*margin-bottom: -1px;*/
+    /* position+z-index поднимают активную вкладку НАД .tab-content-box, поэтому её
+       белый ФОН (а не цветная граница) закрывает верхнюю сажевую границу контента на стыке.
+       Так стык бесшовен и в покое, и при затухании (li в навигации всегда непрозрачен,
+       в отличие от затухающего .tab-pane), без «уса» 45° от цветной border-bottom. */
+    position: relative;
+    z-index: 2;
 }
 
 /*.goods-tabs .nav-tabs .nav-link.active {*/
 .goods-tabs .nav-link.active,
 .goods-tabs .nav-item.show .nav-link {
+    /* Прозрачная: белый фон и скруглённые углы даёт сам .nav-item (см. выше). */
     background: transparent;
     border: none;
     color: var(--forest-green);
@@ -592,7 +993,36 @@ body {
     border-bottom-right-radius: 15px;
     box-shadow: 0 2px 8px var(--shadow);
     min-height: 200px;
-    margin-top: -2px;
+    /* Нахлёст под активную вкладку = толщине границы (2px), но граница из-за device-pixel
+       snapping рендерится ~1.75px, поэтому -1.75px: низ боковой границы вкладки точно
+       совпадает с нижним краем верхней границы контента — без перелёта вниз и без щели. */
+    margin-top: -1.75px;
+}
+
+/* На узких экранах полоса вкладок не переносится на 2 строки (что ломало бы
+   "блокнотный" нахлёст), а превращается в горизонтальную скролл-ленту. */
+@media (max-width: 767.98px) {
+    .goods-tabs.nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .goods-tabs.nav-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .goods-tabs.nav-tabs .nav-item {
+        flex: 0 0 auto;
+    }
+
+    .goods-tabs .nav-tabs .nav-link,
+    .goods-tabs.nav-tabs .nav-link {
+        white-space: nowrap;
+        padding: 0.6rem 1rem;
+    }
 }
 
 /* ===== Markdown Content ===== */
@@ -744,6 +1174,82 @@ body {
     border-radius: 15px;
 }
 
+/* Контрастные стрелки каруселей: белый шеврон на тёмно-зелёном круге с обводкой —
+   видно и на светлом, и на тёмном фото (модалка использует отдельные .modal-prev/.modal-next) */
+.carousel-control-prev,
+.carousel-control-next {
+    opacity: 0;
+    width: 14%;
+    transition: opacity 0.25s ease;
+}
+
+/* Показываем стрелки только при наведении на карусель
+   (и при фокусе с клавиатуры — чтобы оставались доступными) */
+.carousel:hover .carousel-control-prev,
+.carousel:hover .carousel-control-next,
+.carousel:focus-within .carousel-control-prev,
+.carousel:focus-within .carousel-control-next {
+    opacity: 1;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+    background-color: rgba(45, 80, 22, 0.6);
+    background-size: 1.05rem 1.05rem;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.carousel-control-prev:hover .carousel-control-prev-icon,
+.carousel-control-next:hover .carousel-control-next-icon,
+.carousel-control-prev:focus-visible .carousel-control-prev-icon,
+.carousel-control-next:focus-visible .carousel-control-next-icon {
+    background-color: var(--forest-green);
+    transform: scale(1.08);
+}
+
+/* ===== Видео-плеер мастер-классов ===== */
+.masterclass-video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-lg);
+    background: #000;
+    box-shadow: var(--shadow-md);
+}
+
+.masterclass-video-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.masterclass-video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.masterclass-video-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--light-green);
+    border: 2px dashed var(--sage-green);
+    border-radius: var(--radius-lg);
+}
+
 /* ===== Image Modal ===== */
 .image-modal .modal-dialog {
     margin: 0;
@@ -753,6 +1259,7 @@ body {
     border: none;
     border-radius: 0;
     height: 100vh;
+    height: 100dvh;
     background: transparent;
 }
 
@@ -773,10 +1280,28 @@ body {
 
 .modal-image {
     max-width: 100%;
-    max-height: 100%;
+    /* Ограничиваем по высоте вьюпорта, а не по высоте обёртки: обёртка LazyImage
+       имеет инлайновый height:auto и растягивается по картинке, из-за чего
+       max-height:100% не ограничивал портретные фото и появлялся вертикальный скролл.
+       Симметрично с правилом для видео (.image-modal-content video). */
+    max-height: 100vh;
+    max-height: 100dvh;
     width: auto;
     height: auto;
     object-fit: contain;
+}
+
+/* LazyImage оборачивает <img> в <div style="width:100%">, поэтому во flex-контейнере
+   .image-modal-content центрируется обёртка (на всю ширину), а сам <img> внутри прижат
+   влево. Делаем обёртку картинки полноразмерным flex-контейнером, центрирующим <img>.
+   :has(.modal-image) ограничивает правило картинками (видео идёт без такой обёртки). */
+.image-modal-content > div:has(.modal-image) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 .modal-close {
@@ -843,18 +1368,19 @@ body {
 /* ===== Video Player ===== */
 .carousel-item video {
     width: 100%;
-    height: 250px;
+    height: var(--media-card-h);
     object-fit: cover;
     background-color: #000;
 }
 
 .large-carousel .carousel-item video {
-    height: 400px;
+    height: var(--media-large-h);
 }
 
 .image-modal-content video {
     max-width: 100%;
     max-height: 100vh;
+    max-height: 100dvh;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -1067,12 +1593,13 @@ body {
 
 /* ===== Clickable Plant Card ===== */
 .clickable-card {
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .clickable-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 8px 20px var(--shadow);
+    box-shadow: var(--shadow-md);
     border: 2px solid var(--leaf-green);
 }
 
@@ -1081,6 +1608,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 550px;
+    height: min(70dvh, 550px);
     background-color: white;
     border-radius: 12px;
     overflow: hidden;
@@ -1102,6 +1630,74 @@ body {
     font-weight: 600;
 }
 
+/* ===== Страница «Флорариум под заказ»: компактные шапки + высокое окно чата ===== */
+.florarium-page.catalog-page {
+    padding: 1.5rem 0;
+}
+
+.florarium-page .catalog-header {
+    margin-bottom: 1.25rem;
+}
+
+.florarium-page .catalog-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.35rem;
+}
+
+.florarium-page-subtitle {
+    color: var(--warm-brown);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.florarium-chat-wrap {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Окно чата выше — заполняет освободившееся по вертикали место (не трогает чат товара) */
+.florarium-chat.chat-container {
+    height: calc(100vh - 240px);
+    height: calc(100dvh - 200px);
+    min-height: 520px;
+}
+
+@media (max-width: 767.98px) {
+    .florarium-chat.chat-container {
+        min-height: 60dvh;
+    }
+}
+
+/* Компактная шапка «Дизайнер флорариума» */
+.florarium-chat .chat-header {
+    padding: 0.25rem 1.25rem;
+}
+
+.florarium-chat .chat-header h5 {
+    font-size: 1.05rem;
+}
+
+/* Кнопка «Закончить разговор» — читаемая на зелёном фоне, в т.ч. в неактивном состоянии */
+.florarium-end-btn.btn {
+    white-space: nowrap;
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.florarium-end-btn.btn:hover:not(:disabled),
+.florarium-end-btn.btn:focus:not(:disabled) {
+    color: var(--forest-green);
+    background-color: #fff;
+    border-color: #fff;
+}
+
+.florarium-end-btn.btn:disabled {
+    opacity: 1;
+    color: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.55);
+    background-color: transparent;
+}
+
 .chat-messages {
     flex: 1;
     overflow-y: auto;
@@ -1117,7 +1713,7 @@ body {
     padding: 0.75rem 1rem;
     border-radius: 12px;
     word-wrap: break-word;
-    line-height: 1.5;
+    line-height: 1.3;
 }
 
 .chat-message-user {
@@ -1138,14 +1734,62 @@ body {
 
 .chat-message-bot .markdown-content {
     font-size: 0.95rem;
+    line-height: 1.3;
 }
 
-.chat-message-bot .markdown-content p {
-    margin-bottom: 0.5rem;
+.chat-message-bot .markdown-content p,
+.chat-message-bot .markdown-paragraph {
+    margin-bottom: 0.4rem;
+    line-height: 1.3;
 }
 
 .chat-message-bot .markdown-content p:last-child {
     margin-bottom: 0;
+}
+
+/* ===== Дизайнер флорариумов: картинки в пузыре бота ===== */
+.chat-message-bot.has-image {
+    max-width: 90%;
+}
+
+.florarium-image-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 0.5rem;
+}
+
+.chat-message-image {
+    display: block;
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.chat-message-image:hover {
+    transform: scale(1.01);
+}
+
+.florarium-order-btn {
+    margin-top: 0.4rem;
+}
+
+.florarium-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    min-height: 140px;
+    margin-top: 0.5rem;
+    padding: 1.5rem;
+    border: 1px dashed var(--sage-green);
+    border-radius: 8px;
+    background-color: rgba(127, 166, 80, 0.06);
+    color: var(--warm-brown);
+    font-size: 0.9rem;
 }
 
 .chat-empty-state {
@@ -1215,7 +1859,7 @@ body {
 .chat-typing-indicator {
     display: flex;
     gap: 4px;
-    padding: 0.5rem 0;
+    padding: 0.2rem 0;
 }
 
 .chat-typing-indicator span {
@@ -1245,7 +1889,7 @@ body {
     }
     30% {
         opacity: 1;
-        transform: translateY(-8px);
+        transform: translateY(-5px);
     }
 }
 

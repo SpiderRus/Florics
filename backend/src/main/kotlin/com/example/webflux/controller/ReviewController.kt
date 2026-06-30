@@ -2,6 +2,7 @@ package com.example.webflux.controller
 
 import com.example.webflux.controller.model.CreateReviewRequest
 import com.example.webflux.controller.model.GoodsRatingDto
+import com.example.webflux.controller.model.GoodsRatingItemDto
 import com.example.webflux.controller.model.ReviewDto
 import com.example.webflux.controller.model.toReviewDto
 import com.example.webflux.security.SecurityUtils
@@ -31,6 +32,15 @@ class ReviewController(
         val (averageRating, totalReviews) = reviewService.getGoodsRating(goodsId)
 
         return ResponseEntity.ok(GoodsRatingDto(averageRating, totalReviews))
+    }
+
+    @GetMapping("/ratings")
+    @Operation(summary = "Рейтинги нескольких товаров", description = "Возвращает средние рейтинги для списка товаров одним запросом (устранение N+1 в каталоге). Доступно всем пользователям.")
+    suspend fun getGoodsRatings(@RequestParam(required = false) ids: List<String>?): List<GoodsRatingItemDto> {
+        if (ids.isNullOrEmpty()) return emptyList()
+        return reviewService.getGoodsRatings(ids).map { (goodsId, pair) ->
+            GoodsRatingItemDto(goodsId, pair.first, pair.second)
+        }
     }
 
     @PostMapping

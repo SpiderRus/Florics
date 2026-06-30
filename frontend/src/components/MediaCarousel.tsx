@@ -87,7 +87,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
                 alt={`${goodsName} - медиа недоступно`}
                 style={{
                     width: '100%',
-                    height: '250px',
+                    height: 'var(--media-card-h)',
                     objectFit: 'cover'
                 }}
                 showLoader={false}
@@ -105,7 +105,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
                     onError={() => handleMediaError(item.url)}
                     style={{
                         width: '100%',
-                        height: '250px',
+                        height: 'var(--media-card-h)',
                         objectFit: 'cover'
                     }}
                 />
@@ -123,7 +123,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
                     onError={() => handleMediaError(item.url)}
                     style={{
                         width: '100%',
-                        height: '250px',
+                        height: 'var(--media-card-h)',
                         objectFit: 'cover'
                     }}
                 />
@@ -159,7 +159,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
                                 alt={item.alt}
                                 onError={() => handleMediaError(item.url)}
                                 style={{
-                                    height: '250px',
+                                    height: 'var(--media-card-h)',
                                     objectFit: 'cover'
                                 }}
                             />
@@ -176,7 +176,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ media, goodsName, goodsId
                                 onError={() => handleMediaError(item.url)}
                                 style={{
                                     width: '100%',
-                                    height: '250px',
+                                    height: 'var(--media-card-h)',
                                     objectFit: 'cover'
                                 }}
                             />

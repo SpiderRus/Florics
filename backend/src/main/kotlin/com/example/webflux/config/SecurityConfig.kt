@@ -77,6 +77,7 @@ class SecurityConfig {
                     .pathMatchers("/api/auth/login", "/api/auth/register").permitAll()
                     .pathMatchers("/api/goods/**").permitAll()
                     .pathMatchers("/api/categories/**").permitAll()
+                    .pathMatchers("/api/reviews/ratings").permitAll()
                     .pathMatchers("/api/reviews/{goodsId}").permitAll()
                     .pathMatchers("/api/reviews/rating/{goodsId}").permitAll()
                     .pathMatchers("/api/hello/**").permitAll()
@@ -92,6 +93,8 @@ class SecurityConfig {
                     .pathMatchers("/admin", "/admin/**").permitAll()
                     // Загруженные файлы (изображения/видео)
                     .pathMatchers("/uploads/**").permitAll()
+                    // Бинарные фото из БД (публичная отдача по id)
+                    .pathMatchers("/api/media/**").permitAll()
                     // AI чат-бот - только для авторизованных пользователей
                     .pathMatchers("/api/aibot/**").authenticated()
                     // Загрузка документов - только для авторизованных пользователей

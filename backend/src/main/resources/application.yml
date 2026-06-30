@@ -38,12 +38,41 @@ security:
     expiration-hours: 8760
 
 ai-agent:
+  # Новый бот OllamaTestController (проект AIAgentNew).
+  # ВАЖНО: AIAgentNew по умолчанию слушает порт 8080 (как и этот сервис) — запускать его на 8081.
   base-url: http://localhost:8081
-  base-path: /api/v1
+  base-path: /api/v1/ollama
+  # Тип агента для магазина растений (agents.prompts.<agent-type> в AIAgentNew)
+  agent-type: plants
+  # Тип агента дизайнера флорариумов (генерация картинок) для страницы /custom-terrarium
+  florarium-agent-type: florarium
+  # Тип агента-эксперта (ассистент мастера по сборке) для админки, вкладка «Заказы»
+  florarium-expert-agent-type: florarium-expert
   connect-timeout: 5000
-  read-timeout: 30000
+  # 120с: новый бот дольше отдаёт первый токен (RAG + tool-calls), апстрим OpenRouter у него тоже 120с
+  read-timeout: 120000
   # Connection pool настройки (опционально)
   # По умолчанию используется глобальный elastic pool Reactor Netty
   pool:
     max-connections: 10      # Максимум соединений к AI Agent
     pending-acquire-timeout: 45000  # Таймаут ожидания соединения из pool (мс)
+
+rate-limit:
+  # Глобальный выключатель rate limiting для эндпоинтов аутентификации
+  enabled: true
+  # Время простоя, после которого бакет вытесняется из Caffeine-кэша.
+  # ДОЛЖНО быть >= максимального refill-period ниже (register = 1h).
+  idle-timeout: 1h
+  endpoints:
+    # Вход: 5 попыток в минуту на IP (защита от брутфорса пароля)
+    login:
+      capacity: 5
+      refill-period: 1m
+    # Регистрация: 3 в час на IP (защита от массового создания аккаунтов)
+    register:
+      capacity: 3
+      refill-period: 1h
+    # Выход: 10 в минуту на IP
+    logout:
+      capacity: 10
+      refill-period: 1m

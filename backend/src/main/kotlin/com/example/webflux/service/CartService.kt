@@ -7,6 +7,7 @@ import com.example.webflux.domain.model.CartSummary
 import com.example.webflux.domain.model.GoodsType
 import com.example.webflux.entity.CartItemEntity
 import com.example.webflux.mapper.CartItemMapper
+import com.example.webflux.repository.AiConversationRepository
 import com.example.webflux.repository.CartItemR2dbcRepository
 import com.example.webflux.repository.CartRepository
 import com.example.webflux.repository.CategoryRepository
@@ -27,7 +28,8 @@ class CartService(
     private val cartRepository: CartRepository,
     private val goodsRepository: GoodsRepository,
     private val categoryRepository: CategoryRepository,
-    private val cartItemR2dbcRepository: CartItemR2dbcRepository
+    private val cartItemR2dbcRepository: CartItemR2dbcRepository,
+    private val aiConversationRepository: AiConversationRepository
 ) {
     /**
      * Получить сводку корзины с полной информацией о товарах и расчётом итогов
@@ -37,21 +39,39 @@ class CartService(
 
         // Получаем полную информацию о товарах и фильтруем несуществующие
         val itemsWithGoods = cartItems.mapNotNull { item ->
-           goodsRepository.findById(item.goodsId)?.let { goods ->
+            if (item.goodsId == null) {
+                // Кастомный флорариум — товара каталога нет, цену проставит админ
                 CartItemWithGoods(
-                    id = generateId(item),
-                    goods = goods,
-                    category = categoryRepository.findById(goods.categoryId),
+                    id = item.id!!,
+                    goods = null,
+                    category = null,
                     quantity = item.quantity,
-                    addedAt = item.addedAt
+                    addedAt = item.addedAt,
+                    conversationId = item.conversationId,
+                    imageUrl = item.imageUrl,
+                    customerComment = item.customerComment,
+                    contact = item.contact
                 )
+            } else {
+                goodsRepository.findById(item.goodsId)?.let { goods ->
+                    CartItemWithGoods(
+                        id = item.id!!,
+                        goods = goods,
+                        category = categoryRepository.findById(goods.categoryId),
+                        quantity = item.quantity,
+                        addedAt = item.addedAt
+                    )
+                }
             }
         }
 
         return CartSummary(
             items = itemsWithGoods,
             totalItems = itemsWithGoods.sumOf { it.quantity },
-            totalPrice = itemsWithGoods.sumOf { (it.goods.price * BigDecimal.valueOf(it.quantity.toLong())) }
+            // Кастомные элементы (goods == null) пока без цены — в сумму не входят
+            totalPrice = itemsWithGoods.sumOf { item ->
+                item.goods?.let { it.price * BigDecimal.valueOf(item.quantity.toLong()) } ?: BigDecimal.ZERO
+            }
         )
     }
 
@@ -83,7 +103,7 @@ class CartService(
 
         val savedItem = cartRepository.addOrUpdateItem(cartItem)
         return CartItemWithGoods(
-            id = generateId(savedItem),
+            id = savedItem.id!!,
             goods = goods,
             category = category,
             quantity = savedItem.quantity,
@@ -122,12 +142,65 @@ class CartService(
         )
 
         return CartItemWithGoods(
-            id = generateId(updated),
+            id = updated.id!!,
             goods = goods,
             category = category,
             quantity = updated.quantity,
             addedAt = updated.addedAt
         )
+    }
+
+    /**
+     * Добавить кастомный флорариум в корзину (по результатам чата с дизайнером).
+     * Всегда новая строка (quantity = 1), цена будет проставлена админом при обработке заказа.
+     */
+    suspend fun addCustomFlorarium(
+        userId: String,
+        conversationId: String,
+        imageUrl: String,
+        comment: String?,
+        contact: String?
+    ): CartItemWithGoods {
+        // Валидация: разговор существует и принадлежит пользователю
+        val ownerId = aiConversationRepository.findByConversationId(conversationId)
+            ?: throw IllegalArgumentException("Conversation not found: $conversationId")
+        require(ownerId == userId) { "Conversation does not belong to user" }
+        require(imageUrl.isNotBlank()) { "Image URL is required" }
+
+        val saved = cartRepository.insertCustomItem(
+            CartItem(
+                userId = userId,
+                goodsId = null,
+                quantity = 1,
+                addedAt = OffsetDateTime.now(),
+                conversationId = conversationId,
+                imageUrl = imageUrl,
+                customerComment = comment?.takeIf { it.isNotBlank() },
+                contact = contact?.takeIf { it.isNotBlank() }
+            )
+        )
+
+        return CartItemWithGoods(
+            id = saved.id!!,
+            goods = null,
+            category = null,
+            quantity = saved.quantity,
+            addedAt = saved.addedAt,
+            conversationId = saved.conversationId,
+            imageUrl = saved.imageUrl,
+            customerComment = saved.customerComment,
+            contact = saved.contact
+        )
+    }
+
+    /**
+     * Удалить кастомный элемент корзины по id (с проверкой владельца).
+     */
+    suspend fun removeCustomItem(userId: String, id: String): Boolean {
+        val item = cartRepository.findById(id) ?: return false
+        require(item.userId == userId) { "Cart item does not belong to user" }
+        cartRepository.deleteById(id)
+        return true
     }
 
     /**
@@ -198,10 +271,5 @@ class CartService(
 
         // Вернуть обновленную корзину
         return getCartSummary(userId)
-    }
-
-    private companion object {
-        fun generateId(cardItem: CartItem): String =
-            "${cardItem.userId}-${cardItem.goodsId}" // Composite key as string
     }
 }

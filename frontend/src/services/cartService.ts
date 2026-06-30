@@ -1,5 +1,5 @@
 import axiosInstance from '../utils/axiosConfig';
-import { CartSummary, CartItem, LocalCartItem, AddToCartRequest, UpdateQuantityRequest, MergeCartRequest, CheckoutResponse } from '../types/cart';
+import { CartSummary, CartItem, LocalCartItem, AddToCartRequest, UpdateQuantityRequest, MergeCartRequest, CheckoutResponse, AddCustomFlorariumRequest } from '../types/cart';
 
 const API_BASE_URL = '/cart';
 const LOCAL_CART_KEY = 'localCart';
@@ -30,6 +30,17 @@ export const cartService = {
 
     removeItem: async (goodsId: string): Promise<void> => {
         await axiosInstance.delete(`${API_BASE_URL}/items/${goodsId}`);
+    },
+
+    // Добавить кастомный флорариум в корзину (по результатам чата с дизайнером)
+    addCustomFlorariumToCart: async (payload: AddCustomFlorariumRequest): Promise<CartItem> => {
+        const response = await axiosInstance.post<CartItem>(`${API_BASE_URL}/custom-florarium`, payload);
+        return response.data;
+    },
+
+    // Удалить кастомный элемент корзины по id строки
+    removeCustomItem: async (id: string): Promise<void> => {
+        await axiosInstance.delete(`${API_BASE_URL}/custom-items/${id}`);
     },
 
     clearCart: async (): Promise<void> => {

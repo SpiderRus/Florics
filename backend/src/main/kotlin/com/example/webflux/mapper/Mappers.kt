@@ -158,19 +158,29 @@ object GoodsMapper {
 object CartItemMapper {
     fun toEntity(cartItem: CartItem): CartItemEntity {
         return CartItemEntity(
+            id = cartItem.id,
             userId = cartItem.userId,
             goodsId = cartItem.goodsId,
             quantity = cartItem.quantity,
-            addedAt = cartItem.addedAt
+            addedAt = cartItem.addedAt,
+            conversationId = cartItem.conversationId,
+            imageUrl = cartItem.imageUrl,
+            customerComment = cartItem.customerComment,
+            contact = cartItem.contact
         )
     }
 
     fun toModel(entity: CartItemEntity): CartItem {
         return CartItem(
+            id = entity.id,
             userId = entity.userId,
             goodsId = entity.goodsId,
             quantity = entity.quantity,
-            addedAt = entity.addedAt
+            addedAt = entity.addedAt,
+            conversationId = entity.conversationId,
+            imageUrl = entity.imageUrl,
+            customerComment = entity.customerComment,
+            contact = entity.contact
         )
     }
 }
@@ -187,7 +197,12 @@ object PurchaseMapper {
             goodsId = purchase.goodsId,
             price = purchase.price,
             quantity = purchase.quantity,
-            purchaseDate = purchase.purchaseDate
+            purchaseDate = purchase.purchaseDate,
+            conversationId = purchase.conversationId,
+            imageUrl = purchase.imageUrl,
+            customerComment = purchase.customerComment,
+            contact = purchase.contact,
+            status = purchase.status
         )
     }
 
@@ -198,7 +213,12 @@ object PurchaseMapper {
             goodsId = entity.goodsId,
             price = entity.price,
             quantity = entity.quantity,
-            purchaseDate = entity.purchaseDate
+            purchaseDate = entity.purchaseDate,
+            conversationId = entity.conversationId,
+            imageUrl = entity.imageUrl,
+            customerComment = entity.customerComment,
+            contact = entity.contact,
+            status = entity.status
         )
     }
 }
@@ -229,28 +249,6 @@ object ReviewMapper {
             comment = entity.comment,
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt
-        )
-    }
-}
-
-// =====================================================
-// GOODS TYPE DOCUMENT MAPPER
-// =====================================================
-object GoodsTypeDocumentMapper {
-
-    fun toEntity(model: GoodsTypeDocument): GoodsTypeDocumentEntity {
-        return GoodsTypeDocumentEntity(
-            documentId = model.documentId,
-            goodsType = model.goodsType.name,
-            createdAt = model.createdAt
-        )
-    }
-
-    fun toModel(entity: GoodsTypeDocumentEntity): GoodsTypeDocument {
-        return GoodsTypeDocument(
-            documentId = entity.documentId,
-            goodsType = GoodsType.valueOf(entity.goodsType),
-            createdAt = entity.createdAt
         )
     }
 }

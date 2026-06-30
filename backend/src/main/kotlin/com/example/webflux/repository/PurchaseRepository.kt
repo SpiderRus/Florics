@@ -23,6 +23,10 @@ interface PurchaseR2dbcRepository : CoroutineCrudRepository<PurchaseEntity, Stri
 
     @Query("UPDATE purchases SET deleted_at = CURRENT_TIMESTAMP WHERE id = :id AND deleted_at IS NULL")
     suspend fun softDelete(id: String)
+
+    // Кастомные заказы флорариума (для экрана админки)
+    @Query("SELECT * FROM purchases WHERE conversation_id IS NOT NULL AND deleted_at IS NULL ORDER BY purchase_date DESC")
+    fun findAllCustomOrders(): Flow<PurchaseEntity>
 }
 
 
@@ -39,4 +43,16 @@ class PurchaseRepository(
 
     suspend fun hasPurchased(userId: String, goodsId: String): Boolean =
         purchaseR2dbcRepository.existsByUserIdAndGoodsId(userId, goodsId)
+
+    /** Все кастомные заказы флорариума — для экрана админки. */
+    fun findAllCustomOrders(): Flow<Purchase> =
+        purchaseR2dbcRepository.findAllCustomOrders().map { PurchaseMapper.toModel(it) }
+
+    /** Найти покупку/заказ по id. */
+    suspend fun findById(id: String): Purchase? =
+        purchaseR2dbcRepository.findById(id)?.let { PurchaseMapper.toModel(it) }
+
+    /** Обновить существующую запись (id != null ⇒ UPDATE). */
+    suspend fun update(purchase: Purchase): Purchase =
+        PurchaseMapper.toModel(purchaseR2dbcRepository.save(PurchaseMapper.toEntity(purchase)))
 }

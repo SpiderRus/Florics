@@ -33,3 +33,24 @@ export interface PaginationParams {
     sortBy: SortField;
     sortOrder: SortOrder;
 }
+
+export interface AdminMedia {
+    id: string;
+    type: string;   // IMAGE | VIDEO
+    url: string;
+    order: number;
+}
+
+export interface MediaReconcileItem {
+    id?: string;   // есть => существующее медиа (оставить, обновить порядок)
+    url?: string;  // есть без id => новое внешнее
+    order: number;
+}
+
+export interface PlantCard {
+    name?: string;
+    shortDescription?: string;
+    fullDescription?: string;
+    care?: string;
+    error?: string;
+}

@@ -3,7 +3,7 @@ import axiosInstance from '../utils/axiosConfig';
 export interface Category {
     id: string;
     name: string;
-    type: 'PHYSICAL' | 'COURSE';
+    type: 'PLANT' | 'TERRARIUM' | 'COURSE';
 }
 
 export const categoryService = {
